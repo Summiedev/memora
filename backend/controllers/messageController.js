@@ -1,0 +1,50 @@
+const { getIo, onlineUsers } = require('../config/socket');
+const Message = require('../models/message'); // Adjust the path as needed
+const User = require('../models/user'); // Adjust the path as needed
+
+exports.getChatHistory = async (req, res) => {
+  try {
+    const { userId, friendId } = req.params;
+    const chatId = [userId, friendId].sort().join("_");
+    const messages = await Message.find({ chatId }).sort("timestamp");
+    res.json(messages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not load chat history" });
+  }
+};
+
+exports.sendMessage = async (req, res) => {
+  const { senderId, receiverId, text } = req.body;
+
+  try {
+    const message = await Message.create({ sender: senderId, receiver: receiverId, text });
+
+    // Emit message to receiver if online
+    const io = getIo();
+    const receiverSocketId = onlineUsers.get(receiverId);
+
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessage", message);
+    }
+
+    res.json(message);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+
+}
+  
+exports.readHistory =async (req, res) => {
+ try {
+    const messages = await Message.find({ chatId: req.params.chatId })
+      .sort("timestamp")
+      .populate("sender", "username")
+      .populate("receiver", "username");
+
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load messages." });
+  }
+}
+;
