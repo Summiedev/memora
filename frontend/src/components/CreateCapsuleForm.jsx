@@ -388,6 +388,15 @@ const TimeCapsuleModal = ({ isOpen, closeModal, addCapsule }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [media, setMedia] = useState([]);
+   const [capsuleType, setCapsuleType] = useState('private'); // 'private' | 'public' | 'shared'
+  // ▶️ FEATURE: permission controls for shared capsules
+  const [shareWithFriends, setShareWithFriends] = useState(false);
+  const [friendsList, setFriendsList] = useState([]); // fetch from your API
+
+  // ▶️ FEATURE: emotional tagging
+  const [emotionTags, setEmotionTags] = useState([]); // e.g. ["joy", "nostalgia"]
+
+  // ▶️ FEATURE: reminder toggle
 
   const categoryOptions = ['Personal', 'Work', 'Memories', 'Milestones', 'Other'];
     const minDateTime = new Date().toISOString().slice(0, 16);
@@ -497,6 +506,44 @@ console.log("🔑 Signature payload:", sig);
           </div>
 
           <form className="space-y-5 bg-[#1f1f21] p-4 rounded-xl shadow-lg">
+              {/* ▶️ Capsule Type */}
+          <div>
+            <label className="block mb-1">Capsule Type</label>
+            <div className="flex gap-3">
+              {['private','public','shared'].map(type => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setCapsuleType(type)}
+                  className={`px-3 py-1 rounded-md text-sm ${
+                    capsuleType===type
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-700 text-gray-300'
+                  }`}
+                >
+                  {type.charAt(0).toUpperCase()+type.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ▶️ Share With Friends (only if shared) */}
+          {capsuleType === 'shared' && (
+            <div className="space-y-2">
+              <label className="block mb-1">Share with friends?</label>
+              <input
+                type="checkbox"
+                checked={shareWithFriends}
+                onChange={() => setShareWithFriends(!shareWithFriends)}
+              />
+              {shareWithFriends && (
+                <div>
+                  {/* TODO: fetch & render your friends list, allow multi-select */}
+                  <p className="text-sm">[Friends multi-select component here]</p>
+                </div>
+              )}
+            </div>
+          )}
 
             {/* Title & Message */}
             <div>

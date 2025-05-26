@@ -14,6 +14,7 @@ const Navbar_Main = () => {
   const [loadingUser, setLoadingUser] = useState(true); // ✅ Loading state
 
   const [showSettingsPage, setShowSettingsPage] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const notifRef = useRef();
   const profileRef = useRef();
 
@@ -181,17 +182,57 @@ const Navbar_Main = () => {
       )}
 
            {/* Mobile Menu Toggle */}
-      <div className="sm:hidden">
-        <button
-          type="button"
-          className="p-2 text-[#6e7aa0] hover:bg-[#e3ecfa] rounded-md focus:outline-none"
-        >
-          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-      </div>
+ <div className="md:hidden">
+  <button
+    onClick={() => setShowMobileMenu(!showMobileMenu)}
+    className="p-2 text-[#6e7aa0] hover:bg-[#e3ecfa] dark:hover:bg-[#374151] rounded-md"
+  >
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  </button>
+</div>
     </div>
+     {/* Mobile Menu */}
+ <AnimatePresence>
+  {showMobileMenu && user && !loadingUser && (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className="md:hidden flex flex-col space-y-3 mt-4 pb-4 border-t border-[#e6edf8] dark:border-[#374151]"
+    >
+      {["dashboard", "capsules", "friends", "memories"].map((page) => (
+        <a
+          key={page}
+          href={`/${page}`}
+          className="text-lg font-medium text-[#4e4e6a] dark:text-white hover:text-[#6C89FF] transition-colors duration-200"
+        >
+          {page.charAt(0).toUpperCase() + page.slice(1)}
+        </a>
+      ))}
+      <button
+        onClick={() => {
+          setShowSettingsPage(true);
+          setShowMobileMenu(false);
+        }}
+        className="flex items-center gap-2 text-sm text-[#4e4e6a] dark:text-white"
+      >
+        <Settings className="w-4 h-4" /> Settings
+      </button>
+      <button
+        onClick={() => {
+          handleLogout();
+          setShowMobileMenu(false);
+        }}
+        className="flex items-center gap-2 text-sm text-red-500"
+      >
+        <LogOut className="w-4 h-4" /> Logout
+      </button>
+    </motion.div>
+  )}
+</AnimatePresence>
+
   </div>
 </nav>
 

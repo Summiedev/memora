@@ -20,6 +20,7 @@ router.use('/cloudinary-signature', signatureRoutes); // Assuming you have a sig
 router.use('/users', userRoutes); // Assuming you have a userRoutes file
 router.use('/friend-requests', require('./friendRequestRoutes')); 
 router.use('/history', require('./messageRoutes')); // Assuming you have a messageRoutes file
+router.use('/mood', require('./moodRoutes')); // Assuming you have a moodRoutes file
 // Assuming you have a friendRequestRoutes file
 router.get('/', (req, res) => {
     res.send('API is working!');

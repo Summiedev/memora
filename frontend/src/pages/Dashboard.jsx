@@ -10,7 +10,8 @@ import DashboardMiniCarousel from "../components/DashboardCaraousel";
 import RecentMemories from "../components/RecentMemories";
 import MemoryCalendar from "../components/MemoryCalendar";
 import MonthlyRecap from "../components/MonthlyRecap";
-
+import MoodTracker from '../components/MoodTracker';
+import axios from "axios";
 
 const moodData = [
   { day: "Mon", mood: 3 },
@@ -55,6 +56,7 @@ const Dashboard = () => {
     setCurrentYear(newYear);
   };
    const { search, pathname } = useLocation();
+     const [user, setUser] = useState(null);
 
   // store and scrub token from URL here
   useEffect(() => {
@@ -70,7 +72,20 @@ const Dashboard = () => {
       console.log("🎉 Stored token from Dashboard:", token);
     }
   }, [search, pathname]);
-
+ useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/auth/profile', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        // if your controller wraps in { user: … } adapt accordingly:
+        setUser(res.data.data || res.data.user);
+      } catch (err) {
+        console.error("Failed to load user", err);
+      }
+    };
+    loadUser();
+  }, []);
   return (
     <div>
     <Navbar_Main/>
@@ -156,7 +171,7 @@ const Dashboard = () => {
           </div>
 
  
-          <div className="bg-gradient-to-br from-[#e0f2ff] to-[#f2f7ff]  p-4 rounded-xl shadow border border-[#dbeafe]">  
+          {/* <div className="bg-gradient-to-br from-[#e0f2ff] to-[#f2f7ff]  p-4 rounded-xl shadow border border-[#dbeafe]">  
             <h3 className="text-lg font-semibold text-indigo-600 mb-4">Weekly Mood Tracker</h3>
 
             <ResponsiveContainer width="100%" height={250}>
@@ -168,8 +183,11 @@ const Dashboard = () => {
                 <Line type="monotone" dataKey="mood" stroke="#6366f1" strokeWidth={3} dot={{ r: 6 }} activeDot={{ r: 8 }} />
               </LineChart>
             </ResponsiveContainer>
-          </div>
-      
+          </div> */}
+        <div className="bg-gradient-to-br from-[#e0f2ff] to-[#f2f7ff] p-4 rounded-xl shadow border border-[#dbeafe]">
+          {/* only render once user is loaded */}
+          {user && <MoodTracker user={user} />}
+        </div>
           {/* Tips or Help */}
           <div className="bg-[#e7edfb] rounded-xl shadow p-6">
             <h4 className="font-semibold text-gray-800 mb-2">Tips</h4>

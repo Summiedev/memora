@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema({
   },
   friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     pendingFriendRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+
   isVerified: {
     type: Boolean,
     default: false
@@ -31,9 +32,18 @@ const userSchema = new mongoose.Schema({
   googleId: {
     type: String
   },
-  avatar: {
-    type: String
-  }
+  bio:{
+    type: String,
+    default: ''
+  },
+  settings: {
+  notifications: { type: Boolean, default: true },
+  darkMode:      { type: Boolean, default: false }
+},
+ avatar: {
+  data: Buffer,
+  contentType: String
+}
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);

@@ -248,6 +248,99 @@ const verifyEmail = async (req, res) => {
       res.status(500).json({ error: 'Google login failed' });
     }
   };
+// controllers/auth.js
+
+const updateProfile = async (req, res) => {
+  try {
+    const updates = {};
+    ['fullname','username','email','bio'].forEach(f => {
+      if (req.body[f] != null) updates[f] = req.body[f];
+    });
+
+    if (req.body.password) {
+      updates.password = await bcrypt.hash(req.body.password, 10);
+    }
+
+    if (req.body.notifications != null || req.body.darkMode != null) {
+      updates.settings = {};
+      if (req.body.notifications != null) updates.settings.notifications = req.body.notifications;
+      if (req.body.darkMode      != null) updates.settings.darkMode      = req.body.darkMode;
+    }
+
+    // Handle avatar as Base64 data URL
+    if (req.body.avatar && req.body.avatar.startsWith('data:')) {
+      // e.g. "data:image/jpeg;base64,/9j/4AAQ..."
+      const [meta, base64Data] = req.body.avatar.split(',');
+      const contentType = meta.match(/data:(.*);base64/)[1];
+      updates.avatar = {
+        data:        Buffer.from(base64Data, 'base64'),
+        contentType
+      };
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Convert avatar buffer back to data URL for the response
+    let avatarDataUrl = null;
+    if (user.avatar?.data) {
+      const b64 = user.avatar.data.toString('base64');
+      avatarDataUrl = `data:${user.avatar.contentType};base64,${b64}`;
+    }
+
+    res.json({
+      user: {
+        id:        user._id,
+        fullname:  user.fullname,
+        username:  user.username,
+        email:     user.email,
+        bio:       user.bio,
+        avatar:    avatarDataUrl,
+        settings:  user.settings
+      }
+    });
+  } catch (err) {
+    console.error('Error updating profile:', err);
+    res.status(500).json({ error: 'Could not update profile' });
+  }
+};
+
+// controllers/auth.js
+
+const getUserDetails= async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // convert avatar buffer → data URL
+    let avatarDataUrl = null;
+    if (user.avatar?.data) {
+      const b64 = user.avatar.data.toString('base64');
+      avatarDataUrl = `data:${user.avatar.contentType};base64,${b64}`;
+    }
+
+    res.json({
+      user: {
+        id:        user._id,
+        fullname:  user.fullname,
+        username:  user.username,
+        email:     user.email,
+        bio:       user.bio,
+        avatar:    avatarDataUrl,
+        settings:  user.settings
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching profile:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 
 module.exports = {
     register,
@@ -260,4 +353,6 @@ module.exports = {
     verifyEmail,
     requestPasswordReset,
     resetPassword,
+    updateProfile,
+    getUserDetails
 };

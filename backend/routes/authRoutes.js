@@ -11,7 +11,8 @@ router.post('/logout', authMiddleware, authController.logout);
 router.get('/verify-email', authController.verifyEmail);
 
 router.get('/profile', authMiddleware, authController.getUserProfile);
-
+router.patch('/profile', authMiddleware, authController.updateProfile);
+router.get('/details', authMiddleware, authController.getUserDetails);
 
 
 // router.post('/register', authController.register);
