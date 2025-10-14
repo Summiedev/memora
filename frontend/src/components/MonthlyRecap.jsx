@@ -2,39 +2,53 @@ import React, { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import dayjs from "dayjs";
-import right from "../assets/right.png";
+import right from "../assets/no_img.png";
+import NoPhotosModal from "./NoPhotoModal";
 
-const StoryRecap = ({ photos, onClose }) => {
-  const [currentIndex, setCurrentIndex] = React.useState(0);
-  const timeoutRef = React.useRef(null);
+function StoryRecap({ photos, onClose }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showNoPhotosModal, setShowNoPhotosModal] = useState(false);
+  const timeoutRef = useRef(null);
   const slideDuration = 4000; // 4 seconds
 
-  React.useEffect(() => {
-    if (photos.length === 0) return;
+  // Whenever photos change, decide whether to show modal or start slideshow
+  useEffect(() => {
+    // If no photos, show the “No Photos” modal and skip slideshow
+    if (photos.length === 0) {
+      setShowNoPhotosModal(true);
+      return;
+    }
 
+    // Otherwise, hide “No Photos” modal and begin cycling
+    setShowNoPhotosModal(false);
+    clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % photos.length);
     }, slideDuration);
 
     return () => clearTimeout(timeoutRef.current);
-  }, [currentIndex, photos.length]);
+  }, [photos.length]);
 
   const goPrev = () => {
     clearTimeout(timeoutRef.current);
-    setCurrentIndex((prev) => (prev === 0 ? photos.length - 1 : prev - 1));
+    setCurrentIndex((prev) =>
+      photos.length > 0 ? (prev === 0 ? photos.length - 1 : prev - 1) : 0
+    );
   };
 
   const goNext = () => {
     clearTimeout(timeoutRef.current);
-    setCurrentIndex((prev) => (prev + 1) % photos.length);
+    setCurrentIndex((prev) =>
+      photos.length > 0 ? (prev + 1) % photos.length : 0
+    );
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center p-4 z-50">
-      {/* Close button OUTSIDE the image container */}
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      {/* Close button (always visible on top) */}
       <button
-        className="absolute top-6 right-6 text-white text-4xl font-bold z-50"
         onClick={onClose}
+        className="absolute top-6 right-6 text-white text-4xl font-bold z-50"
         aria-label="Close recap"
       >
         ×
@@ -44,73 +58,72 @@ const StoryRecap = ({ photos, onClose }) => {
         className="
           relative
           w-full
-          max-w-[900px]  /* max width for large screens */
+          max-w-[900px]
           rounded-lg
           overflow-hidden
-          bg-black
-          flex
-          flex-col
-          items-center
-          sm:max-w-[700px] /* medium screens */
+          flex flex-col items-center
+          sm:max-w-[700px]
           md:max-w-[850px]
-          "
-        style={{ height: "85vh" }} // tall height, almost full viewport height
+        "
+        style={{ height: "85vh" }}
       >
-        {/* Progress bars - above image */}
-        <div className="flex space-x-1 p-2 mb-4 w-full px-4">
-          {photos.map((_, i) => (
-            <div
-              key={i}
-              className="h-1 rounded bg-white/40"
-              style={{
-                flex: 1,
-                opacity: i === currentIndex ? 1 : 0.3,
-                transition: "opacity 0.3s",
-                position: "relative",
-                overflow: "hidden",
-              }}
-            >
-              {i === currentIndex && (
-                <div
-                  className="h-full bg-white"
-                  style={{
-                    width: "100%",
-                    animation: `progressBar ${slideDuration}ms linear forwards`,
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                  }}
-                />
-              )}
-            </div>
-          ))}
-        </div>
+        {/* Progress bars (only if photos exist) */}
+        {photos.length > 0 && (
+          <div className="flex space-x-1 p-2 mb-4 w-full px-4">
+            {photos.map((_, i) => (
+              <div
+                key={i}
+                className="h-1 rounded bg-white/40"
+                style={{
+                  flex: 1,
+                  opacity: i === currentIndex ? 1 : 0.3,
+                  transition: "opacity 0.3s",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                {i === currentIndex && (
+                  <div
+                    className="h-full bg-white"
+                    style={{
+                      width: "100%",
+                      animation: `progressBar ${slideDuration}ms linear forwards`,
+                      position: "absolute",
+                      left: 0,
+                      top: 0,
+                    }}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
-        {/* Image */}
+        {/* If there are photos, show the current one */}
         {photos.length > 0 ? (
           <img
             src={photos[currentIndex]}
             alt={`Recap photo ${currentIndex + 1}`}
-            className="
-              w-full
-              h-full
-              object-contain
-              rounded-md
-            "
+            className="w-full h-full object-contain rounded-md"
           />
         ) : (
-          <div className="text-white p-10 text-center">No photos available</div>
+          // Otherwise, show the NoPhotosModal
+          showNoPhotosModal && <NoPhotosModal onClose={() => setShowNoPhotosModal(false)} />
         )}
 
-        {/* Left and right clickable areas */}
-        <div
-          className="absolute inset-y-0 left-0 w-1/3 cursor-pointer z-20"
-          onClick={goPrev}
-        />
-        <div
-          className="absolute inset-y-0 right-0 w-1/3 cursor-pointer z-20"
-          onClick={goNext}
-        />
+        {/* Clickable areas for Prev/Next (only if > 1 photo) */}
+        {photos.length > 1 && (
+          <>
+            <div
+              onClick={goPrev}
+              className="absolute inset-y-0 left-0 w-1/3 cursor-pointer z-20"
+            />
+            <div
+              onClick={goNext}
+              className="absolute inset-y-0 right-0 w-1/3 cursor-pointer z-20"
+            />
+          </>
+        )}
       </div>
 
       <style>{`
@@ -121,10 +134,9 @@ const StoryRecap = ({ photos, onClose }) => {
       `}</style>
     </div>
   );
-};
+}
 
-
-const MonthlyRecap = () => {
+export default function MonthlyRecap() {
   const [latestMonth, setLatestMonth] = useState(null);
   const [allPhotos, setAllPhotos] = useState([]);
   const [showRecap, setShowRecap] = useState(false);
@@ -132,11 +144,12 @@ const MonthlyRecap = () => {
   useEffect(() => {
     const fetchLatestMonthRecap = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/photo-memories/get-all-photo', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        const res = await axios.get(
+          "http://localhost:5000/api/photo-memories/get-all-photo",
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          }
+        );
         if (!res.data.success) {
           console.error("API call failed");
           return;
@@ -144,15 +157,15 @@ const MonthlyRecap = () => {
 
         const memories = res.data.data;
 
-        const photosFlat = memories.flatMap(m => m.photos || []);
+        // Flatten all photos into one array
+        const photosFlat = memories.flatMap((m) => m.photos || []);
         setAllPhotos(photosFlat);
 
+        // Group by YYYY-MM
         const grouped = {};
         memories.forEach((memory) => {
           const monthKey = dayjs(memory.createdAt).format("YYYY-MM");
-          if (!grouped[monthKey]) {
-            grouped[monthKey] = [];
-          }
+          if (!grouped[monthKey]) grouped[monthKey] = [];
           grouped[monthKey].push(memory);
         });
 
@@ -168,9 +181,8 @@ const MonthlyRecap = () => {
 
         const latestKey = keys.sort((a, b) => dayjs(b).valueOf() - dayjs(a).valueOf())[0];
         const latestMonthMemories = grouped[latestKey];
-
         const backgroundImage =
-          latestMonthMemories.find(m => m.photos?.length)?.photos[0] ?? right;
+          latestMonthMemories.find((m) => m.photos?.length)?.photos[0] ?? right;
 
         const readableMonth = dayjs(latestKey).format("MMMM");
         const readableYear = dayjs(latestKey).format("YYYY");
@@ -190,11 +202,9 @@ const MonthlyRecap = () => {
 
   if (!latestMonth) return null;
 
-  // Pick up to 5 random photos for recap story
+  // Pick up to 5 random photos from allPhotos
   const randomFive = allPhotos.length
-    ? allPhotos
-        .sort(() => 0.5 - Math.random())
-        .slice(0, 5)
+    ? allPhotos.sort(() => 0.5 - Math.random()).slice(0, 5)
     : [];
 
   return (
@@ -223,11 +233,12 @@ const MonthlyRecap = () => {
         </div>
       </motion.div>
 
-      {showRecap && (
-        <StoryRecap photos={randomFive} onClose={() => setShowRecap(false)} />
-      )}
+      { showRecap && (
+    randomFive.length > 0
+      ? <StoryRecap photos={randomFive} onClose={() => setShowRecap(false)} />
+      : <NoPhotosModal onClose={() => setShowRecap(false)} />
+) }
+
     </div>
   );
-};
-
-export default MonthlyRecap;
+}

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import MyImage from '../assets/rightt.png'; // decorative image
+import {Eye, EyeOff} from 'lucide-react';
+import MemoraLoaderOverlay from '../components/MemoraLoader';
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -14,8 +16,9 @@ const SignupPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [registerError, setRegisterError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
+const [showPassword, setShowPassword] = useState(false);
   const handleInputChange = (e) => {
     const { id, value } = e.target;
     setFormData({ ...formData, [id]: value });
@@ -33,6 +36,7 @@ const SignupPage = () => {
 
 
     try {
+      setLoading(true);
       // Send login request to backend
       const response = await axios.post('http://localhost:5000/api/auth/register', formData);
 
@@ -46,30 +50,23 @@ const SignupPage = () => {
 
       // Redirect user after successful login
       setTimeout(() => {
+          setLoading(false); 
         window.location.href = '/dashboard';
       }, 2000);
 
     } catch (err) {
       // Handle error from backend
+        setLoading(false); 
       const serverError = err.response?.data?.error || 'User already registered. Please try again.';
       setRegisterError(serverError);
     }
 
-    // try {
-    //   const response = await axios.post('http://localhost:5000/api/auth/register', formData);
-    //   if (response.status === 201) {
-    //     setSuccess('Registration successful! Redirecting...');
-
-    //   localStorage.setItem('token', response.data.token);
-    //     setTimeout(() => navigate('/dashboard'), 2000);
-
-    //   }
-    // } catch (err) {
-    //   setError(err.response?.data?.message || 'Something went wrong');
-    // }
+  
   };
 
   return (
+    <> 
+    {loading && <MemoraLoaderOverlay/>}
     <div className="relative min-h-screen flex items-center justify-center bg-memora-clouds text-white">
       {/* Cloud elements */}
       <div className="cloud cloud-1"></div>
@@ -176,15 +173,26 @@ const SignupPage = () => {
           </div>
 
           <div className="mb-5">
-            <input
-              type="password"
-              id="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-              className="w-full px-4 py-2 rounded-lg border border-blue-200 bg-blue-50 placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
-            />
+              <div className="relative">
+      <input
+        type={showPassword ? 'text' : 'password'}
+        id="password"
+        name="password"
+        placeholder="••••••••"
+        value={formData.password}
+        onChange={handleInputChange}
+        className="w-full px-4 py-2 rounded-lg border border-blue-200 bg-blue-50 placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+      />
+
+      {/* Toggle button */}
+      <button
+        type="button"
+        onClick={() => setShowPassword(prev => !prev)}
+        className="absolute inset-y-0 right-3 flex items-center p-1 text-blue-500 hover:text-blue-700 focus:outline-none"
+      >
+        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+      </button>
+    </div>
           </div>
 
           
@@ -208,6 +216,7 @@ const SignupPage = () => {
 
 
     </div>
+    </>
   );
 };
 

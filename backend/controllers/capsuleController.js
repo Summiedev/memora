@@ -6,10 +6,10 @@ const createCapsule = async (req, res) => {
       title,
       message,
       category,
-      sendToOthers,
-      recipientName,
-      recipientEmail,
-      recipientPhone,
+      //sendToOthers,
+      //recipientName,
+      //recipientEmail,
+      //recipientPhone,
       permissionLevel,
       messageForRecipient,
       sendDate,
@@ -18,7 +18,10 @@ const createCapsule = async (req, res) => {
       sendMethod,
       tags,
       media,        // URLs from Cloudinary
-      coverImage    // Selected cover image URL
+      coverImage,    // Selected cover image URL
+        capsuleType,    // "private" or "shared"
+      sharedWith,     // [ array of friend IDs ]
+      //emotionTags     // [ array of strings ]
     } = req.body;
 
     // Determine initial status
@@ -47,10 +50,10 @@ const createCapsule = async (req, res) => {
       message,
       category: category || 'Personal',
       coverImage: coverImage || null,
-      sendToOthers,
-      recipientName,
-      recipientEmail,
-      recipientPhone,
+     // sendToOthers,
+      //recipientName,
+      //recipientEmail,
+      //recipientPhone,
       permissionLevel: permissionLevel || 'viewer',
       messageForRecipient,
       sendDate: new Date(sendDate),
@@ -60,7 +63,10 @@ const createCapsule = async (req, res) => {
       tags: tagArray,
       media,
       status,
-      createdBy: req.user._id
+      createdBy: req.user._id,
+       capsuleType: capsuleType || 'private',
+      sharedWith: Array.isArray(sharedWith) ? sharedWith : [],
+    //  emotionTags: Array.isArray(emotionTags) ? emotionTags : []
     };
 
     const newCapsule = await Capsule.create(capsuleData);
@@ -197,15 +203,167 @@ const getAllCapsules = async (req, res) => {
 };
 
 // Get single capsule
+// const getCapsuleById = async (req, res) => {
+//   try {
+//     const capsule = await Capsule.findById(req.params.id);
+//     if (!capsule) return res.status(404).json({ success: false, message: 'Capsule not found' });
+//     res.json({ success: true, data: capsule });
+//   } catch (err) {
+//     res.status(500).json({ success: false, message: 'Failed to retrieve capsule' });
+//   }
+// };
+// In controllers/capsuleController.js
+const shareCapsule = async (req, res) => {
+  try {
+    const capsuleId = req.params.id;
+    const userId    = req.user._id;    // assuming auth middleware sets req.user
+    const capsule   = await Capsule.findById(capsuleId);
+    if (!capsule) 
+      return res.status(404).json({ success: false, message: 'Capsule not found' });
+
+    // Only owner can “share” this capsule
+    if (capsule.createdBy.toString() !== userId.toString()) {
+      return res.status(403).json({ success: false, message: 'Only creator may share' });
+    }
+
+    // Capsule must have type “shared”
+    if (capsule.capsuleType !== 'shared') {
+      return res.status(400).json({ success: false, message: 'Only shared‐type capsules can be shared' });
+    }
+
+    // Get array of friend IDs from the capsule’s own sharedWith[]
+    const friendsToShareWith = capsule.sharedWith.map(x => x.toString());
+    if (!friendsToShareWith.length) {
+      return res.status(400).json({
+        success: false,
+        message: 'No friends specified in capsule.sharedWith'
+      });
+    }
+
+    // For each friendId, add this capsule to their User.sharedCapsules
+    await Promise.all(
+      friendsToShareWith.map(async friendId => {
+        await User.findByIdAndUpdate(
+          friendId,
+          { $addToSet: { sharedCapsules: capsule._id } }
+        );
+      })
+    );
+
+    return res.json({ success: true, message: 'Capsule shared with friends' });
+  } catch (err) {
+    console.error('shareCapsule error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to share capsule' });
+  }
+};
+
+
+// ─── DELETE /api/capsules/:id/share ────────────────────────────────────────
+// A shared friend “unshares” it from their own view:
+//   • Remove capsuleId from their own User.sharedCapsules
+//   • Also remove them from Capsule.sharedWith if you want
+const unshareCapsule = async (req, res) => {
+  try {
+    const capsuleId = req.params.id;
+    const userId    = req.user._id;    // currently logged‐in friend
+
+    const capsule = await Capsule.findById(capsuleId);
+    if (!capsule)
+      return res.status(404).json({ success: false, message: 'Capsule not found' });
+
+    // Only remove if this capsule is actually shared with them
+    const isSharedWithMe = capsule.sharedWith
+      .map(x => x.toString())
+      .includes(userId.toString());
+    if (!isSharedWithMe) {
+      return res.status(403).json({ success: false, message: 'Not shared with you' });
+    }
+
+    // 1) Remove this capsule from the user’s sharedCapsules array
+    await User.findByIdAndUpdate(
+      userId,
+      { $pull: { sharedCapsules: capsule._id } }
+    );
+
+    // 2) Optionally remove the userId from the capsule.sharedWith list
+    await Capsule.findByIdAndUpdate(
+      capsuleId,
+      { $pull: { sharedWith: userId } }
+    );
+
+    return res.json({ success: true, message: 'Removed capsule from your shared list' });
+  } catch (err) {
+    console.error('unshareCapsule error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to unshare capsule' });
+  }
+};
+
 const getCapsuleById = async (req, res) => {
   try {
-    const capsule = await Capsule.findById(req.params.id);
-    if (!capsule) return res.status(404).json({ success: false, message: 'Capsule not found' });
-    res.json({ success: true, data: capsule });
+    const capsule = await Capsule.findById(req.params.id)
+      .populate('sharedWith', 'username')   // If you want to show who it’s shared with
+      .populate('createdBy', 'username');
+
+    if (!capsule) 
+      return res.status(404).json({ success: false, message: 'Capsule not found' });
+
+    const userId = req.user._id.toString();
+    const isCreator = capsule.createdBy._id.toString() === userId;
+    const isSharedRecipient = capsule.sharedWith
+      .map(obj => obj._id.toString())
+      .includes(userId);
+
+    // 1) Private capsule: only creator can view
+    if (capsule.capsuleType === 'private' && !isCreator) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+
+    // 2) Shared capsule: if user isn’t in sharedWith and not creator → forbidden
+    if (capsule.capsuleType === 'shared' && !isCreator && !isSharedRecipient) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+
+    // 3) Locked / Pending logic
+    const now = new Date();
+    const willUnlockAt = new Date(capsule.sendDate);
+    if (capsule.lockUntilSend && now < willUnlockAt) {
+      // Still locked
+      return res.json({
+        success: true,
+        data: {
+          _id: capsule._id,
+          title: capsule.title,
+          status: 'Locked',
+          unlockDate: capsule.sendDate,
+          sharedWith: capsule.capsuleType === 'shared' ? capsule.sharedWith : [],
+          capsuleType: capsule.capsuleType,
+        }
+      });
+    }
+
+    // 4) If we fall through here, it is unlocked/past sendDate → reveal all:
+    return res.json({ success: true, data: capsule });
+
   } catch (err) {
+    console.error(err);
     res.status(500).json({ success: false, message: 'Failed to retrieve capsule' });
   }
 };
+
+// controllers/capsuleController.js
+const getTimeline = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    // Return _all_ capsules created by this user, sorted by sendDate
+    const timeline = await Capsule.find({ createdBy: userId })
+      .sort({ sendDate: 1 })
+      .select('title sendDate status capsuleType'); 
+    return res.json({ success: true, timeline });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Timeline fetch failed' });
+  }
+};
+
 
 // Update
 const updateCapsule = async (req, res) => {
@@ -230,16 +388,7 @@ const deleteCapsule = async (req, res) => {
 };
 
 // Share
-const shareCapsule = async (req, res) => {
-  try {
-    const capsule = await Capsule.findById(req.params.id);
-    if (!capsule) return res.status(404).json({ success: false, message: 'Capsule not found' });
 
-    res.json({ success: true, message: `Capsule "${capsule.title}" shared.` });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed to share capsule' });
-  }
-};
 
 // ✅ Send via Email or SMS
 const sendCapsule = async (req, res) => {
@@ -269,5 +418,7 @@ module.exports = {
     deleteCapsule,
     shareCapsule,
     sendCapsule,
+    getTimeline,
+    unshareCapsule, // Added unshareCapsule function
     // uploadFiles, // Uncomment if you implement file upload functionality
 };

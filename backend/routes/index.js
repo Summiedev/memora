@@ -7,6 +7,7 @@ const photoAlbumRoutes = require("./photoAlbumRoutes");
 const diaryEntryRoutes = require("./diaryEntryRoutes");
 const signatureRoutes = require('./signatureRoutes'); 
 const userRoutes = require('./userRoutes'); // Assuming you have a userRoutes file
+const commentRoutes = require('./commentRoutes'); 
 // Assuming you have a signatureRoute file 
 // const memoryRoutes = require('../routes/memoryRoutes'); // Assuming you have a memoryRoutes file
 // const photoAlbumRoutes = require('../routes/photoAlbumRoutes'); // Assuming you have a photoAlbumRoutes file     
@@ -21,7 +22,10 @@ router.use('/users', userRoutes); // Assuming you have a userRoutes file
 router.use('/friend-requests', require('./friendRequestRoutes')); 
 router.use('/history', require('./messageRoutes')); // Assuming you have a messageRoutes file
 router.use('/mood', require('./moodRoutes')); // Assuming you have a moodRoutes file
+// Assuming you have a commentRoutes file
+router.use('/comments', commentRoutes); // Assuming you have a commentRoutes file
 // Assuming you have a friendRequestRoutes file
+
 router.get('/', (req, res) => {
     res.send('API is working!');
 });

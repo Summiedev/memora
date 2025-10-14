@@ -32,7 +32,20 @@ const register = async (req, res) => {
 
     } catch (err) {
         console.error("❌ Registration error:", err);
-        res.status(500).json({ error: 'Registration failed.' });
+         if (err.code === 11000) {
+   
+      if (err.keyPattern.username) {
+        return res
+          .status(400)
+          .json({ field: "username", message: "Username already exists. Please choose another." });
+      }
+      if (err.keyPattern.email) {
+        return res
+          .status(400)
+          .json({ field: "email", message: "Email already in use. Please log in or use another." });
+      }
+    }
+        res.status(500).json({ error: 'Registration failed. Please try again' });
     }
 };
 
@@ -157,7 +170,7 @@ const verifyEmail = async (req, res) => {
       const secret = process.env.JWT_SECRET + user.password;
       const token = jwt.sign({ id: user._id, email: user.email }, secret, { expiresIn: '1h' });
   
-      const resetURL = `${process.env.CLIENT_URL}/reset-zpassword?id=${user._id}&token=${token}`;
+      const resetURL = `${process.env.CLIENT_URL}/reset-password?id=${user._id}&token=${token}`;
       const subject= 'Password Reset Request';
       const text= `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
       Please click on the following link, or paste this into your browser to complete the process:\n\n
@@ -340,6 +353,25 @@ const getUserDetails= async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+const getFriends = async (req, res) => {
+  try {
+    // req.user is assumed to be populated by your auth middleware
+    const userId = req.user._id;
+
+    // Populate friends array (you can choose which fields to select)
+    const user = await User.findById(userId)
+      .populate('friends', 'fullname username avatar') // bring in basic friend info
+      .select('friends');
+
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    res.json({ success: true, friends: user.friends });
+  } catch (error) {
+    console.error('Error fetching friends:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 
 
 module.exports = {
@@ -354,5 +386,6 @@ module.exports = {
     requestPasswordReset,
     resetPassword,
     updateProfile,
-    getUserDetails
+    getUserDetails,
+    getFriends
 };

@@ -848,7 +848,7 @@ console.log("msg senderId:", msg.senderId, "msg.sender._id:", msg.sender?._id, "
                           fromId: user.id,
                         });
                       }}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300"
+                      className="flex-1 text-black px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300"
                       placeholder="Type your message..."
                     />
                     <button
@@ -875,7 +875,7 @@ console.log("msg senderId:", msg.senderId, "msg.sender._id:", msg.sender?._id, "
             <input
               type="text"
               placeholder="Search users..."
-              className="w-full px-4 py-2 rounded-full border border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full px-4 py-2 rounded-full border text-black border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-300"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />

@@ -1,6 +1,7 @@
 const express = require('express');
 const authMiddleware = require('../middleware/authMiddleware');
 const capsuleController = require('../controllers/capsuleController'); // Using require for named imports
+const commentController = require('../controllers/commentController'); // Using require for named imports
 
 const router = express.Router();
 
@@ -14,6 +15,7 @@ router.delete('/delete-capsule/:id', authMiddleware, capsuleController.deleteCap
 router.post('/:id/share', authMiddleware, capsuleController.shareCapsule);
 router.post('/send/:id', authMiddleware, capsuleController.sendCapsule); 
 
+router.delete('/:id/share', authMiddleware, capsuleController.unshareCapsule); // Delete capsule by ID
 
 
 //router.post('/upload', authMiddleware, capsuleController.uploadFiles); // Upload files to S3

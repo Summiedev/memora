@@ -13,6 +13,7 @@ import MemoriesListPage from "./pages/MemoriesPageList";
 import FriendsPage from "./pages/FriendsPage";
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import ResetConfirmation from "./pages/ResretConfirmation";
 
 function App() {
   function TokenHandler() {
@@ -53,6 +54,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/memories" element={<MemoriesListPage />} />
          <Route path="/friends" element={<FriendsPage />} />
+         <Route path="/reset-confirmation" element={<ResetConfirmation />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
 

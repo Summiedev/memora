@@ -2,13 +2,15 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import MyImage from '../assets/rightt.png'; // Keep your image as is
-
+import { Eye, EyeOff } from 'lucide-react';
+import MemoraLoaderOverlay from '../components/MemoraLoader';
 const LoginPage = () => {
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loginError, setLoginError] = useState("");
-
+  const [showPassword, setShowPassword] = useState(false);
+ const [loading, setLoading] = useState(false);
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData((prevState) => ({ ...prevState, [id]: value }));
@@ -24,6 +26,7 @@ const LoginPage = () => {
     }
 
     try {
+       setLoading(true);
       // Send login request to backend
       const response = await axios.post('http://localhost:5000/api/auth/login', formData);
 
@@ -37,17 +40,21 @@ const LoginPage = () => {
 
       // Redirect user after successful login
       setTimeout(() => {
+         setLoading(false);
         window.location.href = '/dashboard';
       }, 2000);
 
     } catch (err) {
       // Handle error from backend
+        setLoading(false);
       const serverError = err.response?.data?.error || 'Invalid username or password. Please try again.';
       setLoginError(serverError);
     }
   };
 
   return (
+        <> 
+        {loading && <MemoraLoaderOverlay/>}
     <div className="relative min-h-screen flex items-center justify-center bg-memora-clouds text-white">
       {/* Cloud elements */}
       <div className="cloud cloud-1"></div>
@@ -145,15 +152,26 @@ const LoginPage = () => {
             <label htmlFor="password" className="block text-sm mb-1 text-sky-600">
               Password
             </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full px-4 py-2 rounded-lg border border-blue-200 bg-blue-50 placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
-            />
+             <div className="relative">
+      <input
+        type={showPassword ? 'text' : 'password'}
+        id="password"
+        name="password"
+        placeholder="••••••••"
+        value={formData.password}
+        onChange={handleChange}
+        className="w-full px-4 py-2 rounded-lg border border-blue-200 bg-blue-50 placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+      />
+
+      {/* Toggle button */}
+      <button
+        type="button"
+        onClick={() => setShowPassword(prev => !prev)}
+        className="absolute inset-y-0 right-3 flex items-center p-1 text-blue-500 hover:text-blue-700 focus:outline-none"
+      >
+        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+      </button>
+    </div>
           </div>
 
           {/* Submit Button */}
@@ -182,7 +200,7 @@ const LoginPage = () => {
         </form>
       </div>
     </div>
-
+</>
 
 
   );

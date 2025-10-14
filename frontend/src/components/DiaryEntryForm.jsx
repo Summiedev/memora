@@ -50,7 +50,7 @@ export function DiaryEntryForm({ closeForm, onCreate }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
-      <div className="relative bg-paper bg-cover bg-center shadow-2xl rounded-2xl h-full sm:h-[90%] md:h-[80%] md:w-[65%] mx-4 p-6 border-4 border-white">
+      <div className="relative bg-paper bg-cover bg-center shadow-2xl rounded-2xl h-full sm:h-[90%] md:h-[60%] md:w-[65%] mx-4 p-6 border-4 border-white">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-3xl dancing-script text-blue-700">New Diary Entry ✧･ﾟ</h2>
           <span className="text-sm text-gray-500 font-light">{new Date().toLocaleDateString()}</span>

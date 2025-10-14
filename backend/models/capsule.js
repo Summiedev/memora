@@ -20,6 +20,10 @@ const CapsuleSchema = new mongoose.Schema({
   sharedBy:         { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   status:           { type: String, enum: ['Unlocked','Locked','Pending','Sent'], default: 'Unlocked' },
   createdBy:        { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  capsuleType:      { type: String, enum: ['private','shared'], default: 'private' },
+  sharedWith:       [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], 
+   emotionTags:       [{ type: String }],
+  contributors:     [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], 
   memories: [{
     memoryType: { type: String, required: true, enum: ['Diary','PhotoAlbum'] },
     memory:     { type: mongoose.Schema.Types.ObjectId, required: true, refPath: 'memories.memoryType' }

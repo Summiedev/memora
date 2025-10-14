@@ -16,6 +16,9 @@ const ForgotPassword = () => {
     try {
       const res = await axios.post("http://localhost:5000/api/auth/requestPasswordReset", { email: formData.email });
       setMessage(res.data.message);
+       setTimeout(() => {
+        navigate("/reset-confirmation"); 
+      }, 1500);
     } catch (err) {
       console.error(err);
       setMessage(err.response?.data?.message || "Something went wrong");

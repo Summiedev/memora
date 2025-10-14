@@ -5,31 +5,43 @@ import axios from 'axios';
 const DashboardMiniCarousel = () => {
   const [capsules, setCapsules] = useState([]);
   const [selectedCapsule, setSelectedCapsule] = useState(null);
+  
+ // const token = localStorage.getItem('token'); 
 
-  const token = localStorage.getItem('token'); 
+   
+   const [token, setToken] = useState(localStorage.getItem('token'));
+
+  // Whenever someone logs in and sets localStorage, you should also call:
+  //   setToken(localStorage.getItem('token'))
+  // in your login handler. That way, DashboardMiniCarousel will re‐render with a real token.
 
   useEffect(() => {
+    // Only fetch if token exists (non‐null/non‐empty)
+    if (!token) return;
+
+    const fetchCapsules = async () => {
+      try {
+        const res = await axios.get(
+          'http://localhost:5000/api/capsules/all-capsules',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const sorted = res.data.capsules.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        const latestFive = sorted.slice(0, 5);
+        setCapsules(latestFive);
+      } catch (err) {
+        console.error('Error fetching capsules:', err);
+      }
+    };
+
     fetchCapsules();
-  }, []);
-
-  const fetchCapsules = async () => {
-    try {
-      const res = await axios.get('http://localhost:5000/api/capsules/all-capsules', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const sorted = res.data.capsules.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-      );
-      const latestFive = sorted.slice(0, 5);
-      setCapsules(latestFive);
-     
-    } catch (err) {
-      console.error('Error fetching capsules:', err);
-    }
-  };
+  }, [token]);
 
   const getStatus = (capsule) => {
     if (capsule.status === 'Pending') {
@@ -42,6 +54,7 @@ const DashboardMiniCarousel = () => {
       return '🔓 Unlocked'; 
     }
   };
+  
 
   const truncate = (text, maxLength = 100) => {
     if (!text) return '';
@@ -53,12 +66,14 @@ const DashboardMiniCarousel = () => {
       {/* Big Screens - Grid Layout */}
 <div className="hidden lg:grid grid-cols-5 gap-6 mb-4">
   {capsules.map((capsule, index) => (
-    
+   
     <MiniCapsule
       key={capsule._id || index}
       title={capsule.title}
       date={new Date(capsule.createdAt).toLocaleDateString()}
-      description={truncate(capsule.message)}
+      description=  {capsule.status.toLowerCase() === 'locked'
+            ? "Content can't be displayed. This capsule is locked."
+            : truncate(capsule.message)}
       tags={capsule.tags}
       status={getStatus(capsule)}
       onClick={() => setSelectedCapsule(capsule)}
