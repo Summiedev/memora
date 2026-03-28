@@ -1,9 +1,3 @@
-// // src/pages/CapsuleListPage.jsx
-
-// src/pages/CapsuleListPage.jsx
-
-// src/pages/CapsuleListPage.jsx
-
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import Navbar_Main from "../components/Navbar_main";
@@ -13,202 +7,148 @@ import FloatingActions from "../components/FloatingBtn";
 import TimeCapsuleModal from "../components/CreateCapsuleForm";
 import { motion, AnimatePresence } from "framer-motion";
 import ViewCapsuleModal from "../components/ViewCapsuleModal";
+import { Search, SlidersHorizontal, Package } from "lucide-react";
 
 const CapsuleListPage = () => {
-  const [showForm, setShowForm] = useState(false);
-  const [capsules, setCapsules] = useState([]);
-  const [loading, setLoading] = useState(true);
-
+  const [showForm, setShowForm]           = useState(false);
+  const [capsules, setCapsules]           = useState([]);
+  const [loading, setLoading]             = useState(true);
   const [viewCapsuleId, setViewCapsuleId] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortOption, setSortOption] = useState("recent");
+  const [searchQuery, setSearchQuery]     = useState("");
+  const [sortOption, setSortOption]       = useState("recent");
   const token = localStorage.getItem("token");
 
   const fetchCapsules = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:5000/api/capsules/all-capsules",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await axios.get("http://localhost:5000/api/capsules/all-capsules",
+        { headers: { Authorization: `Bearer ${token}` } });
       setCapsules(res.data.capsules);
-    } catch (error) {
-      console.error("Error fetching capsules:", error);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
   };
 
-  useEffect(() => {
-    fetchCapsules();
-  }, []);
+  useEffect(() => { fetchCapsules(); }, []);
 
-  const addCapsule = (newCapsule) =>
-    setCapsules((prev) => [newCapsule, ...prev]);
+  const addCapsule    = c  => setCapsules(p => [c, ...p]);
+  const removeCapsule = id => setCapsules(p => p.filter(c => c._id !== id));
 
-  const removeCapsule = (id) =>
-    setCapsules((prev) => prev.filter((c) => c._id !== id));
-
-  const handleDelete = async (id) => {
+  const handleDelete = async id => {
     try {
-      await axios.delete(
-        `http://localhost:5000/api/capsules/delete-capsule/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.delete(`http://localhost:5000/api/capsules/delete-capsule/${id}`,
+        { headers: { Authorization: `Bearer ${token}` } });
       removeCapsule(id);
-    } catch (error) {
-      console.error("Delete failed:", error);
-    }
-  };
-    const handleShare = async () => {
-    try {
-      await axios.post(
-        `http://localhost:5000/api/capsules/${_id}/share`,
-        {}, // no body needed; server uses capsule.sharedWith[]
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-      alert('🟢 Capsule shared with all designated friends.');
-      onShareSuccess?.(); // e.g. re‐fetch or re‐render
-    } catch (err) {
-      console.error('Share failed', err);
-      alert('⚠️ Failed to share capsule.');
-    }
-  };
-
-  const handleUnshare = async () => {
-    try {
-      await axios.delete(
-        `http://localhost:5000/api/capsules/${_id}/share`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert('🟢 Capsule removed from your shared list.');
-      onUnshareSuccess?.();
-    } catch (err) {
-      console.error('Unshare failed', err);
-      alert('⚠️ Failed to remove shared capsule.');
-    }
+    } catch (e) { console.error(e); }
   };
 
   const filteredCapsules = useMemo(() => {
     let list = [...capsules];
-
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      list = list.filter(
-        (c) =>
-          c.title.toLowerCase().includes(q) ||
-          (c.tags && c.tags.some((tag) => tag.toLowerCase().includes(q)))
+      list = list.filter(c =>
+        c.title.toLowerCase().includes(q) ||
+        (c.tags && c.tags.some(t => t.toLowerCase().includes(q)))
       );
     }
-
     list.sort((a, b) => {
       switch (sortOption) {
-        case "oldest":
-          return new Date(a.sendDate) - new Date(b.sendDate);
-        case "atoz":
-          return a.title.localeCompare(b.title);
-        case "tags":
-          return (a.tags?.[0] || "").localeCompare(b.tags?.[0] || "");
-        case "recent":
-        default:
-          return new Date(b.sendDate) - new Date(a.sendDate);
+        case "oldest": return new Date(a.sendDate) - new Date(b.sendDate);
+        case "atoz":   return a.title.localeCompare(b.title);
+        case "tags":   return (a.tags?.[0]||"").localeCompare(b.tags?.[0]||"");
+        default:       return new Date(b.sendDate) - new Date(a.sendDate);
       }
     });
-
     return list;
   }, [capsules, searchQuery, sortOption]);
-console.log("Filtered Capsules:", filteredCapsules);
+
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100">
+      <div className="min-h-screen" style={{ background: "linear-gradient(160deg,#fce4f3 0%,#ede9ff 40%,#dbeafe 100%)" }}>
         <Navbar_Main />
 
-        {/* Header */}
-        <header className="flex flex-col lg:flex-row items-center justify-between gap-4 px-6 py-6 bg-blue-800 text-white shadow-lg rounded-b-3xl">
-          <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight">
-            ✧ Time Capsules ✧
-          </h1>
-
-          <div className="flex flex-col md:flex-row items-center gap-4 w-full lg:w-auto">
-            <input
-              type="text"
-              name="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search capsules..."
-              className="px-4 py-2 w-full md:w-64 rounded-full bg-blue-700 placeholder-blue-200 text-white border-2 border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-            />
-
-            <select
-              name="filter"
-              value={sortOption}
-              onChange={(e) => setSortOption(e.target.value)}
-              className="px-4 py-2 w-full md:w-48 rounded-full bg-blue-700 text-white border-2 border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-            >
-              <option value="recent">Recently Created</option>
-              <option value="oldest">Oldest First</option>
-              <option value="atoz">A to Z</option>
-              <option value="tags">By First Tag</option>
-            </select>
+        {/* Page header */}
+        <div className="relative overflow-hidden"
+          style={{ background: "linear-gradient(135deg,#ec4899,#8b5cf6,#3b82f6)" }}>
+          <div className="absolute inset-0 opacity-10"
+            style={{ backgroundImage: "radial-gradient(circle at 20% 50%,white 1px,transparent 1px),radial-gradient(circle at 80% 20%,white 1px,transparent 1px)", backgroundSize: "40px 40px" }} />
+          <div className="relative z-10 px-6 py-8">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">
+                <div>
+                  <h1 className="chewy text-4xl text-white drop-shadow mb-1">✦ My Time Capsules</h1>
+                  <p className="text-pink-100 text-sm font-medium">Every memory sealed with love 💌</p>
+                </div>
+                {/* Search + Sort */}
+                <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                  <div className="relative">
+                    <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60" />
+                    <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                      placeholder="Search capsules…"
+                      className="pl-9 pr-4 py-2.5 rounded-2xl bg-white/20 backdrop-blur text-white placeholder-white/50 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm w-full sm:w-56" />
+                  </div>
+                  <div className="relative">
+                    <SlidersHorizontal size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60" />
+                    <select value={sortOption} onChange={e => setSortOption(e.target.value)}
+                      className="pl-8 pr-4 py-2.5 rounded-2xl bg-white/20 backdrop-blur text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm appearance-none cursor-pointer">
+                      <option value="recent" className="text-gray-800">Recently Created</option>
+                      <option value="oldest" className="text-gray-800">Oldest First</option>
+                      <option value="atoz"   className="text-gray-800">A to Z</option>
+                      <option value="tags"   className="text-gray-800">By First Tag</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </header>
+        </div>
 
-        {/* Capsule Grid */}
-        <main className="p-6 lg:px-12 lg:py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between mb-6">
-            <h2 className="text-2xl md:text-3xl font-semibold text-blue-700 mb-2 md:mb-0">
-              Your Capsules ({filteredCapsules.length})
-            </h2>
-            <p className="text-blue-500 italic text-sm">
-              Tap any capsule to open
-            </p>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Package size={18} className="text-purple-500" />
+              <h2 className="text-lg font-bold text-purple-700">
+                {filteredCapsules.length} capsule{filteredCapsules.length !== 1 ? 's' : ''}
+                {searchQuery && <span className="text-sm text-purple-400 font-normal ml-1">for "{searchQuery}"</span>}
+              </h2>
+            </div>
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="text-xs text-pink-500 hover:text-pink-700 font-medium transition-colors">
+                Clear ×
+              </button>
+            )}
           </div>
 
           {loading ? (
-            <div className="flex justify-center py-20">
+            <div className="flex flex-col items-center justify-center py-24 gap-3">
               <Spinner />
+              <p className="text-purple-400 text-sm animate-pulse">Loading your memories…</p>
+            </div>
+          ) : filteredCapsules.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <div className="text-6xl mb-4">📭</div>
+              <p className="text-xl font-bold text-purple-600 mb-2">No capsules found</p>
+              <p className="text-sm text-purple-400">
+                {searchQuery ? "Try a different search term!" : "Create your first capsule to get started ✨"}
+              </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredCapsules.map((capsule, idx) => (
-                <motion.div
-                  key={capsule._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 140,
-                    damping: 20,
-                    delay: idx * 0.08,
-                  }}
-                  className="flex justify-center"
-                >
+                <motion.div key={capsule._id}
+                  initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 140, damping: 20, delay: idx * 0.06 }}
+                  className="flex justify-center">
                   <CapsuleCard
                     image={capsule.coverImage || "/placeholder.png"}
                     title={capsule.title}
                     description={capsule.message}
                     unlockTime={capsule.sendDate}
-                    onManage={() => {
-                      /* unchanged logic */
-                    }}
-                    onDetails={() => {
-                      setViewCapsuleId(capsule._id);
-                      setShowViewModal(true);
-                    }}
+                    onManage={() => {}}
+                    onDetails={() => { setViewCapsuleId(capsule._id); setShowViewModal(true); }}
                     sharedBy={capsule.sharedBy}
-                    onShare={() => {
-                      /* unchanged logic */
-                    }}
-                    onDelete={() => {
-                      removeCapsule(capsule._id);
-                      handleDelete(capsule._id);
-                    }}
-                    onEdit={() => {
-                      /* unchanged logic */
-                    }}
+                    onShare={() => {}}
+                    onDelete={() => { removeCapsule(capsule._id); handleDelete(capsule._id); }}
+                    onEdit={() => {}}
                     tags={capsule.tags || []}
                   />
                 </motion.div>
@@ -217,53 +157,32 @@ console.log("Filtered Capsules:", filteredCapsules);
           )}
         </main>
 
-        {/* Floating Create Button */}
         <FloatingActions onCreate={() => setShowForm(true)} />
       </div>
 
-      {/* Create Capsule Modal */}
+      {/* Create modal */}
       <AnimatePresence>
         {showForm && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-white rounded-2xl shadow-2xl w-11/12 max-w-lg p-8 relative"
-              initial={{ y: "-20%", opacity: 0 }}
-              animate={{ y: "0%", opacity: 1 }}
-              exit={{ y: "-20%", opacity: 0 }}
-            >
-              <button
-                onClick={() => setShowForm(false)}
-                className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-2xl"
-              >
-                &times;
-              </button>
-
-              <TimeCapsuleModal
-                isOpen={showForm}
-                closeModal={() => setShowForm(false)}
-                addCapsule={addCapsule}
-              />
+          <motion.div className="fixed inset-0 z-50 flex items-center justify-center"
+            style={{ background: "rgba(139,92,246,0.25)", backdropFilter: "blur(8px)" }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div className="bg-white rounded-3xl shadow-2xl w-11/12 max-w-lg relative overflow-hidden"
+              initial={{ y: -24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -24, opacity: 0 }}>
+              <div className="h-1.5" style={{ background: "linear-gradient(90deg,#f9a8d4,#c4b5fd,#93c5fd)" }} />
+              <div className="p-6">
+                <button onClick={() => setShowForm(false)}
+                  className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-purple-50 hover:bg-pink-50 text-purple-400 hover:text-pink-500 text-xl transition-colors">×</button>
+                <TimeCapsuleModal isOpen={showForm} closeModal={() => setShowForm(false)} addCapsule={addCapsule} />
+              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* View Capsule Modal */}
       {showViewModal && viewCapsuleId && (
-        <ViewCapsuleModal
-          isOpen={showViewModal}
-          closeModal={() => setShowViewModal(false)}
-          capsuleId={viewCapsuleId}
-        />
+        <ViewCapsuleModal isOpen={showViewModal} closeModal={() => setShowViewModal(false)} capsuleId={viewCapsuleId} />
       )}
     </>
   );
 };
-
 export default CapsuleListPage;
-

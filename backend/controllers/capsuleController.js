@@ -1,4 +1,5 @@
 const Capsule = require('../models/capsule.js');
+const User = require('../models/user.js');
 
 const createCapsule = async (req, res) => {
   try {

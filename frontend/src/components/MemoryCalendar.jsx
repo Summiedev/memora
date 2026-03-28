@@ -51,7 +51,7 @@ const memoryDaysSet = useMemo(() => {
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
   return (
-    <div className="md:col-span-3">
+    <div className="md:col-span-3 p-4 ">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold quicksand text-blue-500">Memory Calendar₊✩‧₊˚</h2>
       </div>

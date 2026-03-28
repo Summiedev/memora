@@ -23,26 +23,45 @@ function initSocket(server) {
       console.log(`🔑 Registered user ${userId} → socket ${socket.id}`);
     });
 
-    // 2️⃣ Send chat message
-  socket.on("send_message", async ({ senderId, receiverId, text, timestamp, chatId, tempId }) => {
+    // 2️⃣ Send chat message (with optional capsule share)
+  socket.on("send_message", async ({ senderId, receiverId, text, timestamp, chatId, tempId, capsuleId, messageType }) => {
   try {
     const cid = chatId || [senderId, receiverId].sort().join("_");
 
-    const msg = await Message.create({
+    const msgData = {
       chatId: cid,
       sender: senderId,
       receiver: receiverId,
-      text,
-      timestamp
-    });
+      text: text || "",
+      timestamp,
+      messageType: messageType || "text",
+    };
+    if (capsuleId) msgData.capsuleId = capsuleId;
+
+    const msg = await Message.create(msgData);
+
+    // If it's a capsule share, populate the capsule details
+    let populatedMsg = msg.toObject();
+    if (capsuleId) {
+      const Capsule = require("../models/capsule");
+      const capsule = await Capsule.findById(capsuleId).select("title coverImage sendDate lockUntilSend capsuleType sharedWith createdBy").populate("createdBy", "username");
+      populatedMsg.capsuleData = capsule;
+
+      // Also add the receiver to capsule.sharedWith if not already there
+      await Capsule.findByIdAndUpdate(capsuleId, {
+        $addToSet: { sharedWith: receiverId },
+        capsuleType: "shared"
+      });
+    }
 
     const msgWithTempId = {
-      ...msg.toObject(), // convert to plain object
-      tempId ,            // attach for client-side matching
-        senderId: msg.sender?._id?.toString?.() || senderId,
-  receiverId: msg.receiver?._id?.toString?.() || receiverId
+      ...populatedMsg,
+      tempId,
+      senderId: populatedMsg.sender?.toString?.() || senderId,
+      receiverId: populatedMsg.receiver?.toString?.() || receiverId
     };
-console.log("📩 Sent message:",senderId);
+
+    console.log("📩 Sent message:", senderId);
     // Echo to sender
     socket.emit("receive_message", msgWithTempId);
 

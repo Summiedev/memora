@@ -208,7 +208,7 @@ export default function MonthlyRecap() {
     : [];
 
   return (
-    <div className="md:col-span-2 mb-8">
+    <div className="md:col-span-2 p-5 mb-8">
       <h2 className="text-2xl quicksand font-semibold text-blue-500 mb-3">
         Monthly Recap Peek ⋆˚｡✩
       </h2>

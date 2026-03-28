@@ -15,24 +15,28 @@ exports.getChatHistory = async (req, res) => {
 };
 
 exports.sendMessage = async (req, res) => {
-  const { senderId, receiverId, text } = req.body;
+  const { senderId, receiverId, text, capsuleId } = req.body;
 
   try {
-    const message = await Message.create({ sender: senderId, receiver: receiverId, text });
+    const chatId = [senderId, receiverId].sort().join("_");
+    const messageData = { chatId, sender: senderId, receiver: receiverId, text };
+    if (capsuleId) messageData.capsuleId = capsuleId;
+
+    const message = await Message.create(messageData);
 
     // Emit message to receiver if online
     const io = getIo();
-    const receiverSocketId = onlineUsers.get(receiverId);
+    const receiverSocketId = onlineUsers.get(String(receiverId));
 
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", message);
+      io.to(receiverSocketId).emit("receive_message", message);
     }
 
     res.json(message);
   } catch (err) {
+    console.error("sendMessage error:", err);
     res.status(500).json({ message: "Server error" });
   }
-
 }
   
 exports.readHistory =async (req, res) => {
