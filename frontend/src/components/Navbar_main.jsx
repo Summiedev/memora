@@ -1,36 +1,44 @@
-// Navbar.jsx
+// Navbar_main.jsx — fixed + redesigned
 import React, { useState, useEffect, useRef } from "react";
-import { Bell, User, Settings, LogOut, X } from "lucide-react";
+import {
+  Bell, User, Settings, LogOut, X, Home, Archive,
+  Users, BookOpen, ChevronDown, Menu,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import TimeCapsuleModal from "./CreateCapsuleForm";
 import ProfileSettingsPage from "../pages/Profile_Settings";
 import axios from "axios";
 
-const Navbar_Main = () => {
-  const [showNotif, setShowNotif] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-  const [user, setUser] = useState(null); // ✅ Store user info
-  const [loadingUser, setLoadingUser] = useState(true); // ✅ Loading state
+const NAV_LINKS = [
+  { href: "/dashboard", label: "Dashboard", icon: Home },
+  { href: "/capsules",  label: "Capsules",  icon: Archive },
+  { href: "/friends",   label: "Friends",   icon: Users },
+  { href: "/memories",  label: "Memories",  icon: BookOpen },
+];
 
-  const [showSettingsPage, setShowSettingsPage] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const notifRef = useRef();
+const Navbar_Main = () => {
+  const [showNotif,       setShowNotif]       = useState(false);
+  const [showProfile,     setShowProfile]     = useState(false);
+  const [showForm,        setShowForm]        = useState(false);
+  const [showSettingsPage,setShowSettingsPage]= useState(false);
+  const [showMobileMenu,  setShowMobileMenu]  = useState(false);
+  const [user,            setUser]            = useState(null);
+  const [loadingUser,     setLoadingUser]     = useState(true);
+  const [notifications,   setNotifications]   = useState([]);
+  const [unreadCount,     setUnreadCount]     = useState(0);
+
+  const notifRef   = useRef();
   const profileRef = useRef();
 
-  // Fetch user on mount
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const urlParams = new URLSearchParams(window.location.search);
-        const urlToken = urlParams.get("token");
-  
+        const urlToken  = urlParams.get("token");
         if (urlToken) {
           localStorage.setItem("token", urlToken);
-          // Clean up the URL (remove the ?token=...)
           window.history.replaceState({}, document.title, window.location.pathname);
         }
-  
         const token = localStorage.getItem("token");
         if (!token) return setLoadingUser(false);
 
@@ -45,230 +53,305 @@ const Navbar_Main = () => {
         setLoadingUser(false);
       }
     };
-
     fetchUser();
   }, []);
+
+  // Fetch real notifications from pending friend requests
+  useEffect(() => {
+    if (!user) return;
+    const token = localStorage.getItem("token");
+    const fetchNotifications = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/friends/pending", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const received = res.data.received || [];
+        const notifs = received.map((r) => ({
+          id:      r._id,
+          message: `${r.username} sent you a friend request`,
+          time:    "Recently",
+          type:    "friend_request",
+        }));
+        setNotifications(notifs);
+        setUnreadCount(notifs.length);
+      } catch (_) {}
+    };
+    fetchNotifications();
+  }, [user]);
 
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
-
       await axios.post(
-        "http://localhost:5000/api/auth/logout",
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        "http://localhost:5000/api/auth/logout", {},
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      localStorage.removeItem("token");
-      setUser(null);
-      window.location.href = "/login"; // Redirect or update as needed
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
+    } catch (_) {}
+    localStorage.removeItem("token");
+    setUser(null);
+    window.location.href = "/login";
   };
 
-  // Close dropdowns on outside click
+  const handleMarkAllRead = () => setUnreadCount(0);
+
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (notifRef.current && !notifRef.current.contains(e.target)) {
-        setShowNotif(false);
-      }
-      if (profileRef.current && !profileRef.current.contains(e.target)) {
-        setShowProfile(false);
-      }
+      if (notifRef.current   && !notifRef.current.contains(e.target))   setShowNotif(false);
+      if (profileRef.current && !profileRef.current.contains(e.target)) setShowProfile(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const currentPath = window.location.pathname;
+
   return (
     <>
-      <nav className="bg-gradient-to-r from-[#a5b4fc] to-[#c7d2fe] border-b chewy border-[#dbe7f5] shadow-md relative z-50">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="flex justify-between h-16 items-center">
-           {/* Logo */}
-      <div className="text-2xl font-bold text-[#6C89FF] tracking-wide font-cursive">
-        Memora
-      </div>
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-violet-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
 
-      {/* Nav Links */}
-      {user && !loadingUser && (
-        <div className="hidden sm:flex items-center space-x-6">
-          <a href="/dashboard" className="text-[#4e4e6a] text-2xl  hover:text-[#87aaff] transition-all">
-            Dashboard
-          </a>
-          <a href="/capsules" className="text-[#4e4e6a] text-2xl hover:text-[#87aaff] transition-all">
-            Capsules
-          </a>
-         
-           <a href="/friends" className="text-[#4e4e6a] text-2xl hover:text-[#87aaff] transition-all">
-            Friends
-          </a>
-          <a href="/memories" className="text-[#4e4e6a] text-2xl hover:text-[#87aaff] transition-all">
-            Memories
-          </a>
-        </div>
-      )}
+            {/* Logo */}
+            <a href="/dashboard" className="flex items-center gap-2 group select-none">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-blue-400 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                <span className="text-white text-sm font-bold">M</span>
+              </div>
+              <span className="chewy text-2xl bg-gradient-to-r from-violet-600 to-blue-500 bg-clip-text text-transparent tracking-wide">
+                Memora
+              </span>
+            </a>
 
-      {/* Icons */}
-      {user && !loadingUser && (
-        <div className="hidden sm:flex items-center space-x-5 relative">
+            {/* Desktop Nav Links */}
+            {user && !loadingUser && (
+              <div className="hidden md:flex items-center gap-1">
+                {NAV_LINKS.map(({ href, label, icon: Icon }) => {
+                  const isActive = currentPath === href;
+                  return (
+                    <a
+                      key={href}
+                      href={href}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 quicksand ${
+                        isActive
+                          ? "bg-violet-100 text-violet-700"
+                          : "text-gray-500 hover:bg-violet-50 hover:text-violet-600"
+                      }`}
+                    >
+                      <Icon size={15} />
+                      {label}
+                    </a>
+                  );
+                })}
+              </div>
+            )}
 
-          {/* Notifications */}
-          <div
-            className="relative"
-            onMouseEnter={() => setShowNotif(true)}
-            onMouseLeave={() => setShowNotif(false)}
-            ref={notifRef}
-          >
-            <button className="relative">
-              <Bell className="w-5 h-5 text-[#6e7aa0] hover:text-[#87aaff]" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-pink-400" />
-            </button>
-            <AnimatePresence>
-              {showNotif && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="absolute right-0 mt-2 w-64 bg-white border border-[#dbe7f5] rounded-xl shadow-lg p-4"
-                >
-                  <div className="text-sm text-[#6e7aa0] font-semibold mb-2">Notifications</div>
-                  <div className="border border-[#e6edf8] p-2 rounded-lg hover:bg-[#f5f9ff] cursor-pointer">
-                    <p className="text-sm text-[#4e4e6a]">Your capsule has been saved!</p>
-                    <span className="text-xs text-gray-500">Just now</span>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+            {/* Right icons */}
+            {user && !loadingUser && (
+              <div className="hidden md:flex items-center gap-2">
 
-                   {/* Profile Dropdown */}
-          <div className="relative" ref={profileRef}>
-            <button onClick={() => setShowProfile((prev) => !prev)}>
-              <User className="w-6 h-6 text-[#6e7aa0] hover:text-[#87aaff]" />
-            </button>
-            <AnimatePresence>
-              {showProfile && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="absolute right-0 mt-2 w-48 bg-white border border-[#dbe7f5] rounded-xl shadow-lg p-3"
-                >
-                  <div className="px-4 py-2 text-sm font-medium text-[#6e7aa0]">
-                    {user?.username || "User"}
-                  </div>
+                {/* Notifications */}
+                <div className="relative" ref={notifRef}>
                   <button
-                    onClick={() => setShowSettingsPage(true)}
-                    className="flex items-center w-full px-4 py-2 text-sm text-[#4e4e6a] hover:bg-[#f0f6ff] rounded-md"
+                    onClick={() => {
+                      setShowNotif((v) => !v);
+                      if (!showNotif) handleMarkAllRead();
+                    }}
+                    className="relative p-2.5 rounded-xl text-gray-500 hover:bg-violet-50 hover:text-violet-600 transition-all"
                   >
-                    <Settings className="w-4 h-4 mr-2" /> Settings
+                    <Bell size={18} />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-400 ring-2 ring-white animate-pulse" />
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {showNotif && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0,  scale: 1 }}
+                        exit={{   opacity: 0, y: -8, scale: 0.97 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 mt-2 w-80 bg-white border border-violet-100 rounded-2xl shadow-xl overflow-hidden"
+                      >
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-violet-50">
+                          <span className="text-sm font-bold text-gray-700 quicksand">Notifications</span>
+                          {notifications.length > 0 && (
+                            <span className="text-[10px] text-violet-500 font-semibold uppercase tracking-wider">
+                              {notifications.length} new
+                            </span>
+                          )}
+                        </div>
+                        <div className="max-h-72 overflow-y-auto">
+                          {notifications.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-10 text-center px-4">
+                              <span className="text-3xl mb-2">🔔</span>
+                              <p className="text-sm text-gray-400 quicksand">All caught up!</p>
+                            </div>
+                          ) : (
+                            notifications.map((n) => (
+                              <div
+                                key={n.id}
+                                className="flex items-start gap-3 px-4 py-3 hover:bg-violet-50 transition-colors border-b border-gray-50 last:border-0"
+                              >
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-400 to-blue-400 flex items-center justify-center shrink-0 mt-0.5">
+                                  <Users size={12} className="text-white" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm text-gray-700 quicksand">{n.message}</p>
+                                  <p className="text-xs text-gray-400 mt-0.5">{n.time}</p>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        {notifications.length > 0 && (
+                          <div className="px-4 py-2.5 border-t border-violet-50">
+                            <a href="/friends" className="text-xs font-semibold text-violet-600 hover:underline quicksand">
+                              View all in Friends →
+                            </a>
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Profile dropdown */}
+                <div className="relative" ref={profileRef}>
+                  <button
+                    onClick={() => setShowProfile((v) => !v)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-violet-50 transition-all"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-400 to-blue-400 flex items-center justify-center text-xs font-bold text-white shadow">
+                      {user?.username?.[0]?.toUpperCase() || "U"}
+                    </div>
+                    <span className="text-sm font-semibold text-gray-700 quicksand hidden lg:block">
+                      {user?.username}
+                    </span>
+                    <ChevronDown size={14} className="text-gray-400" />
+                  </button>
+
+                  <AnimatePresence>
+                    {showProfile && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0,  scale: 1 }}
+                        exit={{   opacity: 0, y: -8, scale: 0.97 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 mt-2 w-52 bg-white border border-violet-100 rounded-2xl shadow-xl overflow-hidden"
+                      >
+                        <div className="px-4 py-3 border-b border-violet-50">
+                          <p className="text-sm font-bold text-gray-800 quicksand">{user?.username}</p>
+                          <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                        </div>
+                        <div className="p-1.5">
+                          <button
+                            onClick={() => { setShowSettingsPage(true); setShowProfile(false); }}
+                            className="flex items-center w-full gap-2.5 px-3 py-2 text-sm text-gray-600 hover:bg-violet-50 hover:text-violet-700 rounded-xl transition-colors quicksand"
+                          >
+                            <Settings size={14} /> Settings
+                          </button>
+                          <button
+                            onClick={handleLogout}
+                            className="flex items-center w-full gap-2.5 px-3 py-2 text-sm text-rose-500 hover:bg-rose-50 rounded-xl transition-colors quicksand"
+                          >
+                            <LogOut size={14} /> Logout
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            )}
+
+            {/* Mobile hamburger */}
+            {user && !loadingUser && (
+              <button
+                onClick={() => setShowMobileMenu((v) => !v)}
+                className="md:hidden p-2 rounded-xl text-gray-500 hover:bg-violet-50 transition-all"
+              >
+                {showMobileMenu ? <X size={20} /> : <Menu size={20} />}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {showMobileMenu && user && !loadingUser && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{   opacity: 0, height: 0 }}
+              className="md:hidden border-t border-violet-100 bg-white/95 backdrop-blur-xl overflow-hidden"
+            >
+              <div className="px-4 py-3 space-y-1">
+                {NAV_LINKS.map(({ href, label, icon: Icon }) => (
+                  <a
+                    key={href}
+                    href={href}
+                    onClick={() => setShowMobileMenu(false)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold quicksand transition-all ${
+                      currentPath === href ? "bg-violet-100 text-violet-700" : "text-gray-600 hover:bg-violet-50"
+                    }`}
+                  >
+                    <Icon size={16} /> {label}
+                  </a>
+                ))}
+                <div className="border-t border-violet-50 pt-2 mt-2 space-y-1">
+                  <button
+                    onClick={() => { setShowSettingsPage(true); setShowMobileMenu(false); }}
+                    className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-gray-600 hover:bg-violet-50 rounded-xl quicksand"
+                  >
+                    <Settings size={16} /> Settings
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-[#fef2f2] rounded-md"
+                    className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-rose-500 hover:bg-rose-50 rounded-xl quicksand"
                   >
-                    <LogOut className="w-4 h-4 mr-2" /> Logout
+                    <LogOut size={16} /> Logout
                   </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      )}
-
-           {/* Mobile Menu Toggle */}
- <div className="md:hidden">
-  <button
-    onClick={() => setShowMobileMenu(!showMobileMenu)}
-    className="p-2 text-[#6e7aa0] hover:bg-[#e3ecfa] dark:hover:bg-[#374151] rounded-md"
-  >
-    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
-  </button>
-</div>
-    </div>
-     {/* Mobile Menu */}
- <AnimatePresence>
-  {showMobileMenu && user && !loadingUser && (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      className="md:hidden flex flex-col space-y-3 mt-4 pb-4 border-t border-[#e6edf8] dark:border-[#374151]"
-    >
-      {["dashboard", "capsules", "friends", "memories"].map((page) => (
-        <a
-          key={page}
-          href={`/${page}`}
-          className="text-lg font-medium text-[#4e4e6a] dark:text-white hover:text-[#6C89FF] transition-colors duration-200"
-        >
-          {page.charAt(0).toUpperCase() + page.slice(1)}
-        </a>
-      ))}
-      <button
-        onClick={() => {
-          setShowSettingsPage(true);
-          setShowMobileMenu(false);
-        }}
-        className="flex items-center gap-2 text-sm text-[#4e4e6a] dark:text-white"
-      >
-        <Settings className="w-4 h-4" /> Settings
-      </button>
-      <button
-        onClick={() => {
-          handleLogout();
-          setShowMobileMenu(false);
-        }}
-        className="flex items-center gap-2 text-sm text-red-500"
-      >
-        <LogOut className="w-4 h-4" /> Logout
-      </button>
-    </motion.div>
-  )}
-</AnimatePresence>
-
-  </div>
-</nav>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </nav>
 
       {/* Capsule Form Modal */}
       <AnimatePresence>
         {showForm && (
           <motion.div
-            className="fixed inset-0 z-50 bg-opacity-50 flex items-center justify-center backdrop-blur-lg"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/30 backdrop-blur-md flex items-center justify-center"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           >
             <motion.div
-              initial={{ y: "-30%", opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: "-30%", opacity: 0 }}
-              className="bg-white rounded-lg shadow-xl w-4/5 max-w-lg p-6 relative"
+              initial={{ y: "-20%", opacity: 0, scale: 0.95 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{   y: "-20%", opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl shadow-2xl w-[90%] max-w-lg p-6 relative"
             >
               <button
                 onClick={() => setShowForm(false)}
-                className="absolute top-4 right-4 text-gray-600 hover:text-red-500"
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-rose-100 hover:text-rose-500 flex items-center justify-center transition-colors"
               >
-                <X />
+                <X size={16} />
               </button>
-              <TimeCapsuleModal isOpen={showForm} closeModal={() => setShowForm(false) } />
+              <TimeCapsuleModal isOpen={showForm} closeModal={() => setShowForm(false)} />
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-       {showSettingsPage && (
-      <div className="fixed inset-0 z-50 backdrop-blur-md bg-opacity-40 flex items-center justify-center">
-        <div className="w-full h-[80%] max-w-7xl mx-auto bg-white rounded-3xl shadow-xl overflow-y-auto relative">
-          <ProfileSettingsPage onClose={() => setShowSettingsPage(false)} />
+
+      {/* Settings Modal */}
+      {showSettingsPage && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full h-[85%] max-w-7xl bg-white rounded-3xl shadow-2xl overflow-y-auto relative">
+            <ProfileSettingsPage onClose={() => setShowSettingsPage(false)} />
+          </div>
         </div>
-      </div>
-    )}
+      )}
     </>
   );
 };

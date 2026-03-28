@@ -6,7 +6,19 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useLocation } from "react-router-dom";
 
-const socket = io("http://localhost:5000");
+// Lazy singleton — connect once, reuse across renders
+let _socket = null;
+const getSocket = () => {
+  if (!_socket) {
+    _socket = io("http://localhost:5000", {
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
+  }
+  return _socket;
+};
+const socket = getSocket();
 
 const formatTime = (ts) =>
   new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -202,7 +214,13 @@ export default function FriendsPage() {
 
   useEffect(() => {
     if (!user) return;
-    socket.emit("register", user.id);
+
+    // Register immediately and again on every reconnect so the server always
+    // knows which socket belongs to this user (fixes the message-delivery race condition)
+    const doRegister = () => socket.emit("register", user.id);
+    doRegister();
+    socket.on("connect",   doRegister);
+    socket.on("reconnect", doRegister);
 
     socket.on("online_users", (ids) => setOnlineUsers(ids));
     socket.on("receive_friend_request", ({ fromUser }) => {
@@ -226,6 +244,8 @@ export default function FriendsPage() {
     });
 
     return () => {
+      socket.off("connect",    doRegister);
+      socket.off("reconnect",  doRegister);
       socket.off("online_users");
       socket.off("receive_friend_request");
       socket.off("friend_request_accepted");
