@@ -1,33 +1,32 @@
 const express = require('express');
 const router = express.Router();
 
-const authRoutes = require('../routes/authRoutes');
-const capsuleRoutes = require('../routes/capsuleRoutes');   
-const photoAlbumRoutes = require("./photoAlbumRoutes");
-const diaryEntryRoutes = require("./diaryEntryRoutes");
-const signatureRoutes = require('./signatureRoutes'); 
-const userRoutes = require('./userRoutes'); // Assuming you have a userRoutes file
-const commentRoutes = require('./commentRoutes'); 
-// Assuming you have a signatureRoute file 
-// const memoryRoutes = require('../routes/memoryRoutes'); // Assuming you have a memoryRoutes file
-// const photoAlbumRoutes = require('../routes/photoAlbumRoutes'); // Assuming you have a photoAlbumRoutes file     
-// const diaryEntryRoutes = require('../routes/diaryEntryRoutes'); // Assuming you have a diaryEntryRoutes file
+ 
+const authRoutes         = require('../routes/authRoutes');
+const capsuleRoutes      = require('../routes/capsuleRoutes');
+const photoAlbumRoutes   = require('./photoAlbumRoutes');
+const diaryEntryRoutes   = require('./diaryEntryRoutes');
+const signatureRoutes    = require('./signatureRoutes');
+const userRoutes         = require('./userRoutes');
+const commentRoutes      = require('./commentRoutes');
+const friendRoutes       = require('./friendRoutes');       // ← new unified friends routes
+const messageRoutes      = require('./messageRoutes');
+const moodRoutes         = require('./moodRoutes');
+ 
+router.use('/auth',                authRoutes);
+router.use('/capsules',            capsuleRoutes);
+router.use('/photo-memories',      photoAlbumRoutes);
+router.use('/diary-entries',       diaryEntryRoutes);
+router.use('/cloudinary-signature',signatureRoutes);
+router.use('/users',               userRoutes);
+router.use('/comments',            commentRoutes);
+router.use('/friends',             friendRoutes);          // ← /api/friends & /api/friends/pending
+router.use('/messages',            messageRoutes);         // ← /api/messages/:chatId  (frontend calls this)
+router.use('/history',             messageRoutes);         // ← keep old /api/history/* working too
+router.use('/mood',                moodRoutes);
 
-router.use('/auth', authRoutes);
-router.use('/capsules', capsuleRoutes);
-router.use('/photo-memories', photoAlbumRoutes);
-router.use('/diary-entries', diaryEntryRoutes); 
-router.use('/cloudinary-signature', signatureRoutes); // Assuming you have a signatureRoute file
-router.use('/users', userRoutes); // Assuming you have a userRoutes file
-router.use('/friend-requests', require('./friendRequestRoutes')); 
-router.use('/history', require('./messageRoutes')); // Assuming you have a messageRoutes file
-router.use('/mood', require('./moodRoutes')); // Assuming you have a moodRoutes file
-// Assuming you have a commentRoutes file
-router.use('/comments', commentRoutes); // Assuming you have a commentRoutes file
-// Assuming you have a friendRequestRoutes file
-
-router.get('/', (req, res) => {
-    res.send('API is working!');
-});
-
+ 
+router.get('/', (req, res) => res.send('API is working!'));
+ 
 module.exports = router;
+ 

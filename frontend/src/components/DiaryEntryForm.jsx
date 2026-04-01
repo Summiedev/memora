@@ -1,125 +1,199 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import axios from "axios";
+import { motion } from "framer-motion";
+import { Smile, Bold, Italic, AlignLeft, Sparkles, Save, X } from "lucide-react";
+
+const STICKERS = ['🌸','✨','💌','🎀','🌷','⭐','🦋','🌈','💫','🍀','🌙','☀️','🎵','💝','🌺'];
+const MOODS   = [
+  { emoji:'😊', label:'Happy',   color:'#fbbf24' },
+  { emoji:'😌', label:'Peaceful',color:'#34d399' },
+  { emoji:'🥺', label:'Nostalgic',color:'#a78bfa'},
+  { emoji:'😔', label:'Sad',     color:'#64748b' },
+  { emoji:'😤', label:'Frustrated',color:'#f87171'},
+  { emoji:'🥰', label:'Grateful',color:'#f472b6' },
+];
+
+const LINE_STYLES = [
+  { label:'Lined', lines: true  },
+  { label:'Plain', lines: false },
+];
 
 export function DiaryEntryForm({ closeForm, onCreate }) {
-  const [title, setTitle] = useState("");
+  const [title, setTitle]       = useState("");
   const [entryText, setEntryText] = useState("");
-  const [stickers, setStickers] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [mood, setMood]         = useState(null);
+  const [loading, setLoading]   = useState(false);
+  const [showStickers, setShowStickers] = useState(false);
+  const [charCount, setCharCount] = useState(0);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const textRef = useRef(null);
+  const MAX = 3000;
 
-  const handleAddSticker = (sticker) => {
-    setEntryText((prev) => prev + " " + sticker);
+  const insertText = (text) => {
+    const ta = textRef.current;
+    if (!ta) return;
+    const s = ta.selectionStart, e = ta.selectionEnd;
+    const next = entryText.slice(0, s) + text + entryText.slice(e);
+    setEntryText(next);
+    setCharCount(next.length);
+    setTimeout(() => { ta.selectionStart = ta.selectionEnd = s + text.length; ta.focus(); }, 0);
   };
 
-  const handleSave = async (e) => {
+  const handleTextChange = e => {
+    if (e.target.value.length > MAX) return;
+    setEntryText(e.target.value);
+    setCharCount(e.target.value.length);
+  };
+
+  const handleSave = async e => {
     e.preventDefault();
-    if (!title || !entryText) return alert("Title and entry text are required");
-
-    const memory = {
-      title,
-      entryText,
-      date: new Date().toISOString(),
-    };
-
+    if (!title.trim()) { alert("Give your entry a title ✦"); return; }
+    if (!entryText.trim()) { alert("Write something first ♡"); return; }
     try {
       setLoading(true);
-
-      // Send the data to the backend
-       const { data } = await axios.post(
+      const { data } = await axios.post(
         "http://localhost:5000/api/diary-entries/create-diary",
-        memory,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        { title, entryText, mood: mood?.label || null, date: new Date().toISOString() },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
-
-         const created = data.data;
-      alert("Memory saved!");
-        onCreate(created);
-      // if (onCreate) onCreate();
-      closeForm();
-    } catch (error) {
-      console.error("Error saving memory:", error);
-      alert("Failed to save memory.");
+      setShowSuccess(true);
+      setTimeout(() => {
+        onCreate && onCreate(data.data);
+        closeForm();
+      }, 1000);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  const pct = (charCount / MAX) * 100;
+  const circumference = 2 * Math.PI * 14;
+  const today = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
-      <div className="relative bg-paper bg-cover bg-center shadow-2xl rounded-2xl h-full sm:h-[90%] md:h-[60%] md:w-[65%] mx-4 p-6 border-4 border-white">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-3xl dancing-script text-blue-700">New Diary Entry ✧･ﾟ</h2>
-          <span className="text-sm text-gray-500 font-light">{new Date().toLocaleDateString()}</span>
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4"
+      style={{ background:'rgba(109,40,217,0.18)', backdropFilter:'blur(10px)' }}
+      onClick={e => { if (e.target === e.currentTarget) closeForm(); }}>
+
+      <motion.div initial={{ y:80, opacity:0 }} animate={{ y:0, opacity:1 }} exit={{ y:80, opacity:0 }}
+        transition={{ type:'spring', stiffness:300, damping:30 }}
+        className="w-full sm:max-w-2xl flex flex-col overflow-hidden"
+        style={{ maxHeight:'95vh', borderRadius:'24px 24px 0 0', background:'#fffdf9' }}
+        onClick={e => e.stopPropagation()}>
+
+        {/* Sticker tape top decoration */}
+        <div className="h-1.5 flex-shrink-0" style={{ background:'linear-gradient(90deg,#f9a8d4,#c4b5fd,#93c5fd,#6ee7b7,#fcd34d)' }} />
+
+        {/* Header */}
+        <div className="px-6 pt-5 pb-4 flex-shrink-0 border-b border-amber-100"
+          style={{ background:'linear-gradient(135deg,#fffdf9,#fff5fb)' }}>
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="dancing-script text-3xl text-purple-700">New Diary Entry ✧</h2>
+              <p className="text-xs text-purple-400 mt-0.5 font-medium">{today}</p>
+            </div>
+            <button onClick={closeForm} className="w-8 h-8 rounded-full bg-pink-50 hover:bg-pink-100 flex items-center justify-center text-pink-400 hover:text-pink-600 font-bold text-lg transition-colors flex-shrink-0">×</button>
+          </div>
+
+          {/* Mood picker */}
+          <div className="mt-3">
+            <p className="text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-1.5">Today's mood</p>
+            <div className="flex gap-2 flex-wrap">
+              {MOODS.map(m => (
+                <button key={m.label} type="button"
+                  onClick={() => setMood(mood?.label === m.label ? null : m)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border-2 transition-all ${mood?.label === m.label ? 'scale-110 shadow-md border-transparent text-white' : 'border-transparent bg-white/60 text-gray-600 hover:scale-105'}`}
+                  style={mood?.label === m.label ? { background:m.color } : { background:'rgba(255,255,255,0.8)' }}>
+                  <span>{m.emoji}</span> {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <form onSubmit={handleSave}>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Memory Title"
-            className="w-full mb-4 px-3 py-2 rounded-md border border-gray-300 quicksand text-2xl font-bold text-gray-800 focus:outline-none"
-          />
+        {/* Writing area */}
+        <div className="flex-1 overflow-y-auto px-6 py-4"
+          style={{ background:'#fffdf9', backgroundImage:'repeating-linear-gradient(transparent,transparent 27px,#e8d5c4 27px,#e8d5c4 28px)' }}>
 
-          <textarea
-            value={entryText}
-            onChange={(e) => setEntryText(e.target.value)}
-            placeholder="Write your memory here..."
-            rows={10}
-            className="w-full reenie-beanie-regular text-2xl font-semibold font-stretch-100% bg-transparent resize-none focus:outline-none text-gray-800"
-          />
+          {/* Title */}
+          <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Title your memory…"
+            maxLength={80}
+            className="w-full bg-transparent border-none outline-none text-2xl font-bold text-purple-900 placeholder-purple-200 quicksand mb-4"
+            style={{ fontFamily:"'Quicksand', sans-serif", lineHeight:'28px' }} />
 
-          <div className="mt-4 space-x-2">
-            <button
-              type="button"
-              onClick={() => handleAddSticker("✧･ﾟ")}
-              className="text-2xl hover:scale-110 transition"
-            >
-              ✧･ﾟ
+          {/* Toolbar */}
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <button type="button" onClick={() => insertText('**')} title="Bold"
+              className="w-7 h-7 rounded-lg bg-white border border-purple-100 flex items-center justify-center text-purple-600 hover:bg-purple-50 transition-colors shadow-sm">
+              <span className="text-xs font-black">B</span>
             </button>
-            <button
-              type="button"
-              onClick={() => handleAddSticker("❀⋆｡˚")}
-              className="text-2xl hover:scale-110 transition"
-            >
-              ❀⋆｡˚
+            <button type="button" onClick={() => insertText('_')} title="Italic"
+              className="w-7 h-7 rounded-lg bg-white border border-purple-100 flex items-center justify-center text-purple-600 hover:bg-purple-50 transition-colors shadow-sm">
+              <span className="text-xs italic font-semibold">I</span>
             </button>
-            <button
-              type="button"
-              onClick={() => handleAddSticker("✿｡.:*")}
-              className="text-2xl hover:scale-110 transition"
-            >
-              ✿｡.:*
-            </button>
+            <div className="w-px h-4 bg-purple-100 mx-0.5" />
+            {/* Stickers */}
+            <div className="relative">
+              <button type="button" onClick={() => setShowStickers(s => !s)}
+                className="flex items-center gap-1 px-2.5 h-7 rounded-lg bg-white border border-purple-100 text-purple-600 hover:bg-purple-50 transition-colors text-xs font-semibold shadow-sm">
+                <Smile size={12} /> Stickers
+              </button>
+              {showStickers && (
+                <div className="absolute top-9 left-0 z-20 bg-white rounded-2xl shadow-xl border border-purple-100 p-3 grid grid-cols-5 gap-1.5" style={{ minWidth:'180px' }}>
+                  {STICKERS.map(s => (
+                    <button key={s} type="button" onClick={() => { insertText(s+' '); setShowStickers(false); }}
+                      className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-purple-50 text-lg transition-colors">
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="mt-6 flex justify-between">
-            <button
-              type="submit"
-              className="px-6 py-2 bg-blue-400 hover:bg-blue-600 text-white rounded-xl shadow-lg font-bold"
-              disabled={loading}
-            >
-              {loading ? "Saving..." : "Save"}
+          {/* Textarea */}
+          <textarea ref={textRef} value={entryText} onChange={handleTextChange}
+            placeholder={"Dear diary...\n\nWrite your memory here, pour your heart out ♡\n\nWhat happened today? How did you feel? What do you want to remember?"}
+            className="w-full bg-transparent border-none outline-none resize-none text-gray-800 leading-7 text-base"
+            style={{ fontFamily:"'Dancing Script', cursive", fontSize:'1.15rem', minHeight:'280px', lineHeight:'28px' }} />
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 pb-6 pt-4 flex-shrink-0 border-t border-amber-100 flex items-center justify-between gap-4"
+          style={{ background:'linear-gradient(135deg,#fffdf9,#fff5fb)' }}>
+          {/* Char counter */}
+          <div className="flex items-center gap-2">
+            <svg width="36" height="36" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="14" fill="none" stroke="#ede9fe" strokeWidth="3" />
+              <circle cx="18" cy="18" r="14" fill="none"
+                stroke={pct > 90 ? '#f87171' : pct > 70 ? '#fbbf24' : '#c4b5fd'}
+                strokeWidth="3" strokeDasharray={circumference}
+                strokeDashoffset={circumference - (pct / 100) * circumference}
+                strokeLinecap="round" transform="rotate(-90 18 18)" />
+              <text x="18" y="22" textAnchor="middle" fontSize="8" fill="#8b5cf6" fontWeight="700">
+                {MAX - charCount}
+              </text>
+            </svg>
+            <span className="text-xs text-purple-400 font-medium">{charCount}/{MAX}</span>
+          </div>
+
+          <div className="flex gap-2">
+            <button type="button" onClick={closeForm}
+              className="px-4 py-2.5 rounded-2xl text-sm font-semibold text-purple-500 bg-purple-50 hover:bg-purple-100 transition-colors">
+              Cancel
             </button>
-            <button
-              type="button"
-              className="px-6 py-2 bg-blue-400 hover:bg-blue-600 text-white rounded-xl shadow-lg font-bold"
-            >
-              Add to Capsule
-            </button>
-            <button
-              type="button"
-              onClick={closeForm}
-              className="rounded-xl shadow-lg font-bold px-6 py-2 bg-red-400 hover:bg-red-500 text-white hover:text-pink-300"
-            >
-              Close
+            <button type="button" onClick={handleSave} disabled={loading || showSuccess}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-bold text-white shadow-md transition-all hover:scale-105 hover:shadow-lg disabled:opacity-70"
+              style={{ background: showSuccess ? 'linear-gradient(135deg,#10b981,#059669)' : 'linear-gradient(135deg,#ec4899,#8b5cf6)' }}>
+              {showSuccess ? <><span>✓</span> Saved!</> : loading ? 'Saving…' : <><Save size={15} /> Save Entry</>}
             </button>
           </div>
-        </form>
-      </div>
+        </div>
+
+      </motion.div>
     </div>
   );
 }

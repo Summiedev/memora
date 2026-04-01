@@ -106,35 +106,53 @@
 // const PORT = process.env.PORT || 5000;
 // server.listen(PORT, () => console.log(`🚀 Server with Socket.IO running on port ${PORT}`));
 // server.js
-const express  = require("express");
-const http     = require("http");
-const mongoose = require("mongoose");
-const dotenv   = require("dotenv");
-const cors     = require("cors");
-const passport = require("passport");
-const { initSocket } = require("./config/socket");  // our module
+// server.js
+const express  = require('express');
+const http     = require('http');
+const dotenv   = require('dotenv');
+const cors     = require('cors');
+const passport = require('passport');
+const cloudinary = require('cloudinary').v2;
 
 dotenv.config();
-require("./config/db")();
-require("./config/passport");
+
+// Connect to MongoDB
+require('./config/db')();
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Passport strategies
+require('./config/passport');
 
 const app    = express();
 const server = http.createServer(app);
 
-// Middleware
-app.use(cors());
-app.use(express.json({ limit: '5mb' }));
-app.use(express.urlencoded({ limit: '5mb', extended: true }));
+
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  credentials: true,
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(passport.initialize());
 
-// Routes
-app.use("/api", require("./routes"));
 
-// Initialize Socket.IO handlers
+app.use('/api', require('./routes'));
+
+
+app.use(require('./middleware/errorHandler'));
+
+
+const { initSocket } = require('./config/socket');
 initSocket(server);
 
-// Start listening
+
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () =>
-  console.log(`🚀 Server running on port ${PORT}`)
+  console.log(`🚀 Server + Socket.IO running on port ${PORT}`)
 );

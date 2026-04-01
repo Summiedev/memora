@@ -13,7 +13,9 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-12">
           {/* Logo */}
           <div className="flex-shrink-0 text-white font-bold text-lg">
-            MyApp
+        <span className="chewy text-2xl bg-gradient-to-r from-violet-600 to-blue-500 bg-clip-text text-transparent tracking-wide">
+                Memora
+              </span>
           </div>
 
           {/* Desktop Links */}

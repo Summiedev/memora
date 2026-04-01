@@ -1,18 +1,21 @@
-import React, { useEffect, useState, useRef } from "react";
-import { X, Send, Package, ChevronLeft, Users, Clock, Check, CheckCheck, Bell } from "lucide-react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import {
+  X, Send, Package, ChevronLeft, Users, Clock,
+  Check, CheckCheck, Bell, UserPlus, Search,
+  Lock, Unlock, Image as ImageIcon, MessageSquare,
+} from "lucide-react";
 import Navbar_Main from "../components/Navbar_main";
 import { io } from "socket.io-client";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode";
 import { useLocation } from "react-router-dom";
 
-// Lazy singleton — connect once, reuse across renders
+// ── Socket singleton ──────────────────────────────────────────────────────────
 let _socket = null;
 const getSocket = () => {
   if (!_socket) {
     _socket = io("http://localhost:5000", {
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
       reconnectionDelay: 1000,
     });
   }
@@ -20,24 +23,23 @@ const getSocket = () => {
 };
 const socket = getSocket();
 
-const formatTime = (ts) =>
+// ── Constants ─────────────────────────────────────────────────────────────────
+const BASE = "http://localhost:5000/api";
+const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const fmtTime = (ts) =>
   new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-const formatDate = (ts) => {
-  const d = new Date(ts);
+const fmtDate = (ts) => {
+  const d     = new Date(ts);
   const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
+  const yest  = new Date(today);
+  yest.setDate(today.getDate() - 1);
   if (d.toDateString() === today.toDateString()) return "Today";
-  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+  if (d.toDateString() === yest.toDateString())  return "Yesterday";
   return d.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
 };
-
-const formatUnlockDate = (ts) =>
-  new Date(ts).toLocaleDateString([], {
-    year: "numeric", month: "short", day: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
 
 const getCountdown = (sendDate) => {
   const diff = new Date(sendDate).getTime() - Date.now();
@@ -50,62 +52,137 @@ const getCountdown = (sendDate) => {
   return `${m}m`;
 };
 
-function CapsuleSharePicker({ onSelect, onClose, token }) {
+// Normalise a message from any source into consistent shape
+const norm = (raw) => ({
+  ...raw,
+  _id:         raw._id,
+  tempId:      raw.tempId,
+  chatId:      raw.chatId || "",
+  senderId:    String(raw.sender?._id ?? raw.sender ?? raw.senderId ?? ""),
+  receiverId:  String(raw.receiver?._id ?? raw.receiver ?? raw.receiverId ?? ""),
+  senderName:  raw.sender?.username ?? raw.senderName ?? "",
+  text:        raw.text || "",
+  timestamp:   raw.timestamp || new Date().toISOString(),
+  messageType: raw.messageType || "text",
+  capsuleData: raw.capsuleData || null,
+  read:        raw.read || false,
+});
+
+// ── Avatar component ──────────────────────────────────────────────────────────
+function Avatar({ name, online, size = "md" }) {
+  const sz = size === "lg" ? "w-12 h-12 text-base" : size === "sm" ? "w-7 h-7 text-xs" : "w-10 h-10 text-sm";
+  return (
+    <div className="relative shrink-0">
+      <div className={`${sz} rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 flex items-center justify-center font-bold text-white shadow-sm`}>
+        {name?.[0]?.toUpperCase() ?? "?"}
+      </div>
+      {online && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-white rounded-full" />}
+    </div>
+  );
+}
+
+// ── Capsule Share Picker ──────────────────────────────────────────────────────
+function CapsulePicker({ onSelect, onClose }) {
   const [capsules, setCapsules] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading,  setLoading]  = useState(true);
+  const [search,   setSearch]   = useState("");
 
   useEffect(() => {
-    axios
-      .get("http://localhost:5000/api/capsules/all-capsules", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    axios.get(`${BASE}/capsules/all-capsules`, { headers: authH() })
       .then((r) => setCapsules(r.data.capsules || []))
       .catch(() => setCapsules([]))
       .finally(() => setLoading(false));
-  }, [token]);
+  }, []);
+
+  const filtered = capsules.filter((c) =>
+    !search || c.title?.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="absolute bottom-16 left-0 right-0 mx-2 z-50 bg-white rounded-2xl shadow-2xl border border-blue-100 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white">
-        <span className="font-semibold text-sm flex items-center gap-2">
-          <Package size={15} /> Share a Capsule
-        </span>
-        <button onClick={onClose} className="hover:bg-white/20 rounded-full p-1">
-          <X size={14} />
+    <div className="absolute bottom-20 left-0 right-0 mx-2 z-50 rounded-2xl shadow-2xl border border-violet-100 overflow-hidden bg-white">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white">
+        <div className="flex items-center gap-2">
+          <Package size={16} />
+          <span className="font-bold text-sm">Share a Time Capsule</span>
+        </div>
+        <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+          <X size={16} />
         </button>
       </div>
-      <div className="max-h-52 overflow-y-auto p-2 space-y-1">
+
+      {/* Search */}
+      <div className="px-3 pt-3 pb-1">
+        <div className="relative">
+          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search capsules…"
+            className="w-full pl-8 pr-3 py-2 text-xs rounded-xl bg-violet-50 border border-violet-100 focus:outline-none focus:ring-1 focus:ring-violet-300"
+          />
+        </div>
+      </div>
+
+      {/* Capsule list */}
+      <div className="max-h-60 overflow-y-auto p-2 space-y-1">
         {loading ? (
-          <p className="text-center text-xs text-gray-400 py-4">Loading capsules…</p>
-        ) : capsules.length === 0 ? (
-          <p className="text-center text-xs text-gray-400 py-4">No capsules found.</p>
+          <div className="flex justify-center py-6">
+            <div className="w-5 h-5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <p className="text-center text-xs text-gray-400 py-5">No capsules found</p>
         ) : (
-          capsules.map((c) => {
-            const locked = c.lockUntilSend && new Date() < new Date(c.sendDate);
+          filtered.map((c) => {
+            const locked   = c.lockUntilSend && new Date() < new Date(c.sendDate);
+            const cdText   = getCountdown(c.sendDate);
             return (
               <button
                 key={c._id}
                 onClick={() => onSelect(c)}
-                className="w-full text-left flex items-center gap-3 p-2 rounded-xl hover:bg-blue-50 transition-colors group"
+                className="w-full text-left flex items-center gap-3 p-2.5 rounded-xl hover:bg-violet-50 transition-colors group border border-transparent hover:border-violet-100"
               >
-                {c.coverImage ? (
-                  <img src={c.coverImage} className="w-10 h-10 rounded-lg object-cover shrink-0" alt="" />
-                ) : (
-                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0 text-lg">
-                    📦
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-blue-900 truncate">{c.title}</p>
-                  <p className="text-xs text-gray-400 flex items-center gap-1">
-                    {locked ? (
-                      <><span className="text-rose-400">🔒</span> Locked · unlocks in {getCountdown(c.sendDate)}</>
-                    ) : (
-                      <><span className="text-emerald-500">🔓</span> Unlocked</>
-                    )}
-                  </p>
+                {/* Cover image or placeholder */}
+                <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-violet-100 bg-violet-50 flex items-center justify-center">
+                  {c.coverImage ? (
+                    <img src={c.coverImage} alt="" className={`w-full h-full object-cover ${locked ? "blur-sm" : ""}`} />
+                  ) : (
+                    <Package size={20} className="text-violet-300" />
+                  )}
                 </div>
-                <span className="text-blue-400 opacity-0 group-hover:opacity-100 text-xs font-medium shrink-0">Share →</span>
+
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-gray-800 truncate">{c.title}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    {locked ? (
+                      <>
+                        <Lock size={10} className="text-rose-400" />
+                        <span className="text-[10px] text-rose-400 font-medium">
+                          {cdText ? `Unlocks in ${cdText}` : "Locked"}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Unlock size={10} className="text-emerald-500" />
+                        <span className="text-[10px] text-emerald-600 font-medium">Open now</span>
+                      </>
+                    )}
+                  </div>
+                  {c.category && (
+                    <span className="text-[10px] text-gray-400">{c.category}</span>
+                  )}
+                </div>
+
+                <div className="shrink-0 flex flex-col items-center gap-1">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all
+                    ${locked
+                      ? "bg-rose-100 text-rose-400"
+                      : "bg-violet-100 text-violet-500 group-hover:bg-violet-500 group-hover:text-white"
+                    }`}>
+                    {locked ? <Lock size={12} /> : <Send size={12} />}
+                  </div>
+                  <span className="text-[9px] text-gray-400 group-hover:text-violet-500">Share</span>
+                </div>
               </button>
             );
           })
@@ -115,554 +192,727 @@ function CapsuleSharePicker({ onSelect, onClose, token }) {
   );
 }
 
+// ── Capsule bubble in chat ────────────────────────────────────────────────────
 function CapsuleBubble({ capsuleData, isMine }) {
   if (!capsuleData) return null;
-  const locked = capsuleData.lockUntilSend && new Date() < new Date(capsuleData.sendDate);
-  const countdown = getCountdown(capsuleData.sendDate);
+  const locked  = capsuleData.lockUntilSend && new Date() < new Date(capsuleData.sendDate);
+  const cdText  = getCountdown(capsuleData.sendDate);
 
   return (
-    <div className={`rounded-2xl overflow-hidden shadow-md border max-w-[220px] ${
-      isMine ? "border-blue-300 bg-blue-50" : "border-purple-200 bg-purple-50"
+    <div className={`rounded-2xl overflow-hidden shadow-md max-w-[240px] border ${
+      isMine ? "border-violet-200 bg-violet-50" : "border-indigo-100 bg-indigo-50"
     }`}>
-      {capsuleData.coverImage && (
-        <div className="relative">
+      {/* Image */}
+      <div className="relative h-24 bg-gradient-to-br from-violet-200 to-indigo-200 overflow-hidden">
+        {capsuleData.coverImage ? (
           <img
             src={capsuleData.coverImage}
-            className={`w-full h-24 object-cover ${locked ? "blur-sm brightness-75" : ""}`}
             alt={capsuleData.title}
+            className={`w-full h-full object-cover ${locked ? "blur-md brightness-50" : ""}`}
           />
-          {locked && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-3xl">🔒</span>
-            </div>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Package size={32} className="text-white/60" />
+          </div>
+        )}
+        {locked && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+            <Lock size={22} className="text-white" />
+            {cdText && <span className="text-white text-[10px] font-bold bg-black/40 px-2 py-0.5 rounded-full">{cdText}</span>}
+          </div>
+        )}
+        <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-full flex items-center gap-1">
+          <Package size={9} className="text-violet-500" />
+          <span className="text-[9px] font-bold text-violet-600 uppercase tracking-wider">Capsule</span>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="p-3">
+        <p className="text-sm font-bold text-gray-800 truncate">{capsuleData.title}</p>
+        {capsuleData.category && (
+          <p className="text-[10px] text-gray-400 mt-0.5">{capsuleData.category}</p>
+        )}
+        <div className={`mt-2 flex items-center gap-1 text-xs font-medium ${locked ? "text-rose-500" : "text-emerald-600"}`}>
+          {locked ? (
+            <><Lock size={10} /> Unlocks {cdText ? `in ${cdText}` : "soon"}</>
+          ) : (
+            <><Unlock size={10} /> Open now!</>
           )}
         </div>
-      )}
-      <div className="p-3">
-        <div className="flex items-center gap-1 mb-1">
-          <Package size={12} className={isMine ? "text-blue-500" : "text-purple-500"} />
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Time Capsule</span>
-        </div>
-        <p className="text-sm font-bold text-gray-800 truncate">{capsuleData.title}</p>
-        {locked ? (
-          <p className="text-xs text-rose-500 mt-1 flex items-center gap-1">
-            <Clock size={10} /> Unlocks in {countdown}
-          </p>
-        ) : (
-          <p className="text-xs text-emerald-600 mt-1">🔓 Open now!</p>
-        )}
-        <p className="text-[10px] text-gray-400 mt-1">
-          {locked ? `Unlocks ${formatUnlockDate(capsuleData.sendDate)}` : `Unlocked ${formatUnlockDate(capsuleData.sendDate)}`}
-        </p>
       </div>
     </div>
   );
 }
 
+// ── Message bubble ────────────────────────────────────────────────────────────
+function MsgBubble({ msg, isMine, friendName }) {
+  const isCapsule = msg.messageType === "capsule_share";
+
+  return (
+    <div className={`flex ${isMine ? "justify-end" : "justify-start"} gap-2 mb-1`}>
+      {!isMine && (
+        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-1">
+          {friendName?.[0]?.toUpperCase()}
+        </div>
+      )}
+      <div className={`flex flex-col ${isMine ? "items-end" : "items-start"} max-w-[68%]`}>
+        {isCapsule ? (
+          <CapsuleBubble capsuleData={msg.capsuleData} isMine={isMine} />
+        ) : (
+          <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
+            isMine
+              ? "bg-gradient-to-br from-violet-500 to-indigo-600 text-white rounded-br-sm"
+              : "bg-white text-gray-800 border border-violet-50 rounded-bl-sm"
+          }`}>
+            {msg.text}
+          </div>
+        )}
+        <div className={`flex items-center gap-1 mt-1 px-1 ${isMine ? "flex-row-reverse" : ""}`}>
+          <span className="text-[10px] text-gray-400">{fmtTime(msg.timestamp)}</span>
+          {isMine && (
+            msg.read
+              ? <CheckCheck size={11} className="text-violet-400" />
+              : <Check size={11} className="text-gray-300" />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── MAIN COMPONENT ────────────────────────────────────────────────────────────
 export default function FriendsPage() {
-  const [search, setSearch] = useState("");
-  const [users, setUsers] = useState([]);
-  const [friends, setFriends] = useState([]);
-  const [pendingReceived, setPendingReceived] = useState([]);
-  const [pendingSent, setPendingSent] = useState([]);
-  const [selectedFriend, setSelectedFriend] = useState(null);
-  const [messageText, setMessageText] = useState("");
-  const [onlineUsers, setOnlineUsers] = useState([]);
-  const [typingStatus, setTypingStatus] = useState({});
-  const [user, setUser] = useState(null);
-  const [loadingUser, setLoadingUser] = useState(true);
-  const [showNotif, setShowNotif] = useState(false);
-  const [showCapsulePicker, setShowCapsulePicker] = useState(false);
-  const [mobileShowChat, setMobileShowChat] = useState(false);
+  const [me,             setMe]             = useState(null);
+  const [loadingMe,      setLoadingMe]      = useState(true);
+  const [friends,        setFriends]        = useState([]);
+  const [pendingIn,      setPendingIn]      = useState([]);  // incoming requests
+  const [pendingOut,     setPendingOut]     = useState([]);  // outgoing requests
+  const [selected,       setSelected]       = useState(null);
+  const [msgText,        setMsgText]        = useState("");
+  const [onlineIds,      setOnlineIds]      = useState([]);
+  const [typing,         setTyping]         = useState({});
+  const [search,         setSearch]         = useState("");
+  const [searchRes,      setSearchRes]      = useState([]);
+  const [showNotif,      setShowNotif]      = useState(false);
+  const [showPicker,     setShowPicker]     = useState(false);
+  const [mobileChat,     setMobileChat]     = useState(false);
+  const [loadingMsgs,    setLoadingMsgs]    = useState(false);
 
-  const typingTimeouts = useRef({});
-  const endOfMessagesRef = useRef(null);
-  const location = useLocation();
+  const typingTimers = useRef({});
+  const endRef       = useRef(null);
+  const location     = useLocation();
 
+  // Auto-scroll
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [selected?.messages?.length]);
+
+  // URL token (Google OAuth)
   useEffect(() => {
-    endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [selectedFriend?.messages?.length]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const token = params.get("token");
-    if (token) {
-      localStorage.setItem("token", token);
-      window.history.replaceState({}, "", location.pathname);
-    }
+    const t = new URLSearchParams(location.search).get("token");
+    if (t) { localStorage.setItem("token", t); window.history.replaceState({}, "", location.pathname); }
   }, [location]);
 
+  // ── Fetch current user ──────────────────────────────────────────────────
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return setLoadingUser(false);
-        const decoded = jwtDecode(token);
-        const userId = decoded.userId || decoded.id;
-        const res = await axios.get("http://localhost:5000/api/auth/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setUser({ ...res.data.user, id: userId });
-      } catch (err) {
-        localStorage.removeItem("token");
-      } finally {
-        setLoadingUser(false);
-      }
-    };
-    fetchUser();
+    axios.get(`${BASE}/auth/profile`, { headers: authH() })
+      .then((r) => setMe({ ...r.data.user, _id: String(r.data.user._id) }))
+      .catch(() => localStorage.removeItem("token"))
+      .finally(() => setLoadingMe(false));
   }, []);
 
+  // ── Fetch friends + pending ─────────────────────────────────────────────
   useEffect(() => {
-    if (!user) return;
+    if (!me) return;
+    axios.get(`${BASE}/friends`, { headers: authH() })
+      .then((r) => {
+        const list = Array.isArray(r.data) ? r.data : (r.data.friends || []);
+        setFriends(list.map((f) => ({ ...f, _id: String(f._id), messages: [], unreadCount: 0, lastMessage: null })));
+      }).catch(console.error);
 
-    // Register immediately and again on every reconnect so the server always
-    // knows which socket belongs to this user (fixes the message-delivery race condition)
-    const doRegister = () => socket.emit("register", user.id);
-    doRegister();
-    socket.on("connect",   doRegister);
-    socket.on("reconnect", doRegister);
+    axios.get(`${BASE}/friends/pending`, { headers: authH() })
+      .then((r) => {
+        setPendingIn((r.data.received || []).map((u) => ({ ...u, _id: String(u._id) })));
+        setPendingOut((r.data.sent    || []).map((u) => ({ ...u, _id: String(u._id) })));
+      }).catch(console.error);
+  }, [me]);
 
-    socket.on("online_users", (ids) => setOnlineUsers(ids));
+  // ── Socket setup ────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!me) return;
+
+    const register = () => socket.emit("register", me._id);
+    register();
+    socket.on("connect", register);
+    socket.on("reconnect", register);
+
+    // Online presence
+    socket.on("online_users", (ids) => setOnlineIds(ids.map(String)));
+
+    // Incoming friend request
     socket.on("receive_friend_request", ({ fromUser }) => {
+      if (!fromUser?._id) return;
+      const fid = String(fromUser._id);
+      setPendingIn((prev) => prev.some((r) => r._id === fid) ? prev : [
+        ...prev,
+        { _id: fid, username: fromUser.username, fullname: fromUser.fullname },
+      ]);
       setShowNotif(true);
-      setPendingReceived((prev) =>
-        prev.some((r) => r._id === fromUser._id)
-          ? prev
-          : [...prev, { _id: fromUser._id, username: fromUser.username }]
-      );
     });
+
+    // My request was accepted
     socket.on("friend_request_accepted", ({ fromUser }) => {
-      setFriends((prev) =>
-        prev.some((f) => f._id === fromUser._id)
-          ? prev
-          : [...prev, { ...fromUser, messages: [] }]
-      );
-      setPendingSent((prev) => prev.filter((r) => r._id !== fromUser._id));
+      if (!fromUser?._id) return;
+      const fid = String(fromUser._id);
+      setFriends((prev) => prev.some((f) => f._id === fid) ? prev : [
+        ...prev,
+        { _id: fid, username: fromUser.username, fullname: fromUser.fullname, messages: [], unreadCount: 0, lastMessage: null },
+      ]);
+      setPendingOut((prev) => prev.filter((r) => r._id !== fid));
     });
+
+    // I accepted someone (server confirms, add them to my list)
+    socket.on("friend_added", ({ friend }) => {
+      if (!friend?._id) return;
+      const fid = String(friend._id);
+      setFriends((prev) => prev.some((f) => f._id === fid) ? prev : [
+        ...prev,
+        { _id: fid, username: friend.username, fullname: friend.fullname, messages: [], unreadCount: 0, lastMessage: null },
+      ]);
+    });
+
+    // My request was declined
     socket.on("friend_request_declined", ({ fromUser }) => {
-      setPendingSent((prev) => prev.filter((r) => r._id !== fromUser._id));
+      if (fromUser?._id) setPendingOut((prev) => prev.filter((r) => r._id !== String(fromUser._id)));
+    });
+
+    // Read receipts
+    socket.on("messages_read", ({ chatId }) => {
+      setFriends((prev) => prev.map((f) => {
+        if (!chatId.includes(f._id)) return f;
+        return { ...f, messages: (f.messages || []).map((m) => ({ ...m, read: true })) };
+      }));
+      setSelected((prev) => {
+        if (!prev || !chatId.includes(prev._id)) return prev;
+        return { ...prev, messages: (prev.messages || []).map((m) => ({ ...m, read: true })) };
+      });
     });
 
     return () => {
-      socket.off("connect",    doRegister);
-      socket.off("reconnect",  doRegister);
+      socket.off("connect", register);
+      socket.off("reconnect", register);
       socket.off("online_users");
       socket.off("receive_friend_request");
       socket.off("friend_request_accepted");
+      socket.off("friend_added");
       socket.off("friend_request_declined");
+      socket.off("messages_read");
     };
-  }, [user]);
+  }, [me]);
 
+  // ── Incoming messages ───────────────────────────────────────────────────
   useEffect(() => {
-    if (!user) return;
-    const token = localStorage.getItem("token");
-    axios.get("http://localhost:5000/api/friends", { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => {
-        const list = Array.isArray(r.data) ? r.data : r.data.friends || [];
-        setFriends(list.map((f) => ({ ...f, messages: [] })));
-      }).catch(() => {});
-    axios.get("http://localhost:5000/api/friends/pending", { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => {
-        setPendingReceived(r.data.received || []);
-        setPendingSent(r.data.sent || []);
-      }).catch(() => {});
-  }, [user]);
-
-  useEffect(() => {
-    if (!selectedFriend || !user) return;
-    const token = localStorage.getItem("token");
-    const chatId = [user.id, selectedFriend._id].sort().join("_");
-    axios.get(`http://localhost:5000/api/messages/${chatId}`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => {
-        const msgs = Array.isArray(r.data) ? r.data : [];
-        setFriends((prev) =>
-          prev.map((f) => f._id === selectedFriend._id ? { ...f, messages: msgs, unreadCount: 0 } : f)
-        );
-        setSelectedFriend((prev) => (prev ? { ...prev, messages: msgs } : prev));
-      }).catch(() => {});
-  }, [selectedFriend?._id]);
-
-  useEffect(() => {
-    const handleIncomingMessage = (rawMsg) => {
-      const msg = {
-        ...rawMsg,
-        chatId: rawMsg.chatId || [rawMsg.sender?._id ?? rawMsg.senderId, rawMsg.receiver?._id ?? rawMsg.receiverId].sort().join("_"),
-        senderId: rawMsg.sender?._id ?? rawMsg.senderId,
-        receiverId: rawMsg.receiver?._id ?? rawMsg.receiverId,
-      };
-      const isFromMe = String(msg.senderId) === String(user?.id);
+    if (!me) return;
+    const handle = (raw) => {
+      const msg         = norm(raw);
+      const isFromMe    = msg.senderId === me._id;
       const otherUserId = isFromMe ? msg.receiverId : msg.senderId;
-      const matchTemp = (m) => (msg.tempId && m.tempId === msg.tempId) || m._id === msg._id;
+      const matchTemp   = (m) => (msg.tempId && m.tempId === msg.tempId) || (msg._id && m._id === msg._id);
 
-      setFriends((prev) =>
-        prev.map((f) => {
-          if (String(f._id) !== String(otherUserId)) return f;
-          const updated = [...(f.messages || [])];
-          const idx = updated.findIndex(matchTemp);
-          if (idx !== -1) updated[idx] = msg; else updated.push(msg);
-          return {
-            ...f, messages: updated, lastMessage: msg,
-            unreadCount: !isFromMe && selectedFriend?._id !== f._id ? (f.unreadCount || 0) + 1 : 0,
-          };
-        })
-      );
-      setSelectedFriend((prev) => {
-        if (!prev || String(prev._id) !== String(otherUserId)) return prev;
-        const updated = [...(prev.messages || [])];
-        const idx = updated.findIndex(matchTemp);
-        if (idx !== -1) updated[idx] = msg; else updated.push(msg);
-        return { ...prev, messages: updated };
+      setFriends((prev) => prev.map((f) => {
+        if (f._id !== otherUserId) return f;
+        const msgs  = [...(f.messages || [])];
+        const idx   = msgs.findIndex(matchTemp);
+        if (idx !== -1) msgs[idx] = msg; else msgs.push(msg);
+        const unread = !isFromMe && selected?._id !== f._id ? (f.unreadCount || 0) + 1 : 0;
+        return { ...f, messages: msgs, lastMessage: msg, unreadCount: unread };
+      }));
+
+      setSelected((prev) => {
+        if (!prev || prev._id !== otherUserId) return prev;
+        const msgs = [...(prev.messages || [])];
+        const idx  = msgs.findIndex(matchTemp);
+        if (idx !== -1) msgs[idx] = msg; else msgs.push(msg);
+        return { ...prev, messages: msgs };
       });
     };
-    socket.on("receive_message", handleIncomingMessage);
-    return () => socket.off("receive_message", handleIncomingMessage);
-  }, [selectedFriend, user]);
+
+    socket.on("receive_message", handle);
+    return () => socket.off("receive_message", handle);
+  }, [me, selected]);
+
+  // ── Typing ──────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!me || !selected || !msgText) return;
+    const chatId = [me._id, selected._id].sort().join("_");
+    const t = setTimeout(() => socket.emit("typing", { chatId, senderId: me._id }), 300);
+    return () => clearTimeout(t);
+  }, [msgText, selected, me]);
 
   useEffect(() => {
-    if (!selectedFriend || !user) return;
-    const typingTimeout = setTimeout(() => {
-      if (!messageText) return;
-      const chatId = [user.id, selectedFriend._id].sort().join("_");
-      socket.emit("typing", { chatId, senderId: user.id });
-    }, 300);
-    return () => clearTimeout(typingTimeout);
-  }, [messageText]);
-
-  useEffect(() => {
-    const handleTyping = ({ chatId, senderId }) => {
-      const activeChatId = [user?.id, selectedFriend?._id].sort().join("_");
-      if (chatId !== activeChatId || senderId === user?.id) return;
-      setTypingStatus((prev) => ({ ...prev, [senderId]: true }));
-      if (typingTimeouts.current[senderId]) clearTimeout(typingTimeouts.current[senderId]);
-      typingTimeouts.current[senderId] = setTimeout(() => {
-        setTypingStatus((prev) => ({ ...prev, [senderId]: false }));
-        delete typingTimeouts.current[senderId];
-      }, 1500);
+    if (!me) return;
+    const handle = ({ chatId, senderId }) => {
+      if (!selected) return;
+      const activeChatId = [me._id, selected._id].sort().join("_");
+      if (chatId !== activeChatId || senderId === me._id) return;
+      setTyping((prev) => ({ ...prev, [senderId]: true }));
+      clearTimeout(typingTimers.current[senderId]);
+      typingTimers.current[senderId] = setTimeout(
+        () => setTyping((prev) => ({ ...prev, [senderId]: false })),
+        1500
+      );
     };
-    socket.on("typing", handleTyping);
-    return () => socket.off("typing", handleTyping);
-  }, [selectedFriend, user]);
+    socket.on("typing", handle);
+    return () => socket.off("typing", handle);
+  }, [me, selected]);
 
+  // ── User search ─────────────────────────────────────────────────────────
   useEffect(() => {
-    const handler = setTimeout(() => {
-      if (!search.trim()) return setUsers([]);
-      axios.get(`http://localhost:5000/api/users?q=${encodeURIComponent(search)}`)
-        .then((r) => { const list = Array.isArray(r.data) ? r.data : r.data.users || []; setUsers(list); })
-        .catch(() => setUsers([]));
+    if (!search.trim()) { setSearchRes([]); return; }
+    const t = setTimeout(() => {
+      axios.get(`${BASE}/users?q=${encodeURIComponent(search)}`)
+        .then((r) => {
+          const list = (Array.isArray(r.data) ? r.data : (r.data.users || []))
+            .filter((u) => String(u._id) !== me?._id)
+            .map((u) => ({ ...u, _id: String(u._id) }));
+          setSearchRes(list);
+        }).catch(() => setSearchRes([]));
     }, 300);
-    return () => clearTimeout(handler);
-  }, [search]);
+    return () => clearTimeout(t);
+  }, [search, me]);
 
-  const handleInvite = (target) => {
-    if (!user) return;
-    if (pendingReceived.some((r) => r._id === target._id) || pendingSent.some((r) => r._id === target._id) || friends.some((f) => f._id === target._id)) return;
-    socket.emit("send_friend_request", { senderId: user.id, receiverId: target._id });
-    setPendingSent((prev) => [...prev, { _id: target._id, username: target.username }]);
-    setSearch(""); setUsers([]);
-  };
+  // ── Select friend + load history ─────────────────────────────────────────
+  const selectFriend = useCallback((friend) => {
+    const fid = String(friend._id);
+    setSelected({ ...friend, _id: fid, messages: friend.messages || [] });
+    setMobileChat(true);
+    setFriends((prev) => prev.map((f) => f._id === fid ? { ...f, unreadCount: 0 } : f));
 
-  const handleAcceptInvite = (id) => {
-    socket.emit("accept_friend_request", { fromId: id, toId: user.id });
-    setFriends((prev) => [...prev, ...pendingReceived.filter((r) => r._id === id).map((f) => ({ ...f, messages: [] }))]);
-    setPendingReceived((prev) => prev.filter((r) => r._id !== id));
-    if (pendingReceived.length <= 1) setShowNotif(false);
-  };
+    if (!(friend.messages?.length)) {
+      setLoadingMsgs(true);
+      const chatId = [me._id, fid].sort().join("_");
+      axios.get(`${BASE}/messages/${chatId}`, { headers: authH() })
+        .then((r) => {
+          const msgs = (Array.isArray(r.data) ? r.data : []).map(norm);
+          setFriends((prev) => prev.map((f) => f._id === fid ? { ...f, messages: msgs, unreadCount: 0 } : f));
+          setSelected((prev) => prev?._id === fid ? { ...prev, messages: msgs } : prev);
 
-  const handleDeclineInvite = (id) => {
-    socket.emit("decline_friend_request", { fromId: id, toId: user.id });
-    setPendingReceived((prev) => prev.filter((r) => r._id !== id));
-    if (pendingReceived.length <= 1) setShowNotif(false);
-  };
-
-  const handleSendMessage = () => {
-    if (!messageText.trim() || !selectedFriend) return;
-    const ts = new Date().toISOString();
-    const chatId = [user.id, selectedFriend._id].sort().join("_");
-    const tempId = crypto.randomUUID();
-    const optimisticMsg = { tempId, chatId, senderId: user.id, receiverId: selectedFriend._id, text: messageText, timestamp: ts, messageType: "text" };
-    setSelectedFriend((prev) => prev ? { ...prev, messages: [...(prev.messages || []), optimisticMsg] } : prev);
-    setFriends((prev) => prev.map((f) => f._id === selectedFriend._id ? { ...f, messages: [...(f.messages || []), optimisticMsg], lastMessage: optimisticMsg } : f));
-    setMessageText("");
-    socket.emit("send_message", optimisticMsg);
-  };
-
-  const handleShareCapsule = (capsule) => {
-    if (!selectedFriend) return;
-    const ts = new Date().toISOString();
-    const chatId = [user.id, selectedFriend._id].sort().join("_");
-    const tempId = crypto.randomUUID();
-    const msg = { tempId, chatId, senderId: user.id, receiverId: selectedFriend._id, text: `Shared a capsule: ${capsule.title}`, capsuleId: capsule._id, capsuleData: capsule, timestamp: ts, messageType: "capsule_share" };
-    setSelectedFriend((prev) => prev ? { ...prev, messages: [...(prev.messages || []), msg] } : prev);
-    setFriends((prev) => prev.map((f) => f._id === selectedFriend._id ? { ...f, messages: [...(f.messages || []), msg], lastMessage: msg } : f));
-    socket.emit("send_message", msg);
-    setShowCapsulePicker(false);
-  };
-
-  const handleKeyDown = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } };
-
-  const selectFriend = (friend) => {
-    setSelectedFriend(friend);
-    setMobileShowChat(true);
-    setFriends((prev) => prev.map((f) => (f._id === friend._id ? { ...f, unreadCount: 0 } : f)));
-  };
-
-  if (loadingUser) return null;
-  const token = localStorage.getItem("token");
-
-  const groupMessagesByDate = (messages = []) => {
-    const groups = [];
-    let lastDate = null;
-    for (const msg of messages) {
-      const d = formatDate(msg.timestamp);
-      if (d !== lastDate) { groups.push({ type: "date", label: d }); lastDate = d; }
-      groups.push({ type: "msg", msg });
+          // Mark as read
+          const chatId2 = [me._id, fid].sort().join("_");
+          socket.emit("read_messages", { chatId: chatId2, readerId: me._id });
+        })
+        .catch(console.error)
+        .finally(() => setLoadingMsgs(false));
     }
-    return groups;
+  }, [me]);
+
+  // ── Actions ─────────────────────────────────────────────────────────────
+  const sendRequest = (target) => {
+    const tid = String(target._id);
+    if (friends.some((f) => f._id === tid) || pendingOut.some((p) => p._id === tid) || pendingIn.some((p) => p._id === tid)) return;
+    // Emit via socket (persists + notifies if online)
+    socket.emit("send_friend_request", { senderId: me._id, receiverId: tid });
+    // Also REST so it persists even if something goes wrong with socket
+    axios.post(`${BASE}/friends/request`, { receiverId: tid }, { headers: authH() }).catch(console.error);
+    setPendingOut((prev) => [...prev, { _id: tid, username: target.username }]);
+    setSearch(""); setSearchRes([]);
   };
 
-  const messageGroups = groupMessagesByDate(selectedFriend?.messages);
-  const totalPending = pendingReceived.length;
+  const acceptRequest = (fromId) => {
+    const fid = String(fromId);
+    socket.emit("accept_friend_request", { fromId: fid, toId: me._id });
+    axios.post(`${BASE}/friends/accept`, { fromId: fid }, { headers: authH() })
+      .then((r) => {
+        const nf = r.data.newFriend;
+        const existing = pendingIn.find((p) => p._id === fid);
+        setFriends((prev) => prev.some((f) => f._id === fid) ? prev : [
+          ...prev,
+          { _id: fid, username: nf?.username || existing?.username, messages: [], unreadCount: 0, lastMessage: null },
+        ]);
+      }).catch(console.error);
+    setPendingIn((prev) => prev.filter((r) => r._id !== fid));
+    if (pendingIn.length <= 1) setShowNotif(false);
+  };
+
+  const declineRequest = (fromId) => {
+    const fid = String(fromId);
+    socket.emit("decline_friend_request", { fromId: fid, toId: me._id });
+    axios.post(`${BASE}/friends/decline`, { fromId: fid }, { headers: authH() }).catch(console.error);
+    setPendingIn((prev) => prev.filter((r) => r._id !== fid));
+    if (pendingIn.length <= 1) setShowNotif(false);
+  };
+
+  const sendMsg = () => {
+    if (!msgText.trim() || !selected || !me) return;
+    const chatId  = [me._id, selected._id].sort().join("_");
+    const tempId  = crypto.randomUUID();
+    const optimistic = norm({
+      tempId, chatId,
+      senderId: me._id, receiverId: selected._id,
+      text: msgText, timestamp: new Date().toISOString(), messageType: "text",
+    });
+    setSelected((p)  => p ? { ...p, messages: [...(p.messages || []), optimistic] } : p);
+    setFriends((prev) => prev.map((f) =>
+      f._id === selected._id ? { ...f, messages: [...(f.messages || []), optimistic], lastMessage: optimistic } : f
+    ));
+    setMsgText("");
+    socket.emit("send_message", { tempId, chatId, senderId: me._id, receiverId: selected._id, text: msgText, timestamp: optimistic.timestamp, messageType: "text" });
+  };
+
+  const shareCapsule = (capsule) => {
+    if (!selected || !me) return;
+    const chatId = [me._id, selected._id].sort().join("_");
+    const tempId = crypto.randomUUID();
+    const ts     = new Date().toISOString();
+    const optimistic = norm({
+      tempId, chatId,
+      senderId: me._id, receiverId: selected._id,
+      text: `Shared a capsule: ${capsule.title}`,
+      capsuleId: capsule._id, capsuleData: capsule,
+      timestamp: ts, messageType: "capsule_share",
+    });
+    setSelected((p)  => p ? { ...p, messages: [...(p.messages || []), optimistic] } : p);
+    setFriends((prev) => prev.map((f) =>
+      f._id === selected._id ? { ...f, messages: [...(f.messages || []), optimistic], lastMessage: optimistic } : f
+    ));
+    socket.emit("send_message", { tempId, chatId, senderId: me._id, receiverId: selected._id, text: optimistic.text, capsuleId: capsule._id, timestamp: ts, messageType: "capsule_share" });
+    setShowPicker(false);
+  };
+
+  const onKey = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); } };
+
+  // ── Group messages by date ───────────────────────────────────────────────
+  const groupByDate = (msgs = []) => {
+    const out = []; let lastD = null;
+    for (const m of msgs) {
+      const d = fmtDate(m.timestamp);
+      if (d !== lastD) { out.push({ type: "date", label: d }); lastD = d; }
+      out.push({ type: "msg", msg: m });
+    }
+    return out;
+  };
+
+  if (loadingMe) return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 to-indigo-100">
+      <div className="w-8 h-8 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  const groups       = groupByDate(selected?.messages);
+  const totalPending = pendingIn.length;
 
   return (
     <>
       <Navbar_Main />
-      <div className="min-h-screen font-quicksand" style={{ background: "linear-gradient(135deg, #e0f2fe 0%, #dbeafe 50%, #ede9fe 100%)" }}>
-        <div className="max-w-7xl mx-auto px-3 py-5">
+      <div className="min-h-screen quicksand" style={{ background: "linear-gradient(135deg,#ede9fe 0%,#e0e7ff 50%,#dbeafe 100%)" }}>
+        <div className="max-w-7xl mx-auto px-3 py-4">
 
-          {/* Header */}
+          {/* ── Header ── */}
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-extrabold text-blue-800 tracking-tight flex items-center gap-2">
-              <Users size={22} className="text-blue-500" /> Friends
+            <h1 className="chewy text-3xl bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-2">
+              <Users size={26} className="text-violet-500" />
+              Friends & Messages
             </h1>
             <button
               onClick={() => setShowNotif((v) => !v)}
-              className="relative p-2 rounded-full bg-white shadow-sm hover:bg-blue-50 transition-colors border border-blue-100"
+              className="relative p-2.5 rounded-2xl bg-white shadow-sm border border-violet-100 hover:bg-violet-50 transition-all"
             >
-              <Bell size={18} className="text-blue-600" />
+              <Bell size={18} className="text-violet-600" />
               {totalPending > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{totalPending}</span>
+                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                  {totalPending}
+                </span>
               )}
             </button>
           </div>
 
-          {/* Pending dropdown */}
-          {showNotif && totalPending > 0 && (
-            <div className="mb-4 bg-white rounded-2xl shadow-lg border border-blue-100 p-4">
-              <h3 className="text-sm font-semibold text-blue-700 mb-3">Friend Requests ({totalPending})</h3>
-              <div className="space-y-2">
-                {pendingReceived.map((r) => (
-                  <div key={r._id} className="flex items-center justify-between bg-blue-50 rounded-xl px-3 py-2">
-                    <span className="text-sm font-medium text-blue-900">{r.username}</span>
-                    <div className="flex gap-2">
-                      <button onClick={() => handleAcceptInvite(r._id)} className="text-xs px-3 py-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full font-medium transition-colors">Accept</button>
-                      <button onClick={() => handleDeclineInvite(r._id)} className="text-xs px-3 py-1 bg-rose-400 hover:bg-rose-500 text-white rounded-full font-medium transition-colors">Decline</button>
-                    </div>
-                  </div>
-                ))}
+          {/* ── Friend Requests panel ── */}
+          {showNotif && (
+            <div className="mb-4 bg-white rounded-2xl shadow-lg border border-violet-100 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-violet-50 to-indigo-50 border-b border-violet-100">
+                <h3 className="text-sm font-bold text-violet-700 flex items-center gap-2">
+                  <UserPlus size={15} />
+                  Friend Requests {totalPending > 0 && `(${totalPending})`}
+                </h3>
+                <button onClick={() => setShowNotif(false)} className="text-gray-400 hover:text-gray-600">
+                  <X size={16} />
+                </button>
               </div>
+              {totalPending === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-4">No pending requests</p>
+              ) : (
+                <div className="divide-y divide-violet-50">
+                  {pendingIn.map((r) => (
+                    <div key={r._id} className="flex items-center justify-between px-4 py-3 hover:bg-violet-50/50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <Avatar name={r.username} size="sm" />
+                        <div>
+                          <p className="text-sm font-bold text-gray-800">{r.username}</p>
+                          {r.fullname && r.fullname !== r.username && (
+                            <p className="text-xs text-gray-400">{r.fullname}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => acceptRequest(r._id)}
+                          className="px-3 py-1.5 bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-xs font-bold rounded-full hover:from-violet-600 hover:to-indigo-600 transition-all shadow-sm"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          onClick={() => declineRequest(r._id)}
+                          className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-bold rounded-full hover:bg-rose-100 hover:text-rose-600 transition-all"
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Chat layout */}
-          <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden" style={{ height: "calc(100vh - 200px)", minHeight: 480 }}>
+          {/* ── Main chat layout ── */}
+          <div
+            className="bg-white rounded-3xl shadow-xl border border-violet-100 overflow-hidden"
+            style={{ height: "calc(100vh - 200px)", minHeight: 520 }}
+          >
             <div className="flex h-full">
 
-              {/* Sidebar */}
-              <div className={`flex flex-col border-r border-blue-50 bg-gradient-to-b from-blue-50 to-white ${mobileShowChat ? "hidden md:flex" : "flex"} w-full md:w-72 lg:w-80 shrink-0`}>
-                <div className="p-4 border-b border-blue-50">
+              {/* ── LEFT SIDEBAR ── */}
+              <div className={`flex flex-col w-full md:w-72 lg:w-80 shrink-0 border-r border-violet-50 bg-gradient-to-b from-violet-50/60 to-white ${mobileChat ? "hidden md:flex" : "flex"}`}>
+
+                {/* Search */}
+                <div className="p-3 border-b border-violet-50">
                   <div className="relative">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                     <input
-                      type="text"
-                      placeholder="Search or add friends…"
-                      className="w-full pl-4 pr-4 py-2 text-sm rounded-xl bg-blue-50 border border-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-700 placeholder-gray-400"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search or add friends…"
+                      className="w-full pl-8 pr-4 py-2.5 text-sm rounded-xl bg-white border border-violet-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-300 text-gray-700 placeholder-gray-400"
                     />
-                    {users.length > 0 && (
-                      <ul className="absolute z-20 w-full bg-white border border-blue-100 rounded-xl shadow-xl mt-1 max-h-44 overflow-y-auto">
-                        {users.map((u) => (
-                          <li key={u._id} className="px-4 py-2.5 hover:bg-blue-50 cursor-pointer flex items-center gap-3" onClick={() => handleInvite(u)}>
-                            <div className="w-7 h-7 rounded-full bg-blue-200 flex items-center justify-center text-xs font-bold text-blue-700 shrink-0">{u.username?.[0]?.toUpperCase()}</div>
-                            <div>
-                              <p className="text-sm font-semibold text-blue-800">{u.fullname}</p>
-                              <p className="text-xs text-gray-400">@{u.username}</p>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
                   </div>
+
+                  {/* Search results */}
+                  {searchRes.length > 0 && (
+                    <div className="mt-2 bg-white border border-violet-100 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto">
+                      {searchRes.map((u) => {
+                        const isFriend  = friends.some((f) => f._id === u._id);
+                        const isSent    = pendingOut.some((p) => p._id === u._id);
+                        const isPending = pendingIn.some((p) => p._id === u._id);
+                        return (
+                          <div
+                            key={u._id}
+                            onClick={() => !isFriend && !isSent && !isPending && sendRequest(u)}
+                            className={`flex items-center justify-between px-3 py-2.5 border-b border-gray-50 last:border-0 transition-colors ${
+                              !isFriend && !isSent && !isPending ? "hover:bg-violet-50 cursor-pointer" : "opacity-70"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Avatar name={u.username} size="sm" />
+                              <div className="min-w-0">
+                                <p className="text-sm font-bold text-gray-800 truncate">{u.fullname || u.username}</p>
+                                <p className="text-xs text-gray-400">@{u.username}</p>
+                              </div>
+                            </div>
+                            <span className={`text-[11px] font-bold shrink-0 ml-2 px-2 py-0.5 rounded-full ${
+                              isFriend  ? "bg-emerald-100 text-emerald-600" :
+                              isSent    ? "bg-amber-100  text-amber-600"    :
+                              isPending ? "bg-blue-100   text-blue-600"     :
+                              "bg-violet-100 text-violet-600"
+                            }`}>
+                              {isFriend ? "Friends" : isSent ? "Sent" : isPending ? "Incoming" : "+ Add"}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
-                  {friends.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full pb-8 text-center">
-                      <div className="text-4xl mb-2">✨</div>
-                      <p className="text-sm text-gray-400">No friends yet.</p>
-                      <p className="text-xs text-gray-300">Search above to add some!</p>
+                {/* Friends list */}
+                <div className="flex-1 overflow-y-auto">
+                  {friends.length === 0 && pendingOut.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center px-4 pb-12">
+                      <div className="w-16 h-16 rounded-2xl bg-violet-100 flex items-center justify-center mb-3">
+                        <Users size={28} className="text-violet-400" />
+                      </div>
+                      <p className="text-sm font-bold text-gray-500">No friends yet</p>
+                      <p className="text-xs text-gray-400 mt-1">Search above to find people</p>
                     </div>
                   ) : (
-                    friends.map((friend) => {
-                      const isOnline = onlineUsers.includes(friend._id);
-                      const isActive = selectedFriend?._id === friend._id;
-                      const lastMsg = friend.lastMessage;
-                      return (
-                        <button
-                          key={friend._id}
-                          onClick={() => selectFriend(friend)}
-                          className={`w-full text-left flex items-center gap-3 px-3 py-3 rounded-2xl transition-all ${isActive ? "bg-blue-100 shadow-sm" : "hover:bg-blue-50"}`}
-                        >
-                          <div className="relative shrink-0">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-300 to-purple-300 flex items-center justify-center text-sm font-bold text-white shadow">
-                              {friend.username?.[0]?.toUpperCase()}
+                    <div className="p-2 space-y-0.5">
+                      {/* Confirmed friends */}
+                      {friends.map((f) => {
+                        const isOnline = onlineIds.includes(f._id);
+                        const isActive = selected?._id === f._id;
+                        const last     = f.lastMessage;
+                        return (
+                          <button
+                            key={f._id}
+                            onClick={() => selectFriend(f)}
+                            className={`w-full text-left flex items-center gap-3 px-3 py-3 rounded-2xl transition-all ${
+                              isActive ? "bg-gradient-to-r from-violet-100 to-indigo-100 shadow-sm" : "hover:bg-violet-50"
+                            }`}
+                          >
+                            <Avatar name={f.username} online={isOnline} />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <span className={`text-sm truncate ${isActive ? "font-extrabold text-violet-700" : "font-bold text-gray-800"}`}>
+                                  {f.username}
+                                </span>
+                                {last && <span className="text-[10px] text-gray-400 shrink-0 ml-1">{fmtTime(last.timestamp)}</span>}
+                              </div>
+                              <div className="flex items-center justify-between mt-0.5">
+                                <p className="text-xs text-gray-400 truncate max-w-[130px]">
+                                  {last
+                                    ? (last.messageType === "capsule_share" ? "📦 Shared a capsule" : last.text)
+                                    : isOnline ? "● Online" : "Tap to chat"}
+                                </p>
+                                {(f.unreadCount || 0) > 0 && (
+                                  <span className="ml-1 min-w-[18px] h-[18px] bg-violet-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 shrink-0">
+                                    {f.unreadCount}
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                            {isOnline && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-white rounded-full" />}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-semibold text-gray-800 truncate">{friend.username}</span>
-                              {lastMsg && <span className="text-[10px] text-gray-400 shrink-0 ml-1">{formatTime(lastMsg.timestamp)}</span>}
-                            </div>
-                            <div className="flex items-center justify-between mt-0.5">
-                              <p className="text-xs text-gray-400 truncate max-w-[130px]">
-                                {lastMsg ? (lastMsg.messageType === "capsule_share" ? "📦 Shared a capsule" : lastMsg.text) : (isOnline ? "Online" : "Offline")}
-                              </p>
-                              {(friend.unreadCount || 0) > 0 && (
-                                <span className="ml-1 w-4 h-4 bg-blue-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center shrink-0">{friend.unreadCount}</span>
-                              )}
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })
-                  )}
+                          </button>
+                        );
+                      })}
 
-                  {pendingSent.length > 0 && (
-                    <div className="mt-3 px-2">
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-300 mb-1 px-1">Pending</p>
-                      {pendingSent.map((r) => (
-                        <div key={r._id} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl opacity-60">
-                          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm font-bold text-gray-400">{r.username?.[0]?.toUpperCase()}</div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-600">{r.username}</p>
-                            <p className="text-xs text-gray-400 italic">Request sent…</p>
-                          </div>
+                      {/* Pending outgoing */}
+                      {pendingOut.length > 0 && (
+                        <div className="mt-2 px-1">
+                          <p className="text-[10px] font-extrabold uppercase tracking-widest text-gray-300 mb-1 px-2">Pending</p>
+                          {pendingOut.map((r) => (
+                            <div key={r._id} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl opacity-50">
+                              <Avatar name={r.username} size="md" />
+                              <div>
+                                <p className="text-sm font-bold text-gray-600">{r.username}</p>
+                                <p className="text-xs text-gray-400 italic">Request sent…</p>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Chat Pane */}
-              <div className={`flex-1 flex flex-col ${!mobileShowChat ? "hidden md:flex" : "flex"}`}>
-                {selectedFriend ? (
+              {/* ── CHAT PANE ── */}
+              <div className={`flex-1 flex flex-col ${!mobileChat ? "hidden md:flex" : "flex"} min-w-0`}>
+                {selected ? (
                   <>
                     {/* Chat header */}
-                    <div className="flex items-center gap-3 px-4 py-3 border-b border-blue-50 bg-white shadow-sm shrink-0">
-                      <button className="md:hidden p-1 rounded-lg hover:bg-blue-50 text-blue-600" onClick={() => setMobileShowChat(false)}>
+                    <div className="flex items-center gap-3 px-4 py-3 border-b border-violet-50 bg-white/80 backdrop-blur-sm shrink-0 shadow-sm">
+                      <button className="md:hidden p-1.5 rounded-xl hover:bg-violet-50 text-violet-600" onClick={() => setMobileChat(false)}>
                         <ChevronLeft size={18} />
                       </button>
-                      <div className="relative">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-300 to-purple-300 flex items-center justify-center text-sm font-bold text-white shadow">
-                          {selectedFriend.username?.[0]?.toUpperCase()}
-                        </div>
-                        {onlineUsers.includes(selectedFriend._id) && <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-400 border-2 border-white rounded-full" />}
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-gray-800">{selectedFriend.username}</p>
+                      <Avatar name={selected.username} online={onlineIds.includes(selected._id)} size="md" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-extrabold text-gray-800 truncate">{selected.username}</p>
                         <p className="text-xs text-gray-400">
-                          {typingStatus[selectedFriend._id] ? "typing…" : onlineUsers.includes(selectedFriend._id) ? "Online" : "Offline"}
+                          {typing[selected._id]
+                            ? <span className="text-violet-500 font-medium">typing…</span>
+                            : onlineIds.includes(selected._id)
+                              ? <span className="text-emerald-500">● Online</span>
+                              : "Offline"}
                         </p>
                       </div>
                     </div>
 
-                    {/* Messages area */}
-                    <div
-                      className="flex-1 overflow-y-auto px-4 py-4 space-y-1"
-                      style={{ background: "repeating-linear-gradient(0deg, transparent, transparent 28px, #e0f2fe22 28px, #e0f2fe22 29px)" }}
-                    >
-                      {messageGroups.map((item, i) => {
-                        if (item.type === "date") {
-                          return (
-                            <div key={`d-${i}`} className="flex items-center gap-3 py-3">
-                              <div className="flex-1 h-px bg-blue-100" />
-                              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-2">{item.label}</span>
-                              <div className="flex-1 h-px bg-blue-100" />
+                    {/* Messages */}
+                    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-0.5"
+                      style={{ background: "linear-gradient(180deg, #faf8ff 0%, #f5f3ff 100%)" }}>
+                      {loadingMsgs ? (
+                        <div className="flex justify-center items-center h-full">
+                          <div className="w-7 h-7 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+                        </div>
+                      ) : groups.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full text-center">
+                          <div className="w-16 h-16 rounded-2xl bg-violet-100 flex items-center justify-center mb-3">
+                            <MessageSquare size={28} className="text-violet-400" />
+                          </div>
+                          <p className="text-sm font-bold text-gray-500">Start the conversation!</p>
+                          <p className="text-xs text-gray-400 mt-1">Say hi or share a time capsule ✨</p>
+                        </div>
+                      ) : (
+                        groups.map((item, i) => {
+                          if (item.type === "date") return (
+                            <div key={`d-${i}`} className="flex items-center gap-3 py-4">
+                              <div className="flex-1 h-px bg-violet-100" />
+                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 bg-violet-50 rounded-full py-0.5">
+                                {item.label}
+                              </span>
+                              <div className="flex-1 h-px bg-violet-100" />
                             </div>
                           );
-                        }
+                          const { msg } = item;
+                          const isMine  = msg.senderId === me._id;
+                          return (
+                            <MsgBubble
+                              key={msg._id || msg.tempId || i}
+                              msg={msg}
+                              isMine={isMine}
+                              friendName={selected.username}
+                            />
+                          );
+                        })
+                      )}
 
-                        const msg = item.msg;
-                        const senderIdStr = msg.senderId?.toString() || msg.sender?._id?.toString() || "";
-                        const userIdStr = user?.id?.toString() || "";
-                        const isMine = senderIdStr === userIdStr;
-                        const isCapsule = msg.messageType === "capsule_share";
-
-                        return (
-                          <div key={msg._id || msg.tempId || i} className={`flex ${isMine ? "justify-end" : "justify-start"} mb-1`}>
-                            {!isMine && (
-                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-300 to-purple-300 flex items-center justify-center text-[10px] font-bold text-white mr-2 mt-1 shrink-0">
-                                {selectedFriend.username?.[0]?.toUpperCase()}
-                              </div>
-                            )}
-                            <div className={`flex flex-col ${isMine ? "items-end" : "items-start"} max-w-[70%]`}>
-                              {isCapsule ? (
-                                <CapsuleBubble capsuleData={msg.capsuleData} isMine={isMine} />
-                              ) : (
-                                <div className={`px-4 py-2.5 rounded-2xl shadow-sm text-sm ${isMine ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-sm" : "bg-white text-gray-800 border border-blue-50 rounded-bl-sm"}`}>
-                                  {msg.text}
-                                </div>
-                              )}
-                              <div className={`flex items-center gap-1 mt-0.5 px-1 ${isMine ? "flex-row-reverse" : ""}`}>
-                                <span className="text-[10px] text-gray-400">{formatTime(msg.timestamp)}</span>
-                                {isMine && (msg.read ? <CheckCheck size={11} className="text-blue-400" /> : <Check size={11} className="text-gray-300" />)}
-                              </div>
-                            </div>
+                      {/* Typing indicator */}
+                      {typing[selected._id] && (
+                        <div className="flex items-end gap-2 mt-1">
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 flex items-center justify-center text-[10px] font-bold text-white">
+                            {selected.username?.[0]?.toUpperCase()}
                           </div>
-                        );
-                      })}
-
-                      {typingStatus[selectedFriend._id] && (
-                        <div className="flex items-end gap-2 justify-start">
-                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-300 to-purple-300 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
-                            {selectedFriend.username?.[0]?.toUpperCase()}
-                          </div>
-                          <div className="bg-white border border-blue-50 rounded-2xl rounded-bl-sm px-4 py-2.5 shadow-sm flex gap-1 items-center">
-                            <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0ms]" />
-                            <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:150ms]" />
-                            <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:300ms]" />
+                          <div className="bg-white border border-violet-100 rounded-2xl rounded-bl-sm px-4 py-2.5 shadow-sm flex gap-1 items-center">
+                            {[0, 150, 300].map((d) => (
+                              <span key={d} className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                            ))}
                           </div>
                         </div>
                       )}
-
-                      <div ref={endOfMessagesRef} />
+                      <div ref={endRef} />
                     </div>
 
                     {/* Input bar */}
-                    <div className="px-3 py-3 border-t border-blue-50 bg-white shrink-0 relative">
-                      {showCapsulePicker && (
-                        <CapsuleSharePicker token={token} onSelect={handleShareCapsule} onClose={() => setShowCapsulePicker(false)} />
+                    <div className="px-3 py-3 border-t border-violet-50 bg-white shrink-0 relative">
+                      {showPicker && (
+                        <CapsulePicker onSelect={shareCapsule} onClose={() => setShowPicker(false)} />
                       )}
                       <div className="flex items-center gap-2">
+                        {/* Capsule share button */}
                         <button
-                          onClick={() => setShowCapsulePicker((v) => !v)}
+                          onClick={() => setShowPicker((v) => !v)}
                           title="Share a capsule"
-                          className={`p-2 rounded-xl transition-colors shrink-0 ${showCapsulePicker ? "bg-blue-500 text-white shadow" : "bg-blue-50 text-blue-500 hover:bg-blue-100"}`}
+                          className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all shrink-0 ${
+                            showPicker
+                              ? "bg-gradient-to-r from-violet-500 to-indigo-500 text-white shadow-md shadow-violet-200"
+                              : "bg-violet-50 text-violet-600 hover:bg-violet-100 border border-violet-100"
+                          }`}
                         >
-                          <Package size={18} />
+                          <Package size={16} />
+                          <span className="hidden sm:inline text-xs">Capsule</span>
                         </button>
+
+                        {/* Message input */}
                         <input
-                          value={messageText}
-                          onChange={(e) => setMessageText(e.target.value)}
-                          onKeyDown={handleKeyDown}
+                          value={msgText}
+                          onChange={(e) => setMsgText(e.target.value)}
+                          onKeyDown={onKey}
                           placeholder="Type a message…"
-                          className="flex-1 px-4 py-2.5 text-sm rounded-xl bg-blue-50 border border-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-700 placeholder-gray-400"
+                          className="flex-1 px-4 py-2.5 text-sm rounded-xl bg-violet-50 border border-violet-100 focus:outline-none focus:ring-2 focus:ring-violet-300 text-gray-700 placeholder-gray-400"
                         />
+
+                        {/* Send button */}
                         <button
-                          onClick={handleSendMessage}
-                          disabled={!messageText.trim()}
-                          className="p-2.5 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-200 text-white rounded-xl transition-colors shrink-0 shadow-sm"
+                          onClick={sendMsg}
+                          disabled={!msgText.trim()}
+                          className="p-2.5 bg-gradient-to-br from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 disabled:opacity-30 text-white rounded-xl transition-all shadow-sm shrink-0"
                         >
                           <Send size={16} />
                         </button>
@@ -670,14 +920,23 @@ export default function FriendsPage() {
                     </div>
                   </>
                 ) : (
+                  /* No friend selected */
                   <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
-                    <div className="text-6xl mb-4 select-none">💌</div>
-                    <p className="text-lg font-semibold text-blue-700">Pick a friend to chat</p>
-                    <p className="text-sm text-gray-400 mt-1">You can also share time capsules right in the conversation ✨</p>
+                    <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center mb-5 shadow-sm">
+                      <MessageSquare size={36} className="text-violet-400" />
+                    </div>
+                    <p className="text-xl font-extrabold text-gray-700 quicksand">Your messages</p>
+                    <p className="text-sm text-gray-400 mt-2 max-w-xs quicksand leading-relaxed">
+                      Select a friend to start chatting, or share a time capsule directly in your conversation ✨
+                    </p>
+                    {friends.length === 0 && (
+                      <p className="text-xs text-violet-400 mt-5 font-semibold">
+                        Add a friend using the search bar on the left!
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
-
             </div>
           </div>
         </div>

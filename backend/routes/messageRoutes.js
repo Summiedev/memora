@@ -7,4 +7,5 @@ router.post("/message",authMiddleware, MessageController.sendMessage);
 router.get("/:userId/:friendId", authMiddleware,MessageController.getChatHistory);
 router.get("/:chatId", authMiddleware, MessageController.readHistory);
 
+
 module.exports = router;
