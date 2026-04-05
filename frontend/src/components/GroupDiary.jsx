@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import api from '../utils/auth';
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Plus, Lock, BookOpen, Send, X, Copy, Check, Mic, Play, Pause } from "lucide-react";
-
-const BASE = "http://localhost:5000/api";
 
 const GROUP_TYPES = [
   { key:'friends', emoji:'👯', label:'Friend Group' },
@@ -33,14 +32,14 @@ function CreateGroupForm({ onClose, onCreate }) {
     finally { setLoading(false); }
   };
 
-  return (
+  return createPortal(
     <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
       className="fixed inset-0 flex items-center justify-center p-4"
-      style={{ background:'rgba(0,0,0,0.6)', backdropFilter:'blur(8px)', zIndex: 9999 }}
+      style={{ background:'rgba(0,0,0,0.6)', backdropFilter:'blur(8px)', zIndex: 99999 }}
       onClick={e => e.target === e.currentTarget && onClose()}>
       <motion.div initial={{ scale:0.9, y: 20 }} animate={{ scale:1, y: 0 }} exit={{ scale:0.9 }}
         className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
-        style={{ zIndex: 10000 }}
+        style={{ zIndex: 100000 }}
         onClick={e => e.stopPropagation()}>
         <div className="h-1.5" style={{ background:'linear-gradient(90deg,#f9a8d4,#c4b5fd,#93c5fd)' }} />
         <div className="p-6">
@@ -77,7 +76,7 @@ function CreateGroupForm({ onClose, onCreate }) {
           </button>
         </div>
       </motion.div>
-    </motion.div>
+    </motion.div>, document.body
   );
 }
 
@@ -98,14 +97,14 @@ function JoinGroupForm({ onClose, onJoin }) {
     finally { setLoading(false); }
   };
 
-  return (
+  return createPortal(
     <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
       className="fixed inset-0 flex items-center justify-center p-4"
-      style={{ background:'rgba(0,0,0,0.6)', backdropFilter:'blur(8px)', zIndex: 9999 }}
+      style={{ background:'rgba(0,0,0,0.6)', backdropFilter:'blur(8px)', zIndex: 99999 }}
       onClick={e => e.target === e.currentTarget && onClose()}>
       <motion.div initial={{ scale:0.9, y: 20 }} animate={{ scale:1, y: 0 }} exit={{ scale:0.9 }}
         className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6"
-        style={{ zIndex: 10000 }}
+        style={{ zIndex: 100000 }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="chewy text-xl text-purple-700">Join a Group 🤝</h2>
@@ -119,7 +118,7 @@ function JoinGroupForm({ onClose, onJoin }) {
           {loading ? 'Joining…' : 'Join Group'}
         </button>
       </motion.div>
-    </motion.div>
+    </motion.div>, document.body
   );
 }
 
@@ -159,14 +158,14 @@ function GroupViewer({ group, onClose, me }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  return (
+  return createPortal(
     <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
       className="fixed inset-0 flex items-center justify-center p-4"
-      style={{ background:'rgba(0,0,0,0.6)', backdropFilter:'blur(8px)', zIndex: 9999 }}
+      style={{ background:'rgba(0,0,0,0.6)', backdropFilter:'blur(8px)', zIndex: 99999 }}
       onClick={e => e.target === e.currentTarget && onClose()}>
       <motion.div initial={{ scale:0.9, y: 20 }} animate={{ scale:1, y: 0 }}
         className="bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden"
-        style={{ maxHeight:'90vh', zIndex: 10000 }}
+        style={{ maxHeight:'90vh', zIndex: 100000 }}
         onClick={e => e.stopPropagation()}>
 
         {/* Header */}
@@ -239,7 +238,7 @@ function GroupViewer({ group, onClose, me }) {
           </div>
         </div>
       </motion.div>
-    </motion.div>
+    </motion.div>, document.body
   );
 }
 

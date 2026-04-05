@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import Navbar_Main from "../components/Navbar_main";
 import { io } from "socket.io-client";
-import api from "../utils/auth";
+import api, { SOCKET_URL } from "../utils/auth";
 import { useLocation } from "react-router-dom";
 import MobileBottomNav from "../components/MobileBottomNav";
 
@@ -15,7 +15,7 @@ import MobileBottomNav from "../components/MobileBottomNav";
 let _socket = null;
 const getSocket = () => {
   if (!_socket) {
-    _socket = io("http://localhost:5000", {
+    _socket = io(SOCKET_URL, {
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
@@ -26,8 +26,6 @@ const getSocket = () => {
 const socket = getSocket();
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const BASE = "http://localhost:5000/api";
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmtTime = (ts) =>
   new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -624,7 +622,7 @@ export default function FriendsPage() {
   useEffect(() => {
     if (!search.trim()) { setSearchRes([]); return; }
     const t = setTimeout(() => {
-      axios.get(`${BASE}/users?q=${encodeURIComponent(search)}`)
+      api.get('/users', { params: { q: search } })
         .then((r) => {
           const list = (Array.isArray(r.data) ? r.data : (r.data.users || []))
             .filter((u) => String(u._id) !== me?._id)

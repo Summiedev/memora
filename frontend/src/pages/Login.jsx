@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import api from '../utils/auth';
+import api, { BASE_URL } from '../utils/auth';
 import { Eye, EyeOff } from 'lucide-react';
 import MemoraLoaderOverlay from '../components/MemoraLoader';
 
@@ -79,7 +79,7 @@ const LoginPage = () => {
 
               {/* Social */}
               <div className="flex gap-3">
-                <a href="http://localhost:5000/api/auth/google"
+                <a href={`${BASE_URL}/auth/google`}
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl font-semibold text-sm border-2 transition-all hover:scale-105 hover:shadow-md"
                   style={{ background:"#f0f4ff", borderColor:"#c7d7ff", color:"#4f6ef7" }}>
                   <svg viewBox="0 0 48 48" className="w-5 h-5" fill="#4f6ef7"><path d="M44.5 20H24v8.5h11.8C34.5 32.9 30.1 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.7 3l6.4-6.4C34.4 5.1 29.5 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.6 0 20.2-7.7 21-21 .1-.7.1-1.3.1-2z"/></svg>

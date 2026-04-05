@@ -14,8 +14,6 @@ const MOODS = [
   { emoji:'🤩', label:'excited', display:'Excited',  color:'#fb923c' },
 ];
 
-const BASE = "http://localhost:5000/api";
-
 // ── Voice Recorder Component ─────────────────────────────────────────────────
 function VoiceRecorder({ onRecorded, existingUrl }) {
   const [state, setState]   = useState("idle"); // idle | recording | preview

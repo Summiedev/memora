@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import MobileBottomNav from "../components/MobileBottomNav";
 import Navbar_Main from "../components/Navbar_main";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence,motion } from "framer-motion";
 import FloatingActions from "../components/FloatingBtn";
 import { useLocation } from "react-router-dom";
 import DashboardMiniCarousel from "../components/DashboardCaraousel";
@@ -17,10 +17,10 @@ import ViewCapsuleModal from '../components/ViewCapsuleModal';
 import TimeCapsuleModal from '../components/CreateCapsuleForm';
 import PhotoAlbumForm from '../components/PhotoAlbumForm';
 import { DiaryEntryForm } from '../components/DiaryEntryForm';
+import MemoryModal from '../components/MemoryModal';
 import OnThisDay from '../components/OnThisDay';
 import StreakCard from '../components/StreakCard';
 import GroupDiary from '../components/GroupDiary';
-import axios from "axios";
 import api from "../utils/auth";
 
 // ── Prompts pool ────────────────────────────────────────────────────────────
@@ -139,6 +139,8 @@ const Dashboard = () => {
   const [memoryType,       setMemoryType]       = useState(null);
   const [viewCapsuleId,    setViewCapsuleId]    = useState(null);
   const [showViewModal,    setShowViewModal]    = useState(false);
+  const [selectedMemory,   setSelectedMemory]   = useState(null);
+  const [selectedMemoryType, setSelectedMemoryType] = useState(null);
 
   const { search, pathname } = useLocation();
 
@@ -176,6 +178,7 @@ const Dashboard = () => {
         shared:   caps.filter(c => c.capsuleType === 'shared').length,
       });
     } catch {
+      // Error fetching capsules, silently continue
     }
   }, []);
   
@@ -215,6 +218,23 @@ const Dashboard = () => {
     setMemoryTrigger(t => t + 1);
     setMemoryType(null);
     setShowMemoryPicker(false);
+  };
+
+  const handleMemoryClick = (memory, type) => {
+    setSelectedMemory(memory);
+    setSelectedMemoryType(type);
+  };
+
+  const handleMemorySave = () => {
+    setMemoryTrigger(t => t + 1);
+    setSelectedMemory(null);
+    setSelectedMemoryType(null);
+  };
+
+  const handleMemoryDelete = () => {
+    setMemoryTrigger(t => t + 1);
+    setSelectedMemory(null);
+    setSelectedMemoryType(null);
   };
 
   // ── JSX ────────────────────────────────────────────────────────────────────
@@ -347,12 +367,14 @@ const Dashboard = () => {
             <OnThisDay />
 
             {/* GROUP DIARIES */}
-            <GroupDiary me={user} />
+            <div className="relative">
+              <GroupDiary me={user} />
+            </div>
 
             {/* MONTHLY RECAP */}
-           <div className="relative z-0 bg-white/85 backdrop-blur rounded-3xl border-2 border-purple-100 shadow-md overflow-hidden">
-  <MonthlyRecap />
-</div>
+            <div className="bg-white/85 backdrop-blur rounded-3xl border-2 border-purple-100 shadow-md overflow-hidden">
+              <MonthlyRecap />
+            </div>
 
             {/* TIP OF THE DAY */}
             <div className="rounded-3xl border-2 border-amber-100 shadow-md p-5 relative overflow-hidden"
@@ -373,7 +395,7 @@ const Dashboard = () => {
                   All <ChevronRight size={11} />
                 </a>
               </div>
-              <RecentMemories newEntryTrigger={memoryTrigger} compact />
+              <RecentMemories newEntryTrigger={memoryTrigger} compact onMemoryClick={handleMemoryClick} />
             </div>
 
           </div>
@@ -440,6 +462,22 @@ const Dashboard = () => {
       {showViewModal && viewCapsuleId && (
         <ViewCapsuleModal isOpen={showViewModal} closeModal={() => setShowViewModal(false)} capsuleId={viewCapsuleId} />
       )}
+
+      {/* ── VIEW MEMORY MODAL ───────────────────────────────────────────── */}
+      <AnimatePresence>
+        {selectedMemory && selectedMemoryType && (
+          <MemoryModal 
+            memory={selectedMemory} 
+            type={selectedMemoryType}
+            onClose={() => {
+              setSelectedMemory(null);
+              setSelectedMemoryType(null);
+            }}
+            onSave={handleMemorySave}
+            onDelete={handleMemoryDelete}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

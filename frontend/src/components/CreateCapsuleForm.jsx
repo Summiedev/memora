@@ -71,7 +71,7 @@ import api from '../utils/auth';
 // //       setUploading(true);
 
 // //       // Get signed upload parameters from backend
-// //       const { data: signatureData } = await axios.get("http://localhost:5000/api/cloudinary-signature/signature");
+// //       const { data: signatureData } = await axios.get("/cloudinary-signature/signature");
 
 // //       const uploadedUrls = await Promise.all(
 // //         media.map(async (file) => {
@@ -436,7 +436,7 @@ import api from '../utils/auth';
 //       setUploading(true);
 //        const folderName = 'capsule_media';
 // const { data: sig} = await axios.get(
-//   `http://localhost:5000/api/cloudinary-signature/signature?folder=${folderName}`
+//   `/cloudinary-signature/signature?folder=${folderName}`
 // );
 // console.log("🔑 Signature payload:", sig);
      
@@ -485,7 +485,7 @@ import api from '../utils/auth';
 //       };
 
 //       const response = await axios.post(
-//         'http://localhost:5000/api/capsules/create-capsule',
+//         '/capsules/create-capsule',
 //         payload,
 //         { headers: { Authorization: `Bearer ${token}` } }
 //       );

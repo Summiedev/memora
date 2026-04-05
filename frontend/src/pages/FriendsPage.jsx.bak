@@ -13,7 +13,7 @@ import { useLocation } from "react-router-dom";
 let _socket = null;
 const getSocket = () => {
   if (!_socket) {
-    _socket = io("http://localhost:5000", {
+    _socket = io(import.meta.env.VITE_SOCKET_URL, {
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
@@ -24,7 +24,7 @@ const getSocket = () => {
 const socket = getSocket();
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const BASE = "http://localhost:5000/api";
+const BASE = import.meta.env.VITE_API_BASE_URL;
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

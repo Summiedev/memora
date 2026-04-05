@@ -3,8 +3,6 @@ import api from '../utils/auth';
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Calendar, Mic, Play, Pause, Lock } from "lucide-react";
 
-const BASE = "http://localhost:5000/api";
-
 const EMOTION_COLORS = {
   happy:    { bg:'#fef9c3', border:'#fde047', text:'#854d0e' },
   peaceful: { bg:'#d1fae5', border:'#6ee7b7', text:'#064e3b' },
