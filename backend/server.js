@@ -113,6 +113,9 @@ const dotenv   = require('dotenv');
 const cors     = require('cors');
 const passport = require('passport');
 const cloudinary = require('cloudinary').v2;
+const cookieParser = require('cookie-parser');
+const csrf = require('csurf');
+const { initSocket } = require('./config/socket');
 
 dotenv.config();
 
@@ -136,23 +139,29 @@ const server = http.createServer(app);
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT'],
+  allowedHeaders: ['Content-Type', 'X-CSRF-Token']
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(cookieParser());
 app.use(passport.initialize());
 
+// CSRF protection - only generate tokens, don't block requests yet
+const csrfProtection = csrf({ cookie: true });
+
+// Route to get CSRF token (no validation, only generation)
+app.get('/api/csrf-token', csrfProtection, (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
 
 app.use('/api', require('./routes'));
 
 
 app.use(require('./middleware/errorHandler'));
 
-
-const { initSocket } = require('./config/socket');
+// Initialize Socket.IO
 initSocket(server);
 
-
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () =>
-  console.log(`🚀 Server + Socket.IO running on port ${PORT}`)
-);
+server.listen(PORT, () => console.log(`🚀 Server with Socket.IO running on port ${PORT}`));

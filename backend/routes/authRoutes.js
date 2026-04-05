@@ -2,12 +2,17 @@ const express = require('express');
 const authMiddleware = require('../middleware/authMiddleware');
 const authController = require('../controllers/authController'); // Using require for named imports
 const passport = require('passport');
+const csrf = require('csurf');
 const router = express.Router();
 
-router.post('/register', authController.register);
-router.post('/login', authController.login);
-router.post('/forgot-password', authController.forgotPassword);
-router.post('/logout', authMiddleware, authController.logout);
+// CSRF protection middleware for POST requests
+const csrfProtection = csrf({ cookie: true });
+
+router.post('/register', csrfProtection, authController.register);
+router.post('/login', csrfProtection, authController.login);
+router.post('/refresh', csrfProtection, authController.refresh);
+router.post('/logout', csrfProtection, authController.logout);
+router.post('/forgot-password', csrfProtection, authController.forgotPassword);
 router.get('/verify-email', authController.verifyEmail);
 
 router.get('/profile', authMiddleware, authController.getUserProfile);

@@ -1,3 +1,5 @@
+import axios from 'axios';
+import api from '../utils/auth';
 // import React, { useEffect, useState } from 'react';
 // import CapsuleCard from './CapsuleCard';
 // import ViewCapsule from "./ViewCapsuleModal";
@@ -35,7 +37,7 @@
 //   //}, []);
 
 //   // const fetchCapsules = async () => {
-//   //   const res = await axios.get('http://localhost:5000/api/capsules/all-capsules',{
+//   //   const res = await api.get('/capsules/all-capsules',{
 //   //       headers: {
 //   //           Authorization: `Bearer ${token}`
 //   //         }
@@ -50,7 +52,7 @@
 //     try {
 //       const token = localStorage.getItem('token'); // or however you store it
   
-//       await axios.delete(`http://localhost:5000/api/capsules/delete-capsule/${id}`, {
+//       await api.delete('/capsules/delete-capsule/${id}', {
 //         headers: {
 //           Authorization: `Bearer ${token}`,
 //         },
@@ -69,7 +71,7 @@
 
 
 //   const handleShare = async (id) => {
-//     await axios.post(`http://localhost:5000/api/capsules/${id}/share`);
+//     await api.post('/capsules/${id}/share');
 //     alert('Capsule shared!');
 //   };
 
@@ -112,19 +114,14 @@ import React, { useState, useEffect } from "react";
 import CapsuleCard from "./CapsuleCard";
 // ▼ Remove the old “ViewCapsulePage” import; we’ll handle viewing in the parent.
 
-import axios from "axios";
+import api from '../utils/auth';
 import Spinner from "./Spinner";
 
 const CapsuleList = ({ capsules, addCapsule, removeCapsule, onDetails }) => {
 
-  const token = localStorage.getItem("token");
-
   const handleDelete = async (id) => {
     try {
-      await axios.delete(
-        `http://localhost:5000/api/capsules/delete-capsule/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.delete(`/capsules/delete-capsule/${id}`);
       removeCapsule(id);
     } catch (error) {
       console.error("Delete failed:", error);
@@ -132,11 +129,7 @@ const CapsuleList = ({ capsules, addCapsule, removeCapsule, onDetails }) => {
   };
 
   const handleShare = async (id) => {
-    await axios.post(
-      `http://localhost:5000/api/capsules/${id}/share`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    await api.post(`/capsules/${id}/share`, {});
     alert("Capsule shared!");
   };
 

@@ -3,7 +3,8 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/user.js');
 const sendEmail = require('../utils/sendEmail.js');
 
-const generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+const generateAccessToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '15m' });
+const generateRefreshToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
 const register = async (req, res) => {
     try {
@@ -24,11 +25,26 @@ const register = async (req, res) => {
             verificationToken
         });
 
-        // ✅ Auto-generate token after signup
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        // ✅ Auto-generate tokens after signup
+        const accessToken = generateAccessToken(user._id);
+        const refreshToken = generateRefreshToken(user._id);
 
-        // ✅ Respond with token
-        res.status(201).json({ token });
+        // ✅ Set HTTP-only cookies
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict',
+            maxAge: 15 * 60 * 1000 // 15 minutes
+        });
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        // ✅ Respond with success
+        res.status(201).json({ message: 'User registered successfully' });
 
     } catch (err) {
         console.error("❌ Registration error:", err);
@@ -61,8 +77,24 @@ const login = async (req, res) => {
 
        // // if (!user.isVerified) return res.status(403).json({ error: 'Please verify your email before logging in' });
 
-        const token = generateToken(user._id);
-        res.json({ token });
+        const accessToken = generateAccessToken(user._id);
+        const refreshToken = generateRefreshToken(user._id);
+
+        // Set HTTP-only cookies
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict',
+            maxAge: 15 * 60 * 1000 // 15 minutes
+        });
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        res.json({ message: 'Login successful' });
     } catch (err) {
         res.status(500).json({ error: 'Login failed.' });
     }
@@ -70,17 +102,43 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1]; // Extract the token from the Authorization header
-
-        if (!token) {
-            return res.status(400).json({ error: 'Token is required for logout' });
-        }
-
-
+        // Clear cookies
+        res.clearCookie('accessToken');
+        res.clearCookie('refreshToken');
 
         res.status(200).json({ message: 'Logged out successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Server error', details: error.message });
+    }
+};
+
+const refresh = async (req, res) => {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) return res.status(401).json({ error: 'Refresh token not provided' });
+
+        const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
+        if (!user) return res.status(401).json({ error: 'Invalid refresh token' });
+
+        const newAccessToken = generateAccessToken(user._id);
+
+        res.cookie('accessToken', newAccessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict',
+            maxAge: 15 * 60 * 1000
+        });
+
+        res.json({ message: 'Token refreshed' });
+    } catch (error) {
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({ error: 'Invalid refresh token' });
+        }
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ error: 'Refresh token expired' });
+        }
+        res.status(500).json({ error: 'Server error' });
     }
 };
 
@@ -254,8 +312,23 @@ const verifyEmail = async (req, res) => {
         });
       }
   
-      const token = generateToken(user._id);
-      res.redirect(`${process.env.CLIENT_URL}/dashboard?token=${token}`);
+      const accessToken = generateAccessToken(user._id);
+      const refreshToken = generateRefreshToken(user._id);
+
+      res.cookie('accessToken', accessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'Strict',
+          maxAge: 15 * 60 * 1000
+      });
+      res.cookie('refreshToken', refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'Strict',
+          maxAge: 7 * 24 * 60 * 60 * 1000
+      });
+
+      res.redirect(`${process.env.CLIENT_URL}/dashboard`);
     } catch (err) {
       console.error('Google login failed:', err);
       res.status(500).json({ error: 'Google login failed' });
@@ -378,6 +451,7 @@ module.exports = {
     register,
     login,
     logout,
+    refresh,
     forgotPassword,
     getUserProfile,
     googleAuthSuccess,

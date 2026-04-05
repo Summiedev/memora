@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../utils/auth';
 import { Eye, EyeOff } from 'lucide-react';
 import MemoraLoaderOverlay from '../components/MemoraLoader';
 
@@ -20,9 +20,8 @@ const LoginPage = () => {
     if (!formData.username || !formData.password) { setLoginError('Please fill in all fields! (｡•́︿•̀｡)'); return; }
     try {
       setLoading(true);
-      const res = await axios.post('http://localhost:5000/api/auth/login', formData);
-      localStorage.setItem('token', res.data.token);
-      // Keep loader showing while navigating
+      await api.post('/auth/login', formData);
+      // Server sets secure httpOnly cookies; frontend does not persist tokens in JS.
       setTimeout(() => { window.location.href = '/dashboard'; }, 1800);
     } catch (err) {
       setLoading(false);

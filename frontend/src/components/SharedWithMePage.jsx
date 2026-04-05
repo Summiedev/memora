@@ -1,19 +1,16 @@
 // pages/SharedWithMePage.jsx
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../utils/auth';
 import CapsuleCard from '../components/CapsuleCard';
 
 export default function SharedWithMePage() {
   const [sharedCapsules, setSharedCapsules] = useState([]);
   const [loading, setLoading] = useState(true);
-  const token = localStorage.getItem('token');
 
   useEffect(() => {
     const fetchShared = async () => {
       try {
-        const res = await axios.get(
-          'http://localhost:5000/api/users/me',
-          { headers: { Authorization: `Bearer ${token}` } }
+        const res = await api.get('/users/me'
         );
         // assume res.data.user.sharedCapsules is an array of capsule IDs
         const capsuleIds = res.data.user.sharedCapsules || [];
@@ -21,9 +18,7 @@ export default function SharedWithMePage() {
         // bulk‐fetch capsule details
         const capsuleDetails = await Promise.all(
           capsuleIds.map(id =>
-            axios.get(`http://localhost:5000/api/capsules/${id}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            })
+            api.get(`/capsules/${id}`)
           )
         );
         setSharedCapsules(capsuleDetails.map(r => r.data.data));
@@ -35,7 +30,7 @@ export default function SharedWithMePage() {
     };
 
     fetchShared();
-  }, [token]);
+  }, []);
 
   if (loading) return <div>Loading…</div>;
   if (!sharedCapsules.length) {

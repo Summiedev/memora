@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import api from '../utils/auth';
 import MyImage from '../assets/rightt.png'; // Keep your image as is
 
 const ForgotPassword = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: '' });
   const [message, setMessage] = useState("");
 
@@ -14,7 +16,7 @@ const ForgotPassword = () => {
   const handleForgotPasswordSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/requestPasswordReset", { email: formData.email });
+      const res = await api.post("/auth/requestPasswordReset", { email: formData.email });
       setMessage(res.data.message);
        setTimeout(() => {
         navigate("/reset-confirmation"); 

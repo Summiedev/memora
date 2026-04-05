@@ -1,3 +1,5 @@
+
+import api from '../utils/auth';
 // // import { useState } from 'react';
 // // import axios from 'axios';
 // // import { useNavigate } from 'react-router-dom';
@@ -90,7 +92,7 @@
 // //      // formData.append('photos', uploadedUrls);
 // //       //const token = localStorage.getItem('token');
 
-// //       const response = await axios.post('http://localhost:5000/api/capsules/create-capsule', {
+// //       const response = await api.post('/capsules/create-capsule', {
 
 // //           title,
 // //           message,
@@ -914,9 +916,7 @@ const TimeCapsuleModal = ({ isOpen, closeModal, addCapsule }) => {
   // fetch friends
   useEffect(() => {
     if (!isOpen) return;
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    axios.get('http://localhost:5000/api/friends', { headers:{ Authorization:`Bearer ${token}` } })
+    api.get('/friends')
       .then(r => setFriendsList(Array.isArray(r.data) ? r.data : r.data.friends || []))
       .catch(() => {});
   }, [isOpen]);
@@ -977,8 +977,7 @@ const TimeCapsuleModal = ({ isOpen, closeModal, addCapsule }) => {
     if (!validate()) return;
     try {
       setUploading(true);
-      const token = localStorage.getItem('token');
-      const { data: sig } = await axios.get('http://localhost:5000/api/cloudinary-signature/signature?folder=capsule_media');
+      const { data: sig } = await api.get('/cloudinary-signature/signature?folder=capsule_media');
 
       const uploadFile = async (file, idx, total) => {
         const fd = new FormData();
@@ -1009,9 +1008,7 @@ const TimeCapsuleModal = ({ isOpen, closeModal, addCapsule }) => {
         emotionTags: emotions,
       };
 
-      const res = await axios.post('http://localhost:5000/api/capsules/create-capsule', payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.post('/capsules/create-capsule', payload);
       addCapsule && addCapsule(res.data.data);
       closeModal();
     } catch (err) {

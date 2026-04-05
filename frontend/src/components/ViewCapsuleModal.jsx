@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../utils/auth';
 import { X, Lock, Unlock, Clock, Send, Trash2 } from 'lucide-react';
 
 const formatFullDate = (ts) =>
@@ -53,8 +53,6 @@ const ViewCapsuleModal = ({ isOpen, closeModal, capsuleId }) => {
 
   useEffect(() => {
     if (!isOpen || !capsuleId) return;
-    const token = localStorage.getItem('token');
-    if (!token) { setErrorMsg('Not authenticated.'); setLoading(false); return; }
 
     setLoading(true);
     setErrorMsg('');
@@ -64,12 +62,8 @@ const ViewCapsuleModal = ({ isOpen, closeModal, capsuleId }) => {
     const fetchAll = async () => {
       try {
         const [capRes, comRes] = await Promise.all([
-          axios.get(`http://localhost:5000/api/capsules/${capsuleId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(`http://localhost:5000/api/comments/${capsuleId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+          api.get(`/capsules/${capsuleId}`),
+          api.get(`/comments/${capsuleId}`),
         ]);
 
         setCapsule(capRes.data.data);
@@ -85,14 +79,9 @@ const ViewCapsuleModal = ({ isOpen, closeModal, capsuleId }) => {
 
   const handleAddComment = async () => {
     if (!newCommentText.trim() || postingComment) return;
-    const token = localStorage.getItem('token');
     setPosting(true);
     try {
-      const res = await axios.post(
-        `http://localhost:5000/api/comments/${capsuleId}`,
-        { content: newCommentText },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.post(`/comments/${capsuleId}`, { content: newCommentText });
       if (res.data.success) {
         setComments((prev) => [res.data.comment, ...prev]);
         setNewCommentText('');

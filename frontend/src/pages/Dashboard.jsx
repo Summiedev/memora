@@ -3,6 +3,7 @@ import {
   Sparkles, ChevronRight, Plus, BookOpen, Camera, Pencil,
   RefreshCw, Send, Check, Lock, Unlock, Share2
 } from "lucide-react";
+import MobileBottomNav from "../components/MobileBottomNav";
 import Navbar_Main from "../components/Navbar_main";
 import { motion, AnimatePresence } from "framer-motion";
 import FloatingActions from "../components/FloatingBtn";
@@ -16,7 +17,11 @@ import ViewCapsuleModal from '../components/ViewCapsuleModal';
 import TimeCapsuleModal from '../components/CreateCapsuleForm';
 import PhotoAlbumForm from '../components/PhotoAlbumForm';
 import { DiaryEntryForm } from '../components/DiaryEntryForm';
+import OnThisDay from '../components/OnThisDay';
+import StreakCard from '../components/StreakCard';
+import GroupDiary from '../components/GroupDiary';
 import axios from "axios";
+import api from "../utils/auth";
 
 // ── Prompts pool ────────────────────────────────────────────────────────────
 const PROMPTS = [
@@ -126,6 +131,7 @@ const Dashboard = () => {
   const [memoryTrigger, setMemoryTrigger] = useState(0);
   const [promptIdx,     setPromptIdx]     = useState(() => Math.floor(Math.random() * PROMPTS.length));
   const [tipIdx]                          = useState(() => Math.floor(Math.random() * TIPS.length));
+  const [streak,        setStreak]        = useState(null);
 
   // modals
   const [showCapsuleForm,  setShowCapsuleForm]  = useState(false);
@@ -139,9 +145,7 @@ const Dashboard = () => {
   // scrub token from URL
   useEffect(() => {
     const params = new URLSearchParams(search);
-    const token = params.get("token");
-    if (token) {
-      localStorage.setItem("token", token);
+    if (params.has("token")) {
       params.delete("token");
       window.history.replaceState({}, document.title, pathname + (params.toString() ? `?${params}` : ""));
     }
@@ -149,17 +153,20 @@ const Dashboard = () => {
 
   // load user
   useEffect(() => {
-    axios.get('http://localhost:5000/api/auth/profile', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    }).then(r => setUser(r.data.data || r.data.user)).catch(() => {});
+    api.get('/auth/profile')
+      .then(r => setUser(r.data.data || r.data.user)).catch(() => {});
+    // load streak
+    api.get('/diary-entries/streak')
+      .then(r => setStreak(r.data.data)).catch(() => {});
   }, []);
+
+  // Re-fetch when tab becomes visible (no refresh needed)
+
 
   // load capsule counts
   const fetchCapsules = useCallback(async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/capsules/all-capsules', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      const res = await api.get('/capsules/all-capsules');
       const caps = res.data.capsules || [];
       const now  = new Date();
       setCapsuleStats({
@@ -168,9 +175,20 @@ const Dashboard = () => {
         locked:   caps.filter(c =>  c.lockUntilSend && new Date(c.sendDate) >  now).length,
         shared:   caps.filter(c => c.capsuleType === 'shared').length,
       });
-    } catch {}
+    } catch {
+    }
   }, []);
-
+  
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        api.get('/auth/profile').then(r => setUser(r.data.data || r.data.user)).catch(() => {});
+        fetchCapsules();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [fetchCapsules]);
   useEffect(() => { fetchCapsules(); }, [fetchCapsules]);
 
   const firstName = user?.fullname?.split(' ')[0] || user?.username || 'friend';
@@ -178,11 +196,12 @@ const Dashboard = () => {
 
   // Save prompt response as a diary entry
   const handlePromptSave = async (p, text) => {
-    await axios.post('http://localhost:5000/api/diary-entries/create-diary', {
+    const { data } = await api.post('/diary-entries/create-diary', {
       title: p.text,
       entryText: text,
       date: new Date().toISOString(),
-    }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+    });
+    if (data.streak) setStreak(data.streak);
     setMemoryTrigger(t => t + 1);
   };
 
@@ -202,8 +221,9 @@ const Dashboard = () => {
   return (
     <div style={{ background: 'linear-gradient(160deg,#fdf0f9 0%,#f0ebff 45%,#e8f4ff 100%)', minHeight: '100vh' }}>
       <Navbar_Main />
+      <MobileBottomNav />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24 md:pb-6 space-y-5">
 
         {/* ── WELCOME BANNER ─────────────────────────────────────────────── */}
         <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
@@ -320,10 +340,19 @@ const Dashboard = () => {
               )}
             </div>
 
+            {/* STREAK CARD */}
+            {streak !== null && <StreakCard streak={streak} />}
+
+            {/* ON THIS DAY */}
+            <OnThisDay />
+
+            {/* GROUP DIARIES */}
+            <GroupDiary me={user} />
+
             {/* MONTHLY RECAP */}
-            <div className="bg-white/85 backdrop-blur rounded-3xl border-2 border-purple-100 shadow-md overflow-hidden">
-              <MonthlyRecap />
-            </div>
+           <div className="relative z-0 bg-white/85 backdrop-blur rounded-3xl border-2 border-purple-100 shadow-md overflow-hidden">
+  <MonthlyRecap />
+</div>
 
             {/* TIP OF THE DAY */}
             <div className="rounded-3xl border-2 border-amber-100 shadow-md p-5 relative overflow-hidden"

@@ -53,7 +53,9 @@ function initSocket(server) {
           messageType: messageType || 'text',
           read:        false,
         };
-        if (capsuleId) msgData.capsuleId = capsuleId;
+        if (capsuleId)  msgData.capsuleId  = capsuleId;
+        if (payload.memoryId)   msgData.memoryId   = payload.memoryId;
+        if (payload.memoryType) msgData.memoryType = payload.memoryType;
 
         // Save and populate
         const saved = await Message.create(msgData);
@@ -74,6 +76,24 @@ function initSocket(server) {
             $addToSet: { sharedWith: rid },
             capsuleType: 'shared',
           });
+        }
+
+        // Attach memory preview if it's a memory share
+        if (payload.memoryId && payload.memoryType) {
+          try {
+            if (payload.memoryType === 'DiaryMemory') {
+              const DiaryMemory = require('../models/diaryEntry');
+              const mem = await DiaryMemory.findById(payload.memoryId).select('title content emotionTag voiceNote').lean();
+              outObj.memoryData = mem;
+            } else if (payload.memoryType === 'PhotoAlbum') {
+              const PhotoAlbum = require('../models/photoAlbum');
+              const mem = await PhotoAlbum.findById(payload.memoryId).select('title photos').lean();
+              outObj.memoryData = mem;
+            }
+            outObj.memoryType = payload.memoryType;
+          } catch (e) {
+            console.error('Failed to attach memory preview:', e);
+          }
         }
 
         // Normalise IDs to strings so frontend comparisons work

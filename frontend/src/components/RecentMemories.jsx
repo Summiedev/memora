@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../utils/auth';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 dayjs.extend(isoWeek);
@@ -10,11 +10,7 @@ const RecentMemories = ({ newEntryTrigger} ) => {
 
     const fetchMemories = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/photo-memories/get-all-photo', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        const response = await api.get('/photo-memories/get-all-photo');
 
         const memories = response.data.data;
         const grouped = {};

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
 import axios from "axios";
+import api from '../utils/auth';
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, X, Image, CheckCircle, AlertCircle, ChevronRight } from "lucide-react";
 
@@ -56,7 +57,7 @@ export default function PhotoAlbumForm({ closeForm, onCreate = () => {} }) {
     try {
       setUploading(true);
       setUploadPct(0);
-      const { data: sig } = await axios.get("http://localhost:5000/api/cloudinary-signature/signature");
+      const { data: sig } = await api.get('/cloudinary-signature/signature');
       const uploadedUrls = await Promise.all(
         photos.map(async ({ file }, idx) => {
           const fd = new FormData();
@@ -73,10 +74,8 @@ export default function PhotoAlbumForm({ closeForm, onCreate = () => {} }) {
           return res.data.secure_url;
         })
       );
-      const { data } = await axios.post(
-        "http://localhost:5000/api/photo-memories/create-photo-album",
-        { title, description: caption, photos: uploadedUrls, captions: photos.map(p => p.caption) },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      const { data } = await api.post('/photo-memories/create-photo-album',
+        { title, description: caption, photos: uploadedUrls, captions: photos.map(p => p.caption) }
       );
       setShowSuccess(true);
       setTimeout(() => { onCreate(data.data); closeForm(); }, 1200);

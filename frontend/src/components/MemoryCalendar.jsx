@@ -1,6 +1,7 @@
 // MemoryCalendar.jsx — redesigned
 import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
+import api from '../utils/auth';
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -20,9 +21,7 @@ const MemoryCalendar = () => {
   useEffect(() => {
     const fetchMemories = async () => {
       try {
-        const res = await axios.get(
-          "http://localhost:5000/api/photo-memories/get-all-photo",
-          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        const res = await api.get('/photo-memories/get-all-photo'
         );
         setMemories(res.data.data || []);
       } catch (err) {

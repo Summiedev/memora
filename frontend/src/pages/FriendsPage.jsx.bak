@@ -3,13 +3,11 @@ import {
   X, Send, Package, ChevronLeft, Users, Clock,
   Check, CheckCheck, Bell, UserPlus, Search,
   Lock, Unlock, Image as ImageIcon, MessageSquare,
-  BookOpen, Mic,
 } from "lucide-react";
 import Navbar_Main from "../components/Navbar_main";
 import { io } from "socket.io-client";
-import api from "../utils/auth";
+import axios from "axios";
 import { useLocation } from "react-router-dom";
-import MobileBottomNav from "../components/MobileBottomNav";
 
 // ── Socket singleton ──────────────────────────────────────────────────────────
 let _socket = null;
@@ -27,6 +25,7 @@ const socket = getSocket();
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const BASE = "http://localhost:5000/api";
+const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmtTime = (ts) =>
@@ -65,10 +64,8 @@ const norm = (raw) => ({
   text:        raw.text || "",
   timestamp:   raw.timestamp || new Date().toISOString(),
   messageType: raw.messageType || "text",
-  capsuleData:  raw.capsuleData || null,
-  memoryData:   raw.memoryData || raw.memoryPreview || null,
-  memoryType:   raw.memoryType || null,
-  read:         raw.read || false,
+  capsuleData: raw.capsuleData || null,
+  read:        raw.read || false,
 });
 
 // ── Avatar component ──────────────────────────────────────────────────────────
@@ -91,7 +88,7 @@ function CapsulePicker({ onSelect, onClose }) {
   const [search,   setSearch]   = useState("");
 
   useEffect(() => {
-    api.get('/capsules/all-capsules')
+    axios.get(`${BASE}/capsules/all-capsules`, { headers: authH() })
       .then((r) => setCapsules(r.data.capsules || []))
       .catch(() => setCapsules([]))
       .finally(() => setLoading(false));
@@ -248,120 +245,9 @@ function CapsuleBubble({ capsuleData, isMine }) {
   );
 }
 
-// ── Memory Share Picker ───────────────────────────────────────────────────────
-function MemoryPicker({ onSelect, onClose }) {
-  const [tab, setTab]         = useState("diary"); // diary | photo
-  const [diaries, setDiaries] = useState([]);
-  const [albums, setAlbums]   = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    Promise.all([
-      api.get('/diary-entries/all-diary'),
-      api.get('/photo-memories/get-all-photo'),
-    ]).then(([d, a]) => {
-      setDiaries(d.data.data || []);
-      setAlbums(a.data.data || []);
-    }).catch(() => {}).finally(() => setLoading(false));
-  }, []);
-
-  const items = tab === "diary" ? diaries : albums;
-
-  return (
-    <div className="absolute bottom-20 left-0 right-0 mx-2 z-50 rounded-2xl shadow-2xl border border-pink-100 overflow-hidden bg-white">
-      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white">
-        <div className="flex items-center gap-2">
-          <BookOpen size={16} />
-          <span className="font-bold text-sm">Share a Memory</span>
-        </div>
-        <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-full transition-colors">
-          <X size={16} />
-        </button>
-      </div>
-      {/* Tabs */}
-      <div className="flex border-b border-pink-100">
-        <button onClick={() => setTab("diary")}
-          className={`flex-1 py-2 text-xs font-bold transition-colors ${tab==="diary" ? "bg-pink-50 text-pink-600 border-b-2 border-pink-400" : "text-gray-500"}`}>
-          📓 Diary Entries
-        </button>
-        <button onClick={() => setTab("photo")}
-          className={`flex-1 py-2 text-xs font-bold transition-colors ${tab==="photo" ? "bg-pink-50 text-pink-600 border-b-2 border-pink-400" : "text-gray-500"}`}>
-          📸 Photo Albums
-        </button>
-      </div>
-      <div className="max-h-52 overflow-y-auto p-2 space-y-1">
-        {loading ? (
-          <div className="flex justify-center py-6">
-            <div className="w-5 h-5 border-2 border-pink-400 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : items.length === 0 ? (
-          <p className="text-center text-xs text-gray-400 py-5">No {tab === "diary" ? "diary entries" : "photo albums"} found</p>
-        ) : items.map(item => (
-          <button key={item._id} onClick={() => onSelect(item, tab)}
-            className="w-full text-left flex items-center gap-3 p-2.5 rounded-xl hover:bg-pink-50 transition-colors border border-transparent hover:border-pink-100">
-            {tab === "photo" && item.photos?.[0] ? (
-              <img src={item.photos[0]} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" alt="" />
-            ) : (
-              <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0 text-lg">
-                {tab === "diary" ? "📓" : "📸"}
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-gray-800 truncate">{item.title}</p>
-              {tab === "diary" && item.content && (
-                <p className="text-[10px] text-gray-400 truncate">{item.content.slice(0, 50)}…</p>
-              )}
-              {tab === "photo" && (
-                <p className="text-[10px] text-gray-400">{item.photos?.length || 0} photo{item.photos?.length !== 1 ? "s" : ""}</p>
-              )}
-            </div>
-            <Send size={12} className="text-pink-400 flex-shrink-0" />
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Memory bubble in chat ─────────────────────────────────────────────────────
-function MemoryBubble({ memoryData, memoryType, isMine }) {
-  if (!memoryData) return null;
-  const isDiary = memoryType === "DiaryMemory";
-  return (
-    <div className={`rounded-2xl overflow-hidden shadow-md max-w-[240px] border ${
-      isMine ? "border-pink-200 bg-pink-50" : "border-purple-100 bg-purple-50"
-    }`}>
-      {!isDiary && memoryData.photos?.[0] && (
-        <img src={memoryData.photos[0]} alt="" className="w-full h-24 object-cover" />
-      )}
-      {isDiary && (
-        <div className="h-16 bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center">
-          <span className="text-3xl">📓</span>
-        </div>
-      )}
-      <div className="p-3">
-        <div className="flex items-center gap-1 mb-1">
-          <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-white/70 text-purple-600">
-            {isDiary ? "Diary" : "Album"}
-          </span>
-          {memoryData.voiceNote?.url && <Mic size={9} className="text-pink-500" />}
-        </div>
-        <p className="text-sm font-bold text-gray-800 truncate">{memoryData.title}</p>
-        {isDiary && memoryData.content && (
-          <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-2">{memoryData.content}</p>
-        )}
-        {!isDiary && (
-          <p className="text-[10px] text-gray-400 mt-0.5">{memoryData.photos?.length || 0} photos</p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-
+// ── Message bubble ────────────────────────────────────────────────────────────
 function MsgBubble({ msg, isMine, friendName }) {
   const isCapsule = msg.messageType === "capsule_share";
-  const isMemory  = msg.messageType === "memory_share";
 
   return (
     <div className={`flex ${isMine ? "justify-end" : "justify-start"} gap-2 mb-1`}>
@@ -373,8 +259,6 @@ function MsgBubble({ msg, isMine, friendName }) {
       <div className={`flex flex-col ${isMine ? "items-end" : "items-start"} max-w-[68%]`}>
         {isCapsule ? (
           <CapsuleBubble capsuleData={msg.capsuleData} isMine={isMine} />
-        ) : isMemory ? (
-          <MemoryBubble memoryData={msg.memoryData} memoryType={msg.memoryType} isMine={isMine} />
         ) : (
           <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
             isMine
@@ -412,7 +296,6 @@ export default function FriendsPage() {
   const [searchRes,      setSearchRes]      = useState([]);
   const [showNotif,      setShowNotif]      = useState(false);
   const [showPicker,     setShowPicker]     = useState(false);
-  const [showMemoryPicker, setShowMemoryPicker] = useState(false);
   const [mobileChat,     setMobileChat]     = useState(false);
   const [loadingMsgs,    setLoadingMsgs]    = useState(false);
 
@@ -425,64 +308,33 @@ export default function FriendsPage() {
 
   // URL token (Google OAuth)
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.has("token")) {
-      params.delete("token");
-      window.history.replaceState({}, "", location.pathname + (params.toString() ? `?${params}` : ""));
-    }
+    const t = new URLSearchParams(location.search).get("token");
+    if (t) { localStorage.setItem("token", t); window.history.replaceState({}, "", location.pathname); }
   }, [location]);
 
   // ── Fetch current user ──────────────────────────────────────────────────
   useEffect(() => {
-    api.get('/auth/profile')
+    axios.get(`${BASE}/auth/profile`, { headers: authH() })
       .then((r) => setMe({ ...r.data.user, _id: String(r.data.user._id) }))
-      .catch((err) => {
-        if (err.response?.status === 401) {
-          window.location.href = '/login';
-        }
-      })
+      .catch(() => localStorage.removeItem("token"))
       .finally(() => setLoadingMe(false));
   }, []);
 
   // ── Fetch friends + pending ─────────────────────────────────────────────
-  const fetchFriendData = useCallback(() => {
+  useEffect(() => {
     if (!me) return;
-    api.get('/friends')
+    axios.get(`${BASE}/friends`, { headers: authH() })
       .then((r) => {
         const list = Array.isArray(r.data) ? r.data : (r.data.friends || []);
-        setFriends(prev => {
-          // Preserve existing messages when refreshing
-          const prevMap = Object.fromEntries(prev.map(f => [f._id, f]));
-          return list.map((f) => ({
-            ...f, _id: String(f._id),
-            messages:    prevMap[String(f._id)]?.messages    || [],
-            unreadCount: prevMap[String(f._id)]?.unreadCount || 0,
-            lastMessage: prevMap[String(f._id)]?.lastMessage || null,
-          }));
-        });
-      }).catch(() => {}); // Never throw on network error
+        setFriends(list.map((f) => ({ ...f, _id: String(f._id), messages: [], unreadCount: 0, lastMessage: null })));
+      }).catch(console.error);
 
-    api.get('/friends/pending')
+    axios.get(`${BASE}/friends/pending`, { headers: authH() })
       .then((r) => {
         setPendingIn((r.data.received || []).map((u) => ({ ...u, _id: String(u._id) })));
         setPendingOut((r.data.sent    || []).map((u) => ({ ...u, _id: String(u._id) })));
-      }).catch(() => {});
+      }).catch(console.error);
   }, [me]);
-
-  useEffect(() => { fetchFriendData(); }, [fetchFriendData]);
-
-  // ── Re-register socket + re-fetch when tab becomes visible ───────────────
-  useEffect(() => {
-    if (!me) return;
-    const onVisible = () => {
-      if (document.visibilityState === "visible") {
-        socket.emit("register", me._id); // re-register socket
-        fetchFriendData();               // silently refresh friends list
-      }
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [me, fetchFriendData]);
 
   // ── Socket setup ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -492,12 +344,6 @@ export default function FriendsPage() {
     register();
     socket.on("connect", register);
     socket.on("reconnect", register);
-
-    // Re-register when tab becomes visible (browser may have suspended WS)
-    const onVisible = () => {
-      if (document.visibilityState === "visible") register();
-    };
-    document.addEventListener("visibilitychange", onVisible);
 
     // Online presence
     socket.on("online_users", (ids) => setOnlineIds(ids.map(String)));
@@ -560,7 +406,6 @@ export default function FriendsPage() {
       socket.off("friend_added");
       socket.off("friend_request_declined");
       socket.off("messages_read");
-      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [me]);
 
@@ -645,7 +490,7 @@ export default function FriendsPage() {
     if (!(friend.messages?.length)) {
       setLoadingMsgs(true);
       const chatId = [me._id, fid].sort().join("_");
-      api.get(`/messages/${chatId}`)
+      axios.get(`${BASE}/messages/${chatId}`, { headers: authH() })
         .then((r) => {
           const msgs = (Array.isArray(r.data) ? r.data : []).map(norm);
           setFriends((prev) => prev.map((f) => f._id === fid ? { ...f, messages: msgs, unreadCount: 0 } : f));
@@ -667,7 +512,7 @@ export default function FriendsPage() {
     // Emit via socket (persists + notifies if online)
     socket.emit("send_friend_request", { senderId: me._id, receiverId: tid });
     // Also REST so it persists even if something goes wrong with socket
-    api.post('/friends/request', { receiverId: tid }).catch(console.error);
+    axios.post(`${BASE}/friends/request`, { receiverId: tid }, { headers: authH() }).catch(console.error);
     setPendingOut((prev) => [...prev, { _id: tid, username: target.username }]);
     setSearch(""); setSearchRes([]);
   };
@@ -675,7 +520,7 @@ export default function FriendsPage() {
   const acceptRequest = (fromId) => {
     const fid = String(fromId);
     socket.emit("accept_friend_request", { fromId: fid, toId: me._id });
-    api.post('/friends/accept', { fromId: fid })
+    axios.post(`${BASE}/friends/accept`, { fromId: fid }, { headers: authH() })
       .then((r) => {
         const nf = r.data.newFriend;
         const existing = pendingIn.find((p) => p._id === fid);
@@ -691,7 +536,7 @@ export default function FriendsPage() {
   const declineRequest = (fromId) => {
     const fid = String(fromId);
     socket.emit("decline_friend_request", { fromId: fid, toId: me._id });
-    api.post('/friends/decline', { fromId: fid }).catch(console.error);
+    axios.post(`${BASE}/friends/decline`, { fromId: fid }, { headers: authH() }).catch(console.error);
     setPendingIn((prev) => prev.filter((r) => r._id !== fid));
     if (pendingIn.length <= 1) setShowNotif(false);
   };
@@ -733,31 +578,6 @@ export default function FriendsPage() {
     setShowPicker(false);
   };
 
-  const shareMemory = (memory, tab) => {
-    if (!selected || !me) return;
-    const chatId      = [me._id, selected._id].sort().join("_");
-    const tempId      = crypto.randomUUID();
-    const ts          = new Date().toISOString();
-    const mType       = tab === "diary" ? "DiaryMemory" : "PhotoAlbum";
-    const optimistic  = norm({
-      tempId, chatId,
-      senderId: me._id, receiverId: selected._id,
-      text: `Shared a memory: ${memory.title}`,
-      memoryId: memory._id, memoryData: memory, memoryType: mType,
-      timestamp: ts, messageType: "memory_share",
-    });
-    setSelected((p) => p ? { ...p, messages: [...(p.messages || []), optimistic] } : p);
-    setFriends((prev) => prev.map((f) =>
-      f._id === selected._id ? { ...f, messages: [...(f.messages || []), optimistic], lastMessage: optimistic } : f
-    ));
-    socket.emit("send_message", {
-      tempId, chatId, senderId: me._id, receiverId: selected._id,
-      text: optimistic.text, memoryId: memory._id, memoryType: mType,
-      timestamp: ts, messageType: "memory_share",
-    });
-    setShowMemoryPicker(false);
-  };
-
   const onKey = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); } };
 
   // ── Group messages by date ───────────────────────────────────────────────
@@ -782,9 +602,7 @@ export default function FriendsPage() {
 
   return (
     <>
-   
-        <Navbar_Main />
-        <MobileBottomNav />
+      <Navbar_Main />
       <div className="min-h-screen quicksand" style={{ background: "linear-gradient(135deg,#ede9fe 0%,#e0e7ff 50%,#dbeafe 100%)" }}>
         <div className="max-w-7xl mx-auto px-3 py-4">
 
@@ -950,7 +768,7 @@ export default function FriendsPage() {
                               <div className="flex items-center justify-between mt-0.5">
                                 <p className="text-xs text-gray-400 truncate max-w-[130px]">
                                   {last
-                                    ? (last.messageType === "capsule_share" ? "📦 Shared a capsule" : last.messageType === "memory_share" ? "📓 Shared a memory" : last.text)
+                                    ? (last.messageType === "capsule_share" ? "📦 Shared a capsule" : last.text)
                                     : isOnline ? "● Online" : "Tap to chat"}
                                 </p>
                                 {(f.unreadCount || 0) > 0 && (
@@ -1066,13 +884,10 @@ export default function FriendsPage() {
                       {showPicker && (
                         <CapsulePicker onSelect={shareCapsule} onClose={() => setShowPicker(false)} />
                       )}
-                      {showMemoryPicker && (
-                        <MemoryPicker onSelect={shareMemory} onClose={() => setShowMemoryPicker(false)} />
-                      )}
                       <div className="flex items-center gap-2">
                         {/* Capsule share button */}
                         <button
-                          onClick={() => { setShowPicker((v) => !v); setShowMemoryPicker(false); }}
+                          onClick={() => setShowPicker((v) => !v)}
                           title="Share a capsule"
                           className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all shrink-0 ${
                             showPicker
@@ -1082,20 +897,6 @@ export default function FriendsPage() {
                         >
                           <Package size={16} />
                           <span className="hidden sm:inline text-xs">Capsule</span>
-                        </button>
-
-                        {/* Memory share button */}
-                        <button
-                          onClick={() => { setShowMemoryPicker((v) => !v); setShowPicker(false); }}
-                          title="Share a memory"
-                          className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all shrink-0 ${
-                            showMemoryPicker
-                              ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-md shadow-pink-200"
-                              : "bg-pink-50 text-pink-600 hover:bg-pink-100 border border-pink-100"
-                          }`}
-                        >
-                          <BookOpen size={16} />
-                          <span className="hidden sm:inline text-xs">Memory</span>
                         </button>
 
                         {/* Message input */}

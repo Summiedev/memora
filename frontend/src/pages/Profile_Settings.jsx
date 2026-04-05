@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+
 import { FaCheckCircle, FaArrowLeft } from 'react-icons/fa';
 import { Camera, Bell, Moon, Lock, Star } from 'lucide-react';
-import axios from 'axios';
+import api from '../utils/auth';
 import { compressImage } from '../utils/compressImage';
 
 const achievements = [
@@ -24,15 +24,13 @@ export default function ProfileSettingsPage({ onClose }) {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) return setLoadingUser(false);
-        const res = await axios.get('http://localhost:5000/api/auth/details', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await api.get('/auth/details');
         const { fullname, username, email, bio, avatar } = res.data.user;
         setProfile({ fullname, username, email, bio, avatar, newAvatarFile: null });
       } catch (err) {
-        localStorage.removeItem('token');
+        if (err.response?.status === 401) {
+          window.location.href = '/login';
+        }
       } finally {
         setLoadingUser(false);
       }
@@ -42,10 +40,8 @@ export default function ProfileSettingsPage({ onClose }) {
 
   const saveProfile = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.patch('http://localhost:5000/api/auth/profile',
-        { fullname: profile.fullname, username: profile.username, email: profile.email, bio: profile.bio, avatar: profile.avatar },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await api.patch('/auth/profile',
+        { fullname: profile.fullname, username: profile.username, email: profile.email, bio: profile.bio, avatar: profile.avatar }
       );
       const u = res.data.user;
       setProfile({ fullname: u.fullname, username: u.username, email: u.email, bio: u.bio, avatar: u.avatar, newAvatarFile: null });
@@ -56,10 +52,8 @@ export default function ProfileSettingsPage({ onClose }) {
 
   const saveSettings = async () => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.patch('http://localhost:5000/api/auth/profile',
-        { notifications: settings.notifications, darkMode: settings.darkMode, password: settings.password || undefined },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await api.patch('/auth/profile',
+        { notifications: settings.notifications, darkMode: settings.darkMode, password: settings.password || undefined }
       );
       setSettings(s => ({ ...s, password: '' }));
       setShowSettingsSuccess(true);
@@ -111,7 +105,7 @@ export default function ProfileSettingsPage({ onClose }) {
                   try {
                     const dataUrl = await compressImage(file, 200, 200, 0.6);
                     setProfile(p => ({ ...p, avatar: dataUrl, newAvatarFile: file }));
-                  } catch {}
+                  } catch { /* empty */ }
                 }} />
             </label>
           </div>
@@ -211,7 +205,7 @@ export default function ProfileSettingsPage({ onClose }) {
                 ))}
 
                 <div>
-                  <label className="block text-xs font-semibold text-purple-500 mb-1 ml-1 flex items-center gap-1"><Lock size={11}/> New Password</label>
+                  <label className="flex items-center gap-1 text-xs font-semibold text-purple-500 mb-1 ml-1"><Lock size={11}/> New Password</label>
                   <input type="password" name="password" placeholder="Leave blank to keep current" value={settings.password}
                     onChange={e => setSettings(p => ({ ...p, password: e.target.value }))} className={inputCls} />
                 </div>

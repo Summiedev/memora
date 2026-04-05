@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Share2, Trash, Pencil } from "lucide-react";
+import { Share2, Trash, Pencil, Eye, Settings } from "lucide-react";
 
 const tagColors = [
   "bg-blue-100 text-blue-700",
@@ -55,12 +55,46 @@ const CapsuleCard = ({
   onDelete,
   tags = [],
   onEdit,
+  capsuleId,
 }) => {
   const { display: timeLeft, unlocked: isUnlocked } = useCountdown(unlockTime);
 
   const [gradientClass] = useState(
     () => cardGradients[Math.floor(Math.random() * cardGradients.length)]
   );
+
+  const handleManage = (e) => {
+    e.stopPropagation();
+    if (onManage) onManage();
+    else if (onDetails) onDetails(); // fallback to details if manage not set
+  };
+
+  const handleDetails = (e) => {
+    e.stopPropagation();
+    if (onDetails) onDetails();
+  };
+
+  const handleEdit = (e) => {
+    e.stopPropagation();
+    if (onEdit) onEdit();
+  };
+
+  const handleShare = (e) => {
+    e.stopPropagation();
+    if (onShare) onShare();
+    else {
+      // fallback: copy link
+      navigator.clipboard.writeText(window.location.origin + `/capsules`).catch(() => {});
+      alert("Link copied!");
+    }
+  };
+
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    if (window.confirm("Delete this capsule? This can't be undone.")) {
+      onDelete?.();
+    }
+  };
 
   return (
     <div className="group relative w-full max-w-[300px] rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white border border-blue-100 font-quicksand">
@@ -97,26 +131,26 @@ const CapsuleCard = ({
           </div>
         )}
 
-        {/* Action buttons */}
-        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        {/* Action buttons — always visible on mobile, hover on desktop */}
+        <div className="absolute top-2 right-2 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
           <button
-            onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
-            className="w-7 h-7 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow transition-colors"
+            onClick={handleEdit}
+            className="w-7 h-7 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow transition-colors active:scale-95"
+            title="Edit"
           >
             <Pencil size={12} className="text-blue-700" />
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); onShare?.(); }}
-            className="w-7 h-7 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow transition-colors"
+            onClick={handleShare}
+            className="w-7 h-7 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow transition-colors active:scale-95"
+            title="Share"
           >
             <Share2 size={12} className="text-blue-700" />
           </button>
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (window.confirm("Delete this capsule? This can't be undone.")) onDelete?.();
-            }}
-            className="w-7 h-7 bg-white/80 hover:bg-red-100 rounded-full flex items-center justify-center shadow transition-colors"
+            onClick={handleDelete}
+            className="w-7 h-7 bg-white/90 hover:bg-red-100 rounded-full flex items-center justify-center shadow transition-colors active:scale-95"
+            title="Delete"
           >
             <Trash size={12} className="text-rose-500" />
           </button>
@@ -139,7 +173,7 @@ const CapsuleCard = ({
       {/* Body */}
       <div className="p-4">
         <h3 className="text-base font-bold text-blue-900 truncate mb-2">
-          {title.charAt(0).toUpperCase() + title.slice(1)}
+          {title ? title.charAt(0).toUpperCase() + title.slice(1) : "Untitled"}
         </h3>
 
         {/* Tags */}
@@ -171,16 +205,16 @@ const CapsuleCard = ({
         {/* Buttons */}
         <div className="flex gap-2 mt-1">
           <button
-            onClick={(e) => { e.stopPropagation(); onManage?.(); }}
-            className="flex-1 py-1.5 rounded-xl text-xs font-semibold bg-blue-100 hover:bg-blue-200 text-blue-800 transition-colors"
+            onClick={handleManage}
+            className="flex-1 py-2 rounded-xl text-xs font-semibold bg-blue-100 hover:bg-blue-200 active:bg-blue-300 text-blue-800 transition-colors flex items-center justify-center gap-1"
           >
-            Manage
+            <Settings size={11} /> Manage
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); onDetails?.(); }}
-            className="flex-1 py-1.5 rounded-xl text-xs font-semibold bg-purple-100 hover:bg-purple-200 text-purple-800 transition-colors"
+            onClick={handleDetails}
+            className="flex-1 py-2 rounded-xl text-xs font-semibold bg-purple-100 hover:bg-purple-200 active:bg-purple-300 text-purple-800 transition-colors flex items-center justify-center gap-1"
           >
-            Details
+            <Eye size={11} /> Details
           </button>
         </div>
       </div>

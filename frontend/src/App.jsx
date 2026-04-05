@@ -21,15 +21,13 @@ function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(search);
-    const token = params.get("token");
-    if (token) {
-      localStorage.setItem("token", token);
-      // Remove the token from the URL so it doesn't stick around
-      window.history.replaceState({}, document.title, pathname);
+    if (params.has("token")) {
+      params.delete("token");
+      window.history.replaceState({}, document.title, pathname + (params.toString() ? `?${params}` : ""));
     }
   }, [search, pathname]);
 
-  return null; // this component renders nothing visible
+  return null;
 }
 
 

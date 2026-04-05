@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import axios from 'axios';
+import api from '../utils/auth';
 import { X } from 'lucide-react';
 
 export default function CapsuleDetailsModal({ capsuleId, onClose }) {
@@ -10,26 +10,20 @@ export default function CapsuleDetailsModal({ capsuleId, onClose }) {
 
   // fetch capsule details (title, message, etc.)
   useEffect(() => {
-    axios.get(`/api/capsules/${capsuleId}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    }).then(res => setCapsule(res.data.capsule))
+    api.get(`/capsules/${capsuleId}`)
+      .then(res => setCapsule(res.data.capsule))
       .catch(console.error);
 
     // fetch comments
-    axios.get(`/api/comments/${capsuleId}/comments`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    }).then(res => setComments(res.data.data))
+    api.get(`/comments/${capsuleId}/comments`)
+      .then(res => setComments(res.data.data))
       .catch(console.error);
   }, [capsuleId]);
 
   const submitComment = async () => {
     if (!newComment.trim()) return;
     try {
-      const res = await axios.post(
-        `/api/comments/${capsuleId}/comments`,
-        { content: newComment },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
+      const res = await api.post(`/comments/${capsuleId}/comments`, { content: newComment });
       setComments(prev => [...prev, res.data.data]);
       setNewComment('');
     } catch (err) {

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../utils/auth";
 import { useSearchParams } from "react-router-dom";
 
 const ResetPassword = () => {
@@ -13,7 +13,7 @@ const ResetPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`http://localhost:5000/api/auth/resetPassword/${id}/${token}`, {
+      const res = await api.post(`/auth/resetPassword/${id}/${token}`, {
         password,
       });
       setMessage(res.data.message);

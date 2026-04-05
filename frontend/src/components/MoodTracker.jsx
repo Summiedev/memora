@@ -1,6 +1,6 @@
 // pages/MoodTracker.jsx
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../utils/auth';
 import {
   LineChart,
   Line,
@@ -16,21 +16,14 @@ export default function MoodTracker({ user }) {
   const [moodData, setMoodData]   = useState([]);
   const [showPrompt, setShowPrompt] = useState(false);
 
-  // helper to get headers
-  const authHeaders = () => ({
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`
-    }
-  });
-
   useEffect(() => {
     if (!user) return; // wait until user is loaded
 
     const fetchMoodData = async () => {
       try {
         const [weekRes, todayRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/mood/week', authHeaders()),
-          axios.get('http://localhost:5000/api/mood/today', authHeaders())
+          api.get('/mood/week'),
+          api.get('/mood/today')
         ]);
 
         setMoodData(weekRes.data);
@@ -47,11 +40,11 @@ export default function MoodTracker({ user }) {
 
   const handleMoodSelect = async (mood) => {
     try {
-      await axios.post('http://localhost:5000/api/mood', { mood }, authHeaders());
+      await api.post('/mood', { mood });
       setShowPrompt(false);
 
       // Refresh weekly data
-      const res = await axios.get('http://localhost:5000/api/mood/week', authHeaders());
+      const res = await api.get('/mood/week');
       setMoodData(res.data);
 
       // optionally: update user context/state here

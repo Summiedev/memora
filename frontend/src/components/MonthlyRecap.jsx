@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
+import api from '../utils/auth';
 import dayjs from "dayjs";
 import right from "../assets/no_img.png";
 import NoPhotosModal from "./NoPhotoModal";
@@ -144,12 +145,7 @@ export default function MonthlyRecap() {
   useEffect(() => {
     const fetchLatestMonthRecap = async () => {
       try {
-        const res = await axios.get(
-          "http://localhost:5000/api/photo-memories/get-all-photo",
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-          }
-        );
+        const res = await api.get('/photo-memories/get-all-photo');
         if (!res.data.success) {
           console.error("API call failed");
           return;

@@ -101,3 +101,60 @@
     background-color: #fefbf4;
   }
 }
+
+/* ── Mobile App Feel ─────────────────────────────────────── */
+
+/* Prevent text selection flash on tap (mobile) */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Remove 300ms tap delay on mobile */
+body {
+  touch-action: manipulation;
+}
+
+/* iOS safe area support */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Mobile-optimized inputs */
+input, textarea, select {
+  font-size: 16px; /* Prevents iOS zoom on focus */
+}
+
+/* Smooth active states on mobile */
+button, a {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Hide scrollbar on mobile for horizontal scroll areas */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Ensure modals are always on top */
+.modal-overlay {
+  z-index: 9999;
+}
+
+/* Swipe-friendly card interactions */
+.card-swipe {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-swipe:active {
+  transform: scale(0.98);
+}

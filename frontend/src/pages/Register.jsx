@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../utils/auth';
 import { Eye, EyeOff } from 'lucide-react';
 import MemoraLoaderOverlay from '../components/MemoraLoader';
 
@@ -24,8 +24,7 @@ const SignupPage = () => {
     setRegisterError(''); setSuccess('');
     try {
       setLoading(true);
-      const res = await axios.post('http://localhost:5000/api/auth/register', formData);
-      localStorage.setItem('token', res.data.token);
+      await api.post('/auth/register', formData);
       setSuccess('Account created! Welcome to Memora ✨');
       setTimeout(() => { window.location.href = '/dashboard'; }, 2000);
     } catch (err) {

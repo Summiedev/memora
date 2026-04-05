@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import MiniCapsule from './DashboardMiniCapsuleCard';
-import axios from 'axios';
+import api from '../utils/auth';
 
 const DashboardMiniCarousel = () => {
   const [capsules, setCapsules] = useState([]);
@@ -9,26 +9,10 @@ const DashboardMiniCarousel = () => {
  // const token = localStorage.getItem('token'); 
 
    
-   const [token, setToken] = useState(localStorage.getItem('token'));
-
-  // Whenever someone logs in and sets localStorage, you should also call:
-  //   setToken(localStorage.getItem('token'))
-  // in your login handler. That way, DashboardMiniCarousel will re‐render with a real token.
-
   useEffect(() => {
-    // Only fetch if token exists (non‐null/non‐empty)
-    if (!token) return;
-
     const fetchCapsules = async () => {
       try {
-        const res = await axios.get(
-          'http://localhost:5000/api/capsules/all-capsules',
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await api.get('/capsules/all-capsules');
 
         const sorted = res.data.capsules.sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
@@ -41,7 +25,7 @@ const DashboardMiniCarousel = () => {
     };
 
     fetchCapsules();
-  }, [token]);
+  }, []);
 
   const getStatus = (capsule) => {
     if (capsule.status === 'Pending') {
