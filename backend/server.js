@@ -165,7 +165,10 @@ const csrfProtection = csrf({ cookie: true });
 
 // Route to get CSRF token (no validation, only generation)
 app.get('/api/csrf-token', csrfProtection, (req, res) => {
-  res.json({ csrfToken: req.csrfToken() });
+  const token = req.csrfToken();
+  console.log('🔑 Generated CSRF token:', token);
+  console.log('🔑 CSRF cookie set:', req.cookies._csrf);
+  res.json({ csrfToken: token });
 });
 
 app.use('/api', require('./routes'));

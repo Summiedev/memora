@@ -6,7 +6,17 @@ const csrf = require('csurf');
 const router = express.Router();
 
 // CSRF protection middleware for POST requests
-const csrfProtection = csrf({ cookie: true });
+const csrfProtection = (req, res, next) => {
+  console.log('🔍 CSRF check - received token:', req.headers['x-csrf-token']);
+  console.log('🔍 CSRF check - cookie token:', req.cookies._csrf);
+  csrf({ cookie: true })(req, res, (err) => {
+    if (err) {
+      console.log('❌ CSRF validation failed:', err.message);
+      return res.status(403).json({ error: 'Invalid CSRF token' });
+    }
+    next();
+  });
+};
 
 router.post('/register', csrfProtection, authController.register);
 router.post('/login', csrfProtection, authController.login);
