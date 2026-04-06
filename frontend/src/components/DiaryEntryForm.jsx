@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import api from '../utils/auth';
+import axios from 'axios';
 import { motion, AnimatePresence } from "framer-motion";
 import { Smile, Save, X, Mic, MicOff, Lock, Play, Pause, Square, Flame } from "lucide-react";
 
