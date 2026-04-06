@@ -52,16 +52,19 @@ const greetingByHour = () => {
 };
 
 // ── Tiny helpers ────────────────────────────────────────────────────────────
-const StatCard = ({ emoji, label, count, grad, border, tc, delay, onClick }) => (
+const StatCard = ({ label, count, grad, border, tc, delay, onClick }) => (
   <motion.button onClick={onClick}
     initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
     transition={{ delay, duration: 0.35 }}
     whileHover={{ scale: 1.05, y: -3 }} whileTap={{ scale: 0.97 }}
     className={`w-full text-left rounded-3xl p-5 border-2 ${border} shadow-md hover:shadow-xl transition-all`}
     style={{ background: grad }}>
-    <div className="text-3xl mb-3">{emoji}</div>
+    <div className="flex items-center gap-3 mb-3">
+      <span className="w-3 h-3 rounded-full bg-white/80 shadow-sm"></span>
+      <span className="text-xs font-semibold text-slate-700 uppercase tracking-[0.2em]">{label}</span>
+    </div>
     <div className={`text-4xl font-black chewy ${tc} leading-none mb-1`}>{count ?? <span className="opacity-30">—</span>}</div>
-    <div className={`text-xs font-bold ${tc} opacity-70 uppercase tracking-wide`}>{label}</div>
+    <div className={`text-xs font-semibold ${tc} opacity-70`}>statistic</div>
   </motion.button>
 );
 
@@ -293,19 +296,19 @@ const Dashboard = () => {
 
         {/* ── STAT CARDS ─────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <StatCard emoji="📦" label="Total"    count={capsuleStats.total}
+          <StatCard label="Total"    count={capsuleStats.total}
             grad="linear-gradient(135deg,#fce7f3,#fdf4ff)"
             border="border-pink-200" tc="text-pink-700" delay={0}
             onClick={() => window.location.href = '/capsules'} />
-          <StatCard emoji="🔓" label="Unlocked" count={capsuleStats.unlocked}
+          <StatCard label="Unlocked" count={capsuleStats.unlocked}
             grad="linear-gradient(135deg,#d1fae5,#ecfdf5)"
             border="border-emerald-200" tc="text-emerald-700" delay={0.07}
             onClick={() => window.location.href = '/capsules'} />
-          <StatCard emoji="🔒" label="Sealed"   count={capsuleStats.locked}
+          <StatCard label="Sealed"   count={capsuleStats.locked}
             grad="linear-gradient(135deg,#ede9fe,#faf5ff)"
             border="border-violet-200" tc="text-violet-700" delay={0.14}
             onClick={() => window.location.href = '/capsules'} />
-          <StatCard emoji="💌" label="Shared"   count={capsuleStats.shared}
+          <StatCard label="Shared"   count={capsuleStats.shared}
             grad="linear-gradient(135deg,#e0f2fe,#eff6ff)"
             border="border-sky-200" tc="text-sky-700" delay={0.21}
             onClick={() => window.location.href = '/capsules'} />
