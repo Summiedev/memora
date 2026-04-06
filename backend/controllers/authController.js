@@ -6,12 +6,34 @@ const sendEmail = require('../utils/sendEmail.js');
 const generateAccessToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '15m' });
 const generateRefreshToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
+const getCookieOptions = (maxAge) => {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const options = {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'None',
+        maxAge,
+        path: '/'
+    };
+    if (isProduction) {
+        options.domain = process.env.COOKIE_DOMAIN || undefined;
+    }
+    return options;
+};
+
 const register = async (req, res) => {
     try {
         const { fullname, username, email, password } = req.body;
 
+        if (!fullname || !username || !email || !password) {
+            return res.status(400).json({ error: 'fullname, username, email and password are required' });
+        }
+
         const existingUser = await User.findOne({ email });
         if (existingUser) return res.status(400).json({ error: 'Email already in use' });
+
+        const existingUsername = await User.findOne({ username });
+        if (existingUsername) return res.status(400).json({ error: 'Username already in use' });
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
@@ -30,24 +52,8 @@ const register = async (req, res) => {
         const refreshToken = generateRefreshToken(user._id);
 
         // ✅ Set HTTP-only cookies
-        const isProduction = process.env.NODE_ENV === 'production';
-        const cookieOptions = {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? 'None' : 'Strict',  // Allow cross-domain in production
-            maxAge: 15 * 60 * 1000 // 15 minutes
-        };
-        if (isProduction) {
-            // Set domain for production if needed
-            cookieOptions.domain = process.env.COOKIE_DOMAIN || undefined;
-        }
-        res.cookie('accessToken', accessToken, cookieOptions);
-        res.cookie('refreshToken', refreshToken, {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? 'None' : 'Strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-        });
+        res.cookie('accessToken', accessToken, getCookieOptions(15 * 60 * 1000));
+        res.cookie('refreshToken', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
 
         // ✅ Respond with success
         res.status(201).json({ message: 'User registered successfully' });
@@ -86,24 +92,8 @@ const login = async (req, res) => {
         const accessToken = generateAccessToken(user._id);
         const refreshToken = generateRefreshToken(user._id);
 
-        // Set HTTP-only cookies
-        const isProduction = process.env.NODE_ENV === 'production';
-        const cookieOptions = {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? 'None' : 'Strict',
-            maxAge: 15 * 60 * 1000 // 15 minutes
-        };
-        if (isProduction) {
-            cookieOptions.domain = process.env.COOKIE_DOMAIN || undefined;
-        }
-        res.cookie('accessToken', accessToken, cookieOptions);
-        res.cookie('refreshToken', refreshToken, {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? 'None' : 'Strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-        });
+        res.cookie('accessToken', accessToken, getCookieOptions(15 * 60 * 1000));
+        res.cookie('refreshToken', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
 
         res.json({ message: 'Login successful' });
     } catch (err) {
@@ -134,17 +124,7 @@ const refresh = async (req, res) => {
 
         const newAccessToken = generateAccessToken(user._id);
 
-        const isProduction = process.env.NODE_ENV === 'production';
-        const cookieOptions = {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? 'None' : 'Strict',
-            maxAge: 15 * 60 * 1000
-        };
-        if (isProduction) {
-            cookieOptions.domain = process.env.COOKIE_DOMAIN || undefined;
-        }
-        res.cookie('accessToken', newAccessToken, cookieOptions);
+        res.cookie('accessToken', newAccessToken, getCookieOptions(15 * 60 * 1000));
 
         res.json({ message: 'Token refreshed' });
     } catch (error) {
@@ -331,23 +311,8 @@ const verifyEmail = async (req, res) => {
       const accessToken = generateAccessToken(user._id);
       const refreshToken = generateRefreshToken(user._id);
 
-      const isProduction = process.env.NODE_ENV === 'production';
-      const cookieOptions = {
-          httpOnly: true,
-          secure: isProduction,
-          sameSite: isProduction ? 'None' : 'Strict',
-          maxAge: 15 * 60 * 1000
-      };
-      if (isProduction) {
-          cookieOptions.domain = process.env.COOKIE_DOMAIN || undefined;
-      }
-      res.cookie('accessToken', accessToken, cookieOptions);
-      res.cookie('refreshToken', refreshToken, {
-          httpOnly: true,
-          secure: isProduction,
-          sameSite: isProduction ? 'None' : 'Strict',
-          maxAge: 7 * 24 * 60 * 60 * 1000
-      });
+      res.cookie('accessToken', accessToken, getCookieOptions(15 * 60 * 1000));
+      res.cookie('refreshToken', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
 
       res.redirect(`${process.env.CLIENT_URL}/dashboard`);
     } catch (err) {
