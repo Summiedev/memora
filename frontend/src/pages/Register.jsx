@@ -24,19 +24,35 @@ const SignupPage = () => {
     setRegisterError(''); setSuccess('');
     try {
       setLoading(true);
+
       await api.post('/auth/register', formData);
       setSuccess('Account created! Logging you in... ✨');
-      
-      // Auto-login after successful registration
-      await api.post('/auth/login', { 
-        username: formData.username, 
-        password: formData.password 
-      });
-      
-      setTimeout(() => { window.location.href = '/dashboard'; }, 2000);
+
+      try {
+        await api.post('/auth/login', {
+          username: formData.username,
+          password: formData.password,
+        });
+        setTimeout(() => { window.location.href = '/dashboard'; }, 2000);
+      } catch (loginErr) {
+        setLoading(false);
+        setRegisterError(
+          loginErr.response?.data?.error ||
+          loginErr.response?.data?.message ||
+          loginErr.response?.statusText ||
+          loginErr.message ||
+          'Account created, but automatic login failed. Please try logging in manually.'
+        );
+      }
     } catch (err) {
       setLoading(false);
-      setRegisterError(err.response?.data?.error || 'Something went wrong — try a different username!');
+      setRegisterError(
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.response?.statusText ||
+        err.message ||
+        'Something went wrong. Please check your details and try again.'
+      );
     }
   };
 
