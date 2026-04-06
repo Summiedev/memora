@@ -25,7 +25,14 @@ const SignupPage = () => {
     try {
       setLoading(true);
       await api.post('/auth/register', formData);
-      setSuccess('Account created! Welcome to Memora ✨');
+      setSuccess('Account created! Logging you in... ✨');
+      
+      // Auto-login after successful registration
+      await api.post('/auth/login', { 
+        username: formData.username, 
+        password: formData.password 
+      });
+      
       setTimeout(() => { window.location.href = '/dashboard'; }, 2000);
     } catch (err) {
       setLoading(false);
@@ -37,7 +44,7 @@ const SignupPage = () => {
 
   return (
     <>
-      {loading && <MemoraLoaderOverlay message="Creating your Memora account ₊˚⊹♡" />}
+      {loading && <MemoraLoaderOverlay message="Creating your Memora account & logging you in ₊˚⊹♡" />}
       <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden"
         style={{ background:"linear-gradient(160deg,#fce4f3 0%,#e8d5ff 45%,#c7e8ff 100%)" }}>
 
