@@ -30,16 +30,22 @@ const register = async (req, res) => {
         const refreshToken = generateRefreshToken(user._id);
 
         // ✅ Set HTTP-only cookies
-        res.cookie('accessToken', accessToken, {
+        const isProduction = process.env.NODE_ENV === 'production';
+        const cookieOptions = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'Strict',
+            secure: isProduction,
+            sameSite: isProduction ? 'None' : 'Strict',  // Allow cross-domain in production
             maxAge: 15 * 60 * 1000 // 15 minutes
-        });
+        };
+        if (isProduction) {
+            // Set domain for production if needed
+            cookieOptions.domain = process.env.COOKIE_DOMAIN || undefined;
+        }
+        res.cookie('accessToken', accessToken, cookieOptions);
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'Strict',
+            secure: isProduction,
+            sameSite: isProduction ? 'None' : 'Strict',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
@@ -81,16 +87,21 @@ const login = async (req, res) => {
         const refreshToken = generateRefreshToken(user._id);
 
         // Set HTTP-only cookies
-        res.cookie('accessToken', accessToken, {
+        const isProduction = process.env.NODE_ENV === 'production';
+        const cookieOptions = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'Strict',
+            secure: isProduction,
+            sameSite: isProduction ? 'None' : 'Strict',
             maxAge: 15 * 60 * 1000 // 15 minutes
-        });
+        };
+        if (isProduction) {
+            cookieOptions.domain = process.env.COOKIE_DOMAIN || undefined;
+        }
+        res.cookie('accessToken', accessToken, cookieOptions);
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'Strict',
+            secure: isProduction,
+            sameSite: isProduction ? 'None' : 'Strict',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
@@ -123,12 +134,17 @@ const refresh = async (req, res) => {
 
         const newAccessToken = generateAccessToken(user._id);
 
-        res.cookie('accessToken', newAccessToken, {
+        const isProduction = process.env.NODE_ENV === 'production';
+        const cookieOptions = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'Strict',
+            secure: isProduction,
+            sameSite: isProduction ? 'None' : 'Strict',
             maxAge: 15 * 60 * 1000
-        });
+        };
+        if (isProduction) {
+            cookieOptions.domain = process.env.COOKIE_DOMAIN || undefined;
+        }
+        res.cookie('accessToken', newAccessToken, cookieOptions);
 
         res.json({ message: 'Token refreshed' });
     } catch (error) {
@@ -315,16 +331,21 @@ const verifyEmail = async (req, res) => {
       const accessToken = generateAccessToken(user._id);
       const refreshToken = generateRefreshToken(user._id);
 
-      res.cookie('accessToken', accessToken, {
+      const isProduction = process.env.NODE_ENV === 'production';
+      const cookieOptions = {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'Strict',
+          secure: isProduction,
+          sameSite: isProduction ? 'None' : 'Strict',
           maxAge: 15 * 60 * 1000
-      });
+      };
+      if (isProduction) {
+          cookieOptions.domain = process.env.COOKIE_DOMAIN || undefined;
+      }
+      res.cookie('accessToken', accessToken, cookieOptions);
       res.cookie('refreshToken', refreshToken, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'Strict',
+          secure: isProduction,
+          sameSite: isProduction ? 'None' : 'Strict',
           maxAge: 7 * 24 * 60 * 60 * 1000
       });
 

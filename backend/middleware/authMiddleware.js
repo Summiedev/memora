@@ -6,11 +6,18 @@ const User = require('../models/user.js'); // Adjust the path as necessary
 const authenticateUser = async (req, res, next) => {
     try {
         const token = req.cookies.accessToken;
-        if (!token) return res.status(401).json({ error: 'Access denied. No token provided.' });
+        console.log('🔍 Auth check - accessToken cookie:', !!token ? 'present' : 'missing');
+        if (!token) {
+            console.log('❌ No access token in cookies');
+            return res.status(401).json({ error: 'Access denied. No token provided.' });
+        }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findById(decoded.id);
-        if (!user) return res.status(401).json({ error: 'Invalid token.' });
+        if (!user) {
+            console.log('❌ Invalid user ID from token');
+            return res.status(401).json({ error: 'Invalid token.' });
+        }
 
         req.user = user;
         next();
