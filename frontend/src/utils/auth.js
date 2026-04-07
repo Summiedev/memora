@@ -39,22 +39,42 @@ const subscribeRefresh = (cb) => {
   refreshSubscribers.push(cb);
 };
 
-// CSRF Token Management
-export async function getCsrfToken(forceRefresh = false) {
+// CSRF Token Management with retry logic for mobile
+export async function getCsrfToken(forceRefresh = false, retryCount = 0) {
+  const MAX_RETRIES = 3;
+  
   if (cachedCsrfToken && !forceRefresh) {
     return cachedCsrfToken;
   }
   
   try {
+    console.log(`[CSRF] Fetching token (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`);
     cachedCsrfToken = null; // Clear cache before fetching fresh token
+    
     const response = await axios.get(`${BASE_URL}/csrf-token`, {
       withCredentials: true,
+      timeout: 10000, // 10 second timeout
     });
-    cachedCsrfToken = response.data.csrfToken;
-    return cachedCsrfToken;
+    
+    const token = response.data.csrfToken;
+    if (!token) {
+      throw new Error('CSRF token not in response');
+    }
+    
+    cachedCsrfToken = token;
+    console.log('[CSRF] Token fetched successfully');
+    return token;
   } catch (err) {
-    console.error('Failed to fetch CSRF token:', err);
+    console.error('[CSRF] Failed to fetch token:', err.message);
     cachedCsrfToken = null;
+    
+    // Retry logic for transient failures
+    if (retryCount < MAX_RETRIES) {
+      console.log(`[CSRF] Retrying in 500ms...`);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return getCsrfToken(forceRefresh, retryCount + 1);
+    }
+    
     return null;
   }
 }
@@ -91,19 +111,31 @@ api.interceptors.request.use(async (config) => {
   
   if (authEndpoints.some(endpoint => config.url?.includes(endpoint))) {
     try {
+      console.log(`[Auth] ${config.method?.toUpperCase()} ${config.url} - fetching CSRF token...`);
+      
       // Always get fresh CSRF token for auth endpoints
       const csrfToken = await getCsrfToken(true);
+      
       if (csrfToken) {
         config.headers['X-CSRF-Token'] = csrfToken;
+        console.log('[Auth] CSRF token added to request');
       } else {
-        console.warn('CSRF token unavailable for auth endpoint');
+        console.warn('[Auth] CSRF token unavailable - proceeding without it');
       }
     } catch (err) {
-      console.error('Error adding CSRF token:', err);
+      console.error('[Auth] Error adding CSRF token:', err);
     }
   }
   
+  console.log('[Request]', config.method?.toUpperCase(), config.url, {
+    withCredentials: config.withCredentials,
+    csrfToken: config.headers['X-CSRF-Token'] ? 'present' : 'absent'
+  });
+  
   return config;
+}, (err) => {
+  console.error('[Request Interceptor Error]', err);
+  return Promise.reject(err);
 });
 
 api.interceptors.response.use(
@@ -111,6 +143,38 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     const status = error.response?.status;
+    const errorData = error.response?.data;
+    const iscsrf = errorData?.error?.toLowerCase().includes('csrf') || 
+                   errorData?.message?.toLowerCase().includes('csrf') ||
+                   status === 403;
+
+    // Log response errors
+    console.error('[Response Error]', {
+      status,
+      isCSRF: iscsrf,
+      message: errorData?.error || errorData?.message || error.message,
+      url: originalRequest?.url
+    });
+
+    // Handle CSRF token errors with retry on mobile
+    if (iscsrf && originalRequest && !originalRequest._csrfRetry) {
+      console.log('[CSRF Error] Retrying with fresh CSRF token...');
+      originalRequest._csrfRetry = true;
+      
+      try {
+        // Clear cache and get fresh token
+        clearCsrfCache();
+        const freshToken = await getCsrfToken(true);
+        
+        if (freshToken) {
+          originalRequest.headers['X-CSRF-Token'] = freshToken;
+          console.log('[CSRF Error] Retrying request with fresh token');
+          return api(originalRequest);
+        }
+      } catch (err) {
+        console.error('[CSRF Error] Failed to retry:', err);
+      }
+    }
 
     if (
       status === 401 &&

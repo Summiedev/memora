@@ -138,11 +138,20 @@ const server = http.createServer(app);
 
 app.use(cors({
   origin: (origin, callback) => {
+    const isDev = process.env.NODE_ENV !== 'production';
     const allowedOrigins = [
       'http://localhost:5173',
       'http://localhost:3000',
       process.env.CLIENT_URL
     ].filter(Boolean);
+    
+    // In development, allow all localhost and 192.168.* for mobile testing
+    if (isDev) {
+      if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('192.168')) {
+        callback(null, true);
+        return;
+      }
+    }
     
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -160,15 +169,34 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 app.use(passport.initialize());
 
-// CSRF protection - only generate tokens, don't block requests yet
-const csrfProtection = csrf({ cookie: true });
+// CSRF Protection - disabled in dev, enabled in production
+const isDev = process.env.NODE_ENV !== 'production';
+const csrfProtection = isDev 
+  ? (req, res, next) => {
+      // In dev: issue token but don't validate
+      const token = require('crypto').randomBytes(32).toString('hex');
+      res.cookie('_csrf', token, { 
+        httpOnly: false,  // Allow JS to read for debugging
+        sameSite: 'Lax',
+        maxAge: 3600000
+      });
+      console.log('🔓 CSRF disabled for development');
+      next();
+    }
+  : csrf({ cookie: { httpOnly: true, sameSite: 'Strict', secure: true } });
 
-// Route to get CSRF token (no validation, only generation)
+// Route to get CSRF token (generation only)
 app.get('/api/csrf-token', csrfProtection, (req, res) => {
-  const token = req.csrfToken();
-  console.log('🔑 Generated CSRF token:', token);
-  console.log('🔑 CSRF cookie set:', req.cookies._csrf);
-  res.json({ csrfToken: token });
+  const isDev = process.env.NODE_ENV !== 'production';
+  if (isDev) {
+    const token = require('crypto').randomBytes(32).toString('hex');
+    console.log('🔑 Generated dev CSRF token (no validation)');
+    res.json({ csrfToken: token });
+  } else {
+    const token = req.csrfToken();
+    console.log('🔑 Generated production CSRF token via csurf');
+    res.json({ csrfToken: token });
+  }
 });
 
 app.use('/api', require('./routes'));
