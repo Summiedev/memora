@@ -811,7 +811,7 @@ import api from '../utils/auth';
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Upload, X, Lock, Bell, Users, Tag, ImageIcon, ChevronRight, ChevronLeft, Check, Sparkles, Calendar } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 
 // ── colour palette for emotion tags ──────────────────────────────────
 const EMOTIONS = [
@@ -897,7 +897,6 @@ const TimeCapsuleModal = ({ isOpen, closeModal, addCapsule }) => {
   const [sendDate, setSendDate]       = useState('');
   const [lockUntilSend, setLock]      = useState(false);
   const [reminder, setReminder]       = useState(false);
-  const [dateError, setDateError]     = useState('');
 
   // sharing
   const [capsuleType, setCapsuleType] = useState('private');
@@ -1204,7 +1203,7 @@ const TimeCapsuleModal = ({ isOpen, closeModal, addCapsule }) => {
                     </div>
                     <p className="text-xs text-purple-400 mb-3">When should this capsule become available to open?</p>
                     <input type="datetime-local" value={sendDate}
-                      onChange={e => { setSendDate(e.target.value); setDateError(''); }}
+                      onChange={e => { setSendDate(e.target.value); }}
                       min={minDate}
                       className={inp + ' bg-white'}
                       style={{ colorScheme:'light' }} />

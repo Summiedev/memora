@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import MobileBottomNav from "../components/MobileBottomNav";
 import Navbar_Main from "../components/Navbar_main";
-import { AnimatePresence,motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import FloatingActions from "../components/FloatingBtn";
 import { useLocation } from "react-router-dom";
 import DashboardMiniCarousel from "../components/DashboardCaraousel";

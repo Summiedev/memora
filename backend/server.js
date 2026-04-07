@@ -169,7 +169,7 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 app.use(passport.initialize());
 
-// CSRF Protection - disabled in dev, enabled in production
+// CSRF Protection - with mobile-friendly SameSite=Lax
 const isDev = process.env.NODE_ENV !== 'production';
 const csrfProtection = isDev 
   ? (req, res, next) => {
@@ -180,21 +180,26 @@ const csrfProtection = isDev
         sameSite: 'Lax',
         maxAge: 3600000
       });
-      console.log('🔓 CSRF disabled for development');
       next();
     }
-  : csrf({ cookie: { httpOnly: true, sameSite: 'Strict', secure: true } });
+  : csrf({ 
+      cookie: { 
+        httpOnly: true, 
+        sameSite: 'Lax',  // Mobile-friendly: works across origins better
+        secure: process.env.HTTPS === 'true'  // Only if HTTPS
+      } 
+    });
 
 // Route to get CSRF token (generation only)
 app.get('/api/csrf-token', csrfProtection, (req, res) => {
   const isDev = process.env.NODE_ENV !== 'production';
   if (isDev) {
     const token = require('crypto').randomBytes(32).toString('hex');
-    console.log('🔑 Generated dev CSRF token (no validation)');
+    console.log('🔑 Dev: Generated CSRF token (no validation)');
     res.json({ csrfToken: token });
   } else {
     const token = req.csrfToken();
-    console.log('🔑 Generated production CSRF token via csurf');
+    console.log('🔑 Production: Generated CSRF token');
     res.json({ csrfToken: token });
   }
 });

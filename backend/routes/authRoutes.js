@@ -9,19 +9,24 @@ const router = express.Router();
 const isDev = process.env.NODE_ENV !== 'production';
 const csrfProtection = (req, res, next) => {
   if (isDev) {
-    // In development: skip CSRF validation but still log
     console.log('🔓 CSRF validation skipped (development mode)');
-    console.log('   Received token:', req.headers['x-csrf-token']);
-    console.log('   Cookie token:', req.cookies._csrf);
     return next();
   }
   
-  // In production: validate CSRF
-  console.log('🔍 CSRF check - received token:', req.headers['x-csrf-token']);
-  console.log('🔍 CSRF check - cookie token:', req.cookies._csrf);
-  csrf({ cookie: true })(req, res, (err) => {
+  // Production: Use Lax instead of Strict for better mobile support
+  const expressCSRF = csrf({ 
+    cookie: { 
+      httpOnly: true, 
+      sameSite: 'Lax',  // Better mobile browser support than Strict or None
+      secure: process.env.HTTPS === 'true' || process.env.NODE_ENV === 'production'
+    } 
+  });
+  
+  expressCSRF(req, res, (err) => {
     if (err) {
       console.log('❌ CSRF validation failed:', err.message);
+      console.log('   Received:', req.headers['x-csrf-token']);
+      console.log('   Cookie:', req.cookies._csrf);
       return res.status(403).json({ error: 'Invalid CSRF token' });
     }
     next();

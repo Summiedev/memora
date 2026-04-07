@@ -4,7 +4,7 @@ import {
   Bell, Settings, LogOut, X, Home, Archive,
   Users, BookOpen, ChevronDown, Menu,
 } from "lucide-react";
-import { AnimatePresence,motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import TimeCapsuleModal from "./CreateCapsuleForm";
 import ProfileSettingsPage from "../pages/Profile_Settings";
 import api from "../utils/auth";
@@ -116,6 +116,7 @@ const Navbar_Main = () => {
             {/* Desktop Nav Links */}
             {user && !loadingUser && (
               <div className="hidden md:flex items-center gap-1">
+                {/* eslint-disable-next-line no-unused-vars */}
                 {NAV_LINKS.map(({ href, label, icon: Icon }) => {
                   const isActive = currentPath === href;
                   return (
