@@ -266,7 +266,7 @@ const verifyEmail = async (req, res) => {
             password: encryptedPassword,
           },
         }
-      );
+      );``
   
   
       await user.save();
