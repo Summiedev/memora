@@ -40,12 +40,13 @@ const subscribeRefresh = (cb) => {
 };
 
 // CSRF Token Management
-export async function getCsrfToken() {
-  if (cachedCsrfToken) {
+export async function getCsrfToken(forceRefresh = false) {
+  if (cachedCsrfToken && !forceRefresh) {
     return cachedCsrfToken;
   }
   
   try {
+    cachedCsrfToken = null; // Clear cache before fetching fresh token
     const response = await axios.get(`${BASE_URL}/csrf-token`, {
       withCredentials: true,
     });
@@ -53,8 +54,14 @@ export async function getCsrfToken() {
     return cachedCsrfToken;
   } catch (err) {
     console.error('Failed to fetch CSRF token:', err);
+    cachedCsrfToken = null;
     return null;
   }
+}
+
+// Clear cached CSRF token (call this on logout)
+export function clearCsrfCache() {
+  cachedCsrfToken = null;
 }
 
 const refreshSession = async () => {
@@ -81,11 +88,15 @@ api.interceptors.request.use(async (config) => {
     '/auth/requestPasswordReset',
     '/auth/resetPassword'
   ];
+  
   if (authEndpoints.some(endpoint => config.url?.includes(endpoint))) {
     try {
-      const csrfToken = await getCsrfToken();
+      // Always get fresh CSRF token for auth endpoints
+      const csrfToken = await getCsrfToken(true);
       if (csrfToken) {
         config.headers['X-CSRF-Token'] = csrfToken;
+      } else {
+        console.warn('CSRF token unavailable for auth endpoint');
       }
     } catch (err) {
       console.error('Error adding CSRF token:', err);

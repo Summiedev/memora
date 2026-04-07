@@ -25,16 +25,21 @@ const SignupPage = () => {
     try {
       setLoading(true);
 
+      console.log('Attempting registration with:', { ...formData, password: '[REDACTED]' });
       await api.post('/auth/register', formData);
+      console.log('Registration successful');
       setSuccess('Account created! Logging you in... ✨');
 
       try {
+        console.log('Attempting auto-login...');
         await api.post('/auth/login', {
           username: formData.username,
           password: formData.password,
         });
+        console.log('Auto-login successful, redirecting to dashboard');
         setTimeout(() => { window.location.href = '/dashboard'; }, 2000);
       } catch (loginErr) {
+        console.error('Auto-login failed:', loginErr);
         setLoading(false);
         setRegisterError(
           loginErr.response?.data?.error ||
@@ -45,6 +50,7 @@ const SignupPage = () => {
         );
       }
     } catch (err) {
+      console.error('Registration failed:', err);
       setLoading(false);
       setRegisterError(
         err.response?.data?.error ||
