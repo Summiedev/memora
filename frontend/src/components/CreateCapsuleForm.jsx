@@ -811,7 +811,7 @@ import api from '../utils/auth';
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Upload, X, Lock, Bell, Users, Tag, ImageIcon, ChevronRight, ChevronLeft, Check, Sparkles, Calendar } from 'lucide-react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence,motion } from 'framer-motion';
 
 // ── colour palette for emotion tags ──────────────────────────────────
 const EMOTIONS = [

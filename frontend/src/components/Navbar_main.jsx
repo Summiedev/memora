@@ -4,7 +4,7 @@ import {
   Bell, Settings, LogOut, X, Home, Archive,
   Users, BookOpen, ChevronDown, Menu,
 } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence,motion } from "framer-motion";
 import TimeCapsuleModal from "./CreateCapsuleForm";
 import ProfileSettingsPage from "../pages/Profile_Settings";
 import api from "../utils/auth";
