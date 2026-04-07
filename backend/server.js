@@ -178,15 +178,17 @@ const csrfProtection = isDev
       res.cookie('_csrf', token, { 
         httpOnly: false,  // Allow JS to read for debugging
         sameSite: 'Lax',
-        maxAge: 3600000
+        maxAge: 3600000,
+        path: '/'
       });
       next();
     }
   : csrf({ 
       cookie: { 
         httpOnly: true, 
-        sameSite: 'Lax',  // Mobile-friendly: works across origins better
-        secure: process.env.HTTPS === 'true'  // Only if HTTPS
+        sameSite: 'None',  // Required for cross-domain frontend/backend cookies
+        secure: process.env.HTTPS === 'true',  // Only if HTTPS
+        path: '/'
       } 
     });
 
