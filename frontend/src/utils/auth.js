@@ -210,7 +210,11 @@ api.interceptors.response.use(
       });
     }
 
-    if (status === 403) {
+    // Only redirect to login on 403 for protected routes, not for auth endpoints themselves
+    if (status === 403 &&
+        !originalRequest?.url?.includes("/auth/register") &&
+        !originalRequest?.url?.includes("/auth/login") &&
+        !originalRequest?.url?.includes("/csrf-token")) {
       window.location.href = "/login";
     }
 

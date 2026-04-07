@@ -28,27 +28,10 @@ const SignupPage = () => {
       console.log('Attempting registration with:', { ...formData, password: '[REDACTED]' });
       await api.post('/auth/register', formData);
       console.log('Registration successful');
-      setSuccess('Account created! Logging you in... ✨');
+      setSuccess('Account created! Taking you to your dashboard... ✨');
 
-      try {
-        console.log('Attempting auto-login...');
-        await api.post('/auth/login', {
-          username: formData.username,
-          password: formData.password,
-        });
-        console.log('Auto-login successful, redirecting to dashboard');
-        setTimeout(() => { window.location.href = '/dashboard'; }, 2000);
-      } catch (loginErr) {
-        console.error('Auto-login failed:', loginErr);
-        setLoading(false);
-        setRegisterError(
-          loginErr.response?.data?.error ||
-          loginErr.response?.data?.message ||
-          loginErr.response?.statusText ||
-          loginErr.message ||
-          'Account created, but automatic login failed. Please try logging in manually.'
-        );
-      }
+      // Registration already sets auth cookies, no need to call login separately
+      setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
     } catch (err) {
       console.error('Registration failed:', err);
       setLoading(false);
