@@ -2,42 +2,15 @@ const express = require('express');
 const authMiddleware = require('../middleware/authMiddleware');
 const authController = require('../controllers/authController'); // Using require for named imports
 const passport = require('passport');
-const csrf = require('csurf');
 const router = express.Router();
 
-// CSRF protection middleware for POST requests
-const isDev = process.env.NODE_ENV !== 'production';
-const csrfProtection = (req, res, next) => {
-  if (isDev) {
-    console.log('🔓 CSRF validation skipped (development mode)');
-    return next();
-  }
-  
-  // Production: Use Lax instead of Strict for better mobile support
-  const expressCSRF = csrf({ 
-    cookie: { 
-      httpOnly: true, 
-      sameSite: 'Lax',  // Better mobile browser support than Strict or None
-      secure: process.env.HTTPS === 'true' || process.env.NODE_ENV === 'production'
-    } 
-  });
-  
-  expressCSRF(req, res, (err) => {
-    if (err) {
-      console.log('❌ CSRF validation failed:', err.message);
-      console.log('   Received:', req.headers['x-csrf-token']);
-      console.log('   Cookie:', req.cookies._csrf);
-      return res.status(403).json({ error: 'Invalid CSRF token' });
-    }
-    next();
-  });
-};
+// JWT httpOnly cookies with SameSite=Lax handle CSRF — no additional CSRF middleware needed
 
-router.post('/register', csrfProtection, authController.register);
-router.post('/login', csrfProtection, authController.login);
-router.post('/refresh', csrfProtection, authController.refresh);
-router.post('/logout', csrfProtection, authController.logout);
-router.post('/forgot-password', csrfProtection, authController.forgotPassword);
+router.post('/register', authController.register);
+router.post('/login', authController.login);
+router.post('/refresh', authController.refresh);
+router.post('/logout', authController.logout);
+router.post('/forgot-password', authController.forgotPassword);
 router.get('/verify-email', authController.verifyEmail);
 
 router.get('/profile', authMiddleware, authController.getUserProfile);

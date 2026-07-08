@@ -1,0 +1,184 @@
+/* ─────────────────────────────────────────────────────────
+   Memora Homepage — "Exposure"
+   Scoped entirely under .memora-home so nothing here leaks
+   into the dashboard / auth pages, which keep their own
+   pastel identity untouched.
+   ───────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,450;0,9..144,600;1,9..144,400;1,9..144,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+.memora-home {
+  --ink: #131009;
+  --ink-soft: #1d1912;
+  --paper: #f1e8d6;
+  --paper-deep: #e4d8bd;
+  --safelight: #b0441f;
+  --safelight-dim: #8a3719;
+  --patina: #6f8b7f;
+  --ink-text: #2a2117;
+  --cream-text: #f1e8d6;
+  --cream-text-dim: rgba(241, 232, 214, 0.62);
+  --ink-text-dim: rgba(42, 33, 23, 0.6);
+
+  --font-display: 'Fraunces', 'Iowan Old Style', serif;
+  --font-body: 'Inter', -apple-system, sans-serif;
+  --font-type: 'Special Elite', 'Courier New', monospace;
+
+  font-family: var(--font-body);
+  background: var(--ink);
+  overflow-x: clip;
+}
+
+.memora-home * {
+  box-sizing: border-box;
+}
+
+/* ── shared type helpers ─────────────────────────────────── */
+.mh-display {
+  font-family: var(--font-display);
+  font-weight: 450;
+  letter-spacing: -0.01em;
+}
+.mh-type {
+  font-family: var(--font-type);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.68rem;
+}
+.mh-italic {
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* ── film grain overlay, used sparingly ──────────────────── */
+.mh-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 160px 160px;
+}
+
+/* ── hero photograph: develops from grain into clarity ───── */
+.mh-plate {
+  filter: grayscale(1) blur(10px) brightness(0.35) contrast(0.7) saturate(0.55);
+  animation: mh-develop 2.8s cubic-bezier(0.19, 0.68, 0.24, 1) 0.15s forwards;
+}
+@keyframes mh-develop {
+  55% {
+    filter: grayscale(0.45) blur(2px) brightness(0.82) contrast(0.92) saturate(0.8);
+  }
+  100% {
+    filter: grayscale(0.06) blur(0) brightness(1) contrast(1.04) saturate(1);
+  }
+}
+
+/* ── envelope (Vault section) ────────────────────────────── */
+.mh-envelope-scene {
+  perspective: 1400px;
+}
+.mh-flap {
+  transform-style: preserve-3d;
+  transform-origin: 50% 0%;
+  clip-path: polygon(0 0, 100% 0, 50% 68%);
+}
+.mh-seal {
+  background: radial-gradient(circle at 35% 30%, var(--safelight), var(--safelight-dim) 70%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* ── filmstrip (Archive section) ─────────────────────────── */
+.mh-reel {
+  background: var(--ink);
+  position: relative;
+}
+.mh-sprockets {
+  display: flex;
+  gap: 22px;
+  padding: 0 14px;
+}
+.mh-sprockets span {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--paper-deep);
+  opacity: 0.28;
+  flex-shrink: 0;
+}
+.mh-frame {
+  border: 1px solid rgba(241, 232, 214, 0.18);
+}
+
+/* ── shared circle (connection line) ─────────────────────── */
+.mh-photo-chip {
+  border: 6px solid var(--paper);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+/* ── begin section: mouse-follow safelight glow ──────────── */
+.mh-glow-frame {
+  border: 8px solid var(--paper);
+  position: relative;
+  overflow: hidden;
+  background: var(--ink-soft);
+}
+
+/* ── buttons: flat ink stamps, never pills ───────────────── */
+.mh-btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 0.85rem 1.7rem;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), background 0.35s ease, color 0.35s ease;
+}
+.mh-btn-solid {
+  background: var(--paper);
+  color: var(--ink);
+}
+.mh-btn-solid:hover {
+  transform: translateY(-2px);
+  background: var(--cream-text);
+}
+.mh-btn-outline {
+  border: 1px solid var(--cream-text-dim);
+  color: var(--cream-text);
+  background: transparent;
+}
+.mh-btn-outline:hover {
+  border-color: var(--cream-text);
+  transform: translateY(-2px);
+}
+.mh-btn-outline-dark {
+  border: 1px solid var(--ink-text-dim);
+  color: var(--ink-text);
+  background: transparent;
+}
+.mh-btn-outline-dark:hover {
+  border-color: var(--ink-text);
+  transform: translateY(-2px);
+}
+
+/* ── reduced motion: kill everything decorative ──────────── */
+@media (prefers-reduced-motion: reduce) {
+  .mh-plate {
+    animation: none;
+    filter: none;
+  }
+  .memora-home * {
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .mh-envelope-scene {
+    perspective: 900px;
+  }
+}

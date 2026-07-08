@@ -14,6 +14,7 @@ import FriendsPage from "./pages/FriendsPage";
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import ResetConfirmation from "./pages/ResretConfirmation";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   function TokenHandler() {
@@ -44,14 +45,14 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        <Route path="/capsules" element={<CapsulesListPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/capsules" element={<ProtectedRoute><CapsulesListPage /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
 
-        <Route path="/profile" element={<ProfileSettingsPage />} />
+        <Route path="/profile" element={<ProtectedRoute><ProfileSettingsPage /></ProtectedRoute>} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/memories" element={<MemoriesListPage />} />
-         <Route path="/friends" element={<FriendsPage />} />
+        <Route path="/memories" element={<ProtectedRoute><MemoriesListPage /></ProtectedRoute>} />
+         <Route path="/friends" element={<ProtectedRoute><FriendsPage /></ProtectedRoute>} />
          <Route path="/reset-confirmation" element={<ResetConfirmation />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

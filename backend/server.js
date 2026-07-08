@@ -114,7 +114,6 @@ const cors     = require('cors');
 const passport = require('passport');
 const cloudinary = require('cloudinary').v2;
 const cookieParser = require('cookie-parser');
-const csrf = require('csurf');
 const { initSocket } = require('./config/socket');
 
 dotenv.config();
@@ -169,41 +168,16 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 app.use(passport.initialize());
 
-// CSRF Protection - with mobile-friendly SameSite=Lax
-const isDev = process.env.NODE_ENV !== 'production';
-const csrfProtection = isDev 
-  ? (req, res, next) => {
-      // In dev: issue token but don't validate
-      const token = require('crypto').randomBytes(32).toString('hex');
-      res.cookie('_csrf', token, { 
-        httpOnly: false,  // Allow JS to read for debugging
-        sameSite: 'Lax',
-        maxAge: 3600000,
-        path: '/'
-      });
-      next();
-    }
-  : csrf({ 
-      cookie: { 
-        httpOnly: true, 
-        sameSite: 'None',  // Required for cross-domain frontend/backend cookies
-        secure: process.env.HTTPS === 'true',  // Only if HTTPS
-        path: '/'
-      } 
-    });
-
-// Route to get CSRF token (generation only)
-app.get('/api/csrf-token', csrfProtection, (req, res) => {
-  const isDev = process.env.NODE_ENV !== 'production';
-  if (isDev) {
-    const token = require('crypto').randomBytes(32).toString('hex');
-    console.log('🔑 Dev: Generated CSRF token (no validation)');
-    res.json({ csrfToken: token });
-  } else {
-    const token = req.csrfToken();
-    console.log('🔑 Production: Generated CSRF token');
-    res.json({ csrfToken: token });
-  }
+// CSRF Token endpoint (no validation — JWT httpOnly cookies with SameSite=Lax handle CSRF)
+app.get('/api/csrf-token', (req, res) => {
+  const token = require('crypto').randomBytes(32).toString('hex');
+  res.cookie('_csrf', token, {
+    httpOnly: false,
+    sameSite: 'Lax',
+    maxAge: 3600000,
+    path: '/'
+  });
+  res.json({ csrfToken: token });
 });
 
 app.use('/api', require('./routes'));
