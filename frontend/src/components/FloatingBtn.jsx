@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+﻿import { useState, useRef } from "react";
 import { Plus, X, Camera, Pencil } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import TimeCapsuleModal from "./CreateCapsuleForm";
@@ -24,7 +24,7 @@ const FloatingActions = ({ onCreate }) => {
 
   return (
     <>
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-24 right-4 sm:bottom-6 sm:right-6 z-50">
         <div className="relative flex items-end justify-end">
           <AnimatePresence>
             {open && (

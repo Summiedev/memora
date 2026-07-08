@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+﻿import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Sparkles, ChevronRight, Plus, BookOpen, Camera, Pencil,
   RefreshCw, Send, Check, Lock, Unlock, Share2, Sun,
@@ -26,7 +26,7 @@ import StreakCard from '../components/StreakCard';
 import GroupDiary from '../components/GroupDiary';
 import api from "../utils/auth";
 
-// ── Prompts pool ────────────────────────────────────────────────────────────
+// â”€â”€ Prompts pool â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const PROMPTS = [
   { text: "What made you smile today?",                 icon: Sun },
   { text: "Who are you grateful for right now?",        icon: Heart },
@@ -42,9 +42,9 @@ const PROMPTS = [
 
 const TIPS = [
   "Add a lock date to your capsule so it stays sealed until the right moment",
-  "Share a capsule with a friend — they'll love the surprise",
+  "Share a capsule with a friend â€” they'll love the surprise",
   "Use emotion tags so you can find memories by how they felt",
-  "Write a letter to your future self — your future you will thank you",
+  "Write a letter to your future self â€” your future you will thank you",
 ];
 
 const greetingByHour = () => {
@@ -54,8 +54,8 @@ const greetingByHour = () => {
   return "Good evening";
 };
 
-// ── Tiny helpers ────────────────────────────────────────────────────────────
-const StatCard = ({ label, count, grad, border, tc, delay, onClick }) => (
+// â”€â”€ Tiny helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const StatCard = ({ label, count, subtitle, grad, border, tc, delay, onClick }) => (
   <motion.button onClick={onClick}
     initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
     transition={{ delay, duration: 0.35 }}
@@ -66,12 +66,12 @@ const StatCard = ({ label, count, grad, border, tc, delay, onClick }) => (
       <span className="w-3 h-3 rounded-full bg-white/80 shadow-sm"></span>
       <span className="text-xs font-semibold text-slate-700 uppercase tracking-[0.2em]">{label}</span>
     </div>
-    <div className={`text-4xl font-black chewy ${tc} leading-none mb-1`}>{count ?? <span className="opacity-30">—</span>}</div>
-    <div className={`text-xs font-semibold ${tc} opacity-70`}>statistic</div>
+    <div className={`text-4xl font-black chewy ${tc} leading-none mb-1`}>{count ?? <span className="opacity-30">â€”</span>}</div>
+    <div className={`text-xs font-semibold ${tc} opacity-70`}>{subtitle}</div>
   </motion.button>
 );
 
-// ── Prompt card with inline response ───────────────────────────────────────
+// â”€â”€ Prompt card with inline response â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const PromptCard = ({ prompt, onSave, onNext }) => {
   const [text, setText] = useState('');
   const [saved, setSaved] = useState(false);
@@ -117,7 +117,7 @@ const PromptCard = ({ prompt, onSave, onNext }) => {
       {/* Text area */}
       <div className="px-5 pb-2">
         <textarea ref={ta} value={text} onChange={e => setText(e.target.value)}
-          placeholder="Write your answer here… pour your heart out"
+          placeholder="Write your answer hereâ€¦ pour your heart out"
           rows={4}
           className="w-full resize-none bg-white/70 rounded-2xl border-2 border-purple-100 focus:border-pink-300 focus:ring-4 focus:ring-pink-50 outline-none px-4 py-3 text-sm text-purple-900 placeholder-purple-300 leading-relaxed transition-all"
           style={{ fontFamily: "'Quicksand', sans-serif" }} />
@@ -125,11 +125,11 @@ const PromptCard = ({ prompt, onSave, onNext }) => {
 
       {/* Actions */}
       <div className="px-5 pb-4 flex items-center justify-between">
-        <p className="text-xs text-purple-300 font-medium">{text.length > 0 ? `${text.length} chars` : 'Start typing…'}</p>
+        <p className="text-xs text-purple-300 font-medium">{text.length > 0 ? `${text.length} chars` : 'Start typingâ€¦'}</p>
         <button onClick={handleSave} disabled={!text.trim() || saving || saved}
           className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold text-white shadow transition-all hover:scale-105 disabled:opacity-50 ${saved ? 'bg-emerald-500' : ''}`}
           style={!saved ? { background: 'linear-gradient(135deg,#ec4899,#8b5cf6)' } : {}}>
-          {saved ? <><Check size={14}/> Saved!</> : saving ? 'Saving…' : <><Send size={13}/> Save to Diary</>}
+          {saved ? <><Check size={14}/> Saved!</> : saving ? 'Savingâ€¦' : <><Send size={13}/> Save to Diary</>}
         </button>
       </div>
     </motion.div>
@@ -245,7 +245,7 @@ const Dashboard = () => {
     setSelectedMemoryType(null);
   };
 
-  // ── JSX ────────────────────────────────────────────────────────────────────
+  // â”€â”€ JSX â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div style={{ background: 'linear-gradient(160deg,#fdf0f9 0%,#f0ebff 45%,#e8f4ff 100%)', minHeight: '100vh' }}>
       <Navbar_Main />
@@ -253,7 +253,7 @@ const Dashboard = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24 md:pb-6 space-y-5">
 
-        {/* ── WELCOME BANNER ─────────────────────────────────────────────── */}
+        {/* â”€â”€ WELCOME BANNER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
           className="rounded-3xl p-5 sm:p-6 relative overflow-hidden shadow-xl border-2 border-pink-100"
           style={{ background: 'linear-gradient(135deg,#fff0f9,#f5f0ff,#eef6ff)' }}>
@@ -299,33 +299,33 @@ const Dashboard = () => {
           </div>
         </motion.div>
 
-        {/* ── STAT CARDS ─────────────────────────────────────────────────── */}
+        {/* â”€â”€ STAT CARDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <StatCard label="Total"    count={capsuleStats.total}
+          <StatCard label="Total"    count={capsuleStats.total} subtitle="all memories"
             grad="linear-gradient(135deg,#fce7f3,#fdf4ff)"
             border="border-pink-200" tc="text-pink-700" delay={0}
             onClick={() => window.location.href = '/capsules'} />
-          <StatCard label="Unlocked" count={capsuleStats.unlocked}
+          <StatCard label="Unlocked" count={capsuleStats.unlocked} subtitle="ready now"
             grad="linear-gradient(135deg,#d1fae5,#ecfdf5)"
             border="border-emerald-200" tc="text-emerald-700" delay={0.07}
             onClick={() => window.location.href = '/capsules'} />
-          <StatCard label="Sealed"   count={capsuleStats.locked}
+          <StatCard label="Sealed"   count={capsuleStats.locked} subtitle="still waiting"
             grad="linear-gradient(135deg,#ede9fe,#faf5ff)"
             border="border-violet-200" tc="text-violet-700" delay={0.14}
             onClick={() => window.location.href = '/capsules'} />
-          <StatCard label="Shared"   count={capsuleStats.shared}
+          <StatCard label="Shared"   count={capsuleStats.shared} subtitle="shared with others"
             grad="linear-gradient(135deg,#e0f2fe,#eff6ff)"
             border="border-sky-200" tc="text-sky-700" delay={0.21}
             onClick={() => window.location.href = '/capsules'} />
         </div>
 
-        {/* ── MAIN GRID ──────────────────────────────────────────────────── */}
+        {/* â”€â”€ MAIN GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
 
-          {/* ── LEFT COLUMN (2/3) ──────────────────────────────────────── */}
+          {/* â”€â”€ LEFT COLUMN (2/3) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="xl:col-span-2 space-y-5">
 
-            {/* PROMPT CARD — working journal */}
+            {/* PROMPT CARD â€” working journal */}
             <PromptCard prompt={prompt} onSave={handlePromptSave} onNext={nextPrompt} />
 
             {/* CAPSULE CAROUSEL */}
@@ -361,13 +361,13 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* ── RIGHT SIDEBAR (1/3) ────────────────────────────────────── */}
+          {/* â”€â”€ RIGHT SIDEBAR (1/3) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="space-y-4">
 
             {/* MOOD TRACKER */}
             <div className="bg-white/85 backdrop-blur rounded-3xl border-2 border-pink-100 shadow-md p-5">
               {user ? <MoodTracker user={user} /> : (
-                <div className="h-32 flex items-center justify-center text-purple-300 text-sm">Loading…</div>
+                <div className="h-32 flex items-center justify-center text-purple-300 text-sm">Loadingâ€¦</div>
               )}
             </div>
 
@@ -419,10 +419,10 @@ const Dashboard = () => {
 
       </div>
 
-      {/* ── FAB ─────────────────────────────────────────────────────────── */}
+      {/* â”€â”€ FAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <FloatingActions onCreate={() => { fetchCapsules(); setMemoryTrigger(t => t + 1); }} />
 
-      {/* ── CREATE CAPSULE MODAL ────────────────────────────────────────── */}
+      {/* â”€â”€ CREATE CAPSULE MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <AnimatePresence>
         {showCapsuleForm && (
           <TimeCapsuleModal isOpen={showCapsuleForm} closeModal={() => setShowCapsuleForm(false)}
@@ -430,7 +430,7 @@ const Dashboard = () => {
         )}
       </AnimatePresence>
 
-      {/* ── MEMORY TYPE PICKER ──────────────────────────────────────────── */}
+      {/* â”€â”€ MEMORY TYPE PICKER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <AnimatePresence>
         {showMemoryPicker && !memoryType && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -443,7 +443,7 @@ const Dashboard = () => {
               <div className="h-1.5" style={{ background: 'linear-gradient(90deg,#f9a8d4,#c4b5fd,#93c5fd)' }} />
               <div className="p-6 relative">
                 <button onClick={() => setShowMemoryPicker(false)}
-                  className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-purple-50 hover:bg-pink-50 text-purple-400 font-bold text-xl">×</button>
+                  className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-purple-50 hover:bg-pink-50 text-purple-400 font-bold text-xl">Ã—</button>
                 <div className="flex items-center gap-2 mb-1">
                   <Sparkles size={18} className="text-purple-500" />
                   <h2 className="chewy text-2xl text-purple-700">Create a Memory</h2>
@@ -467,7 +467,7 @@ const Dashboard = () => {
         )}
       </AnimatePresence>
 
-      {/* ── MEMORY FORMS ────────────────────────────────────────────────── */}
+      {/* â”€â”€ MEMORY FORMS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <AnimatePresence>
         {showMemoryPicker && memoryType === 'photo' && (
           <PhotoAlbumForm closeForm={() => { setMemoryType(null); setShowMemoryPicker(false); }} onCreate={handleMemoryCreated} />
@@ -477,12 +477,12 @@ const Dashboard = () => {
         )}
       </AnimatePresence>
 
-      {/* ── VIEW CAPSULE ────────────────────────────────────────────────── */}
+      {/* â”€â”€ VIEW CAPSULE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {showViewModal && viewCapsuleId && (
         <ViewCapsuleModal isOpen={showViewModal} closeModal={() => setShowViewModal(false)} capsuleId={viewCapsuleId} />
       )}
 
-      {/* ── VIEW MEMORY MODAL ───────────────────────────────────────────── */}
+      {/* â”€â”€ VIEW MEMORY MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <AnimatePresence>
         {selectedMemory && selectedMemoryType && (
           <MemoryModal 
