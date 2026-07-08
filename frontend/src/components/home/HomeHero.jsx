@@ -40,7 +40,7 @@ const HomeHero = () => {
             className="mh-tag"
           >
             <BookOpen size={16} className="text-pink-400" />
-            <span className="mh-eyebrow text-pink-500">a diary that remembers for you</span>
+            <span className="mh-eyebrow text-pink-500">your memories, kept in one place</span>
           </motion.div>
 
           <motion.h1
@@ -60,9 +60,19 @@ const HomeHero = () => {
             transition={{ duration: 0.7, delay: 0.4 }}
             className="mt-6 max-w-md text-lg leading-relaxed text-purple-500 quicksand font-medium"
           >
-            Memora is where your little moments turn into a book worth
-            reopening — diary pages, photos, moods and letters to your
-            future self, all kept safe until the right day comes.
+            Memora brings diary pages, photos, moods, and sealed letters
+            together so the small moments of today still feel close when you
+            come back to them later.
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.47 }}
+            className="mt-4 max-w-md text-sm leading-relaxed text-purple-400 quicksand font-semibold"
+          >
+            Write freely now, and let Memora keep the meaning intact until
+            you are ready to return.
           </motion.p>
 
           <motion.div
@@ -85,7 +95,7 @@ const HomeHero = () => {
             transition={{ duration: 0.8, delay: 0.8 }}
             className="mt-6 text-sm text-purple-300 font-semibold quicksand"
           >
-            Free to start · your memories stay yours
+            Private by default · your memories stay yours
           </motion.p>
         </div>
 

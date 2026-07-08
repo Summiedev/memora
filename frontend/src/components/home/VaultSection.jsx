@@ -75,8 +75,12 @@ const VaultSection = () => {
           </h2>
           <p className="mt-6 max-w-md text-lg leading-relaxed text-purple-500 quicksand font-medium">
             Write something now, seal it with a date, and let it sit. A year
-            from now. A decade. The morning after a wedding you haven't had
-            yet. Yours to open later, or someone else's to unwrap.
+            from now, a decade later, or on a morning you did not know would
+            matter yet. Yours to open later, or someone else's to unwrap.
+          </p>
+          <p className="mt-4 max-w-md text-sm leading-relaxed text-purple-400 quicksand font-semibold">
+            The point is not to rush the moment. It is to give it a place to
+            wait until it can be felt fully.
           </p>
           <div className="mt-7 flex items-center gap-2 text-sm font-bold text-pink-500 quicksand">
             <Lock size={16} className="text-pink-400" /> Locked until the date you choose
