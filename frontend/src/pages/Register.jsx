@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import api, { BASE_URL } from '../utils/auth';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Heart, Sparkles, Star, Flower2 } from 'lucide-react';
 import MemoraLoaderOverlay from '../components/MemoraLoader';
 
-const FloatingShape = ({ style, emoji }) => (
-  <div className="pointer-events-none absolute text-2xl animate-bounce select-none" style={style}>{emoji}</div>
+const FloatingIcon = ({ Icon, style }) => (
+  <div className="pointer-events-none absolute select-none" style={style}>
+    <Icon size={22} className="text-purple-300/60 animate-bounce" />
+  </div>
 );
 
 const SignupPage = () => {
@@ -19,21 +21,15 @@ const SignupPage = () => {
   const handleSignup = async e => {
     e.preventDefault();
     if (!formData.fullname || !formData.username || !formData.email || !formData.password) {
-      setRegisterError('Please fill in all fields! (｡•́︿•̀｡)'); return;
+      setRegisterError('Please fill in all fields'); return;
     }
     setRegisterError(''); setSuccess('');
     try {
       setLoading(true);
-
-      console.log('Attempting registration with:', { ...formData, password: '[REDACTED]' });
       await api.post('/auth/register', formData);
-      console.log('Registration successful');
-      setSuccess('Account created! Taking you to your dashboard... ✨');
-
-      // Registration already sets auth cookies, no need to call login separately
+      setSuccess('Account created! Taking you to your dashboard...');
       setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
     } catch (err) {
-      console.error('Registration failed:', err);
       setLoading(false);
       setRegisterError(
         err.response?.data?.error ||
@@ -49,7 +45,7 @@ const SignupPage = () => {
 
   return (
     <>
-      {loading && <MemoraLoaderOverlay message="Creating your Memora account & logging you in ₊˚⊹♡" />}
+      {loading && <MemoraLoaderOverlay message="Creating your Memora account" />}
       <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden"
         style={{ background:"linear-gradient(160deg,#fce4f3 0%,#e8d5ff 45%,#c7e8ff 100%)" }}>
 
@@ -58,16 +54,16 @@ const SignupPage = () => {
         <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full opacity-30 blur-3xl pointer-events-none"
           style={{ background:"radial-gradient(circle,#f9a8d4,transparent)" }} />
 
-        <FloatingShape emoji="🌟" style={{ top:'6%',    left:'5%',    animationDelay:'0s',   animationDuration:'3s'   }} />
-        <FloatingShape emoji="🎀" style={{ top:'18%',   right:'7%',   animationDelay:'0.6s', animationDuration:'2.5s' }} />
-        <FloatingShape emoji="🌷" style={{ bottom:'12%',left:'8%',    animationDelay:'1.1s', animationDuration:'4s'   }} />
-        <FloatingShape emoji="💫" style={{ bottom:'22%',right:'5%',   animationDelay:'0.3s', animationDuration:'3.5s' }} />
-        <FloatingShape emoji="🌸" style={{ top:'50%',   left:'3%',    animationDelay:'1.5s', animationDuration:'2.8s' }} />
+        <FloatingIcon Icon={Sparkles} style={{ top:'6%',    left:'5%',    animationDelay:'0s',   animationDuration:'3s'   }} />
+        <FloatingIcon Icon={Heart} style={{ top:'18%',   right:'7%',   animationDelay:'0.6s', animationDuration:'2.5s' }} />
+        <FloatingIcon Icon={Flower2} style={{ bottom:'12%',left:'8%',    animationDelay:'1.1s', animationDuration:'4s'   }} />
+        <FloatingIcon Icon={Star} style={{ bottom:'22%',right:'5%',   animationDelay:'0.3s', animationDuration:'3.5s' }} />
+        <FloatingIcon Icon={Sparkles} style={{ top:'50%',   left:'3%',    animationDelay:'1.5s', animationDuration:'2.8s' }} />
 
         <div className="relative z-10 w-full max-w-md">
           <div className="text-center mb-6">
             <span className="chewy text-4xl" style={{ background:"linear-gradient(135deg,#ec4899,#8b5cf6,#3b82f6)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
-              Memora ♡
+              Memora <Heart size={20} className="inline text-pink-400" />
             </span>
           </div>
 
@@ -76,9 +72,11 @@ const SignupPage = () => {
 
             <div className="p-8 space-y-5">
               <div className="text-center">
-                <div className="text-4xl mb-2 animate-bounce" style={{ animationDuration:"2s" }}>🌸</div>
+                <div className="mb-2 flex justify-center">
+                  <Flower2 size={32} className="text-pink-400 animate-bounce" style={{ animationDuration:"2s" }} />
+                </div>
                 <h2 className="chewy text-3xl text-purple-700 mb-1">Create your account!</h2>
-                <p className="text-sm text-purple-400 font-medium">Join Memora and start preserving memories ₊˚⊹♡</p>
+                <p className="text-sm text-purple-400 font-medium">Join Memora and start preserving memories</p>
               </div>
 
               {registerError && (
@@ -114,15 +112,15 @@ const SignupPage = () => {
               <form onSubmit={handleSignup} className="space-y-3">
                 <div>
                   <label className="block text-xs font-bold text-purple-500 mb-1.5 ml-1 uppercase tracking-wider">Full Name</label>
-                  <input id="fullname" type="text" placeholder="Your full name ✦" value={formData.fullname} onChange={handleChange} required className={inp} />
+                  <input id="fullname" type="text" placeholder="Your full name" value={formData.fullname} onChange={handleChange} required className={inp} />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-purple-500 mb-1.5 ml-1 uppercase tracking-wider">Username</label>
-                  <input id="username" type="text" placeholder="@username ✦" value={formData.username} onChange={handleChange} required className={inp} />
+                  <input id="username" type="text" placeholder="@username" value={formData.username} onChange={handleChange} required className={inp} />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-purple-500 mb-1.5 ml-1 uppercase tracking-wider">Email</label>
-                  <input id="email" type="email" placeholder="your@email.com ✦" value={formData.email} onChange={handleChange} required className={inp} />
+                  <input id="email" type="email" placeholder="your@email.com" value={formData.email} onChange={handleChange} required className={inp} />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-purple-500 mb-1.5 ml-1 uppercase tracking-wider">Password</label>
@@ -136,15 +134,15 @@ const SignupPage = () => {
                 </div>
 
                 <button type="submit" disabled={loading}
-                  className="w-full py-3.5 rounded-2xl text-white font-bold text-base shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-70 mt-2"
+                  className="w-full py-3.5 rounded-2xl text-white font-bold text-base shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-70 mt-2 flex items-center justify-center gap-2"
                   style={{ background:"linear-gradient(135deg,#ec4899,#8b5cf6)" }}>
-                  ♡ Create account →
+                  <Heart size={16} className="text-pink-200" /> Create account
                 </button>
               </form>
 
               <p className="text-center text-sm text-purple-400">
                 Already have an account?{" "}
-                <a href="/login" className="text-purple-600 font-bold hover:text-pink-500 transition-colors underline underline-offset-2">Sign in ✦</a>
+                <a href="/login" className="text-purple-600 font-bold hover:text-pink-500 transition-colors underline underline-offset-2">Sign in</a>
               </p>
             </div>
           </div>

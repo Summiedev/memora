@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Sparkles, ChevronRight, Plus, BookOpen, Camera, Pencil,
-  RefreshCw, Send, Check, Lock, Unlock, Share2
+  RefreshCw, Send, Check, Lock, Unlock, Share2, Sun,
+  Heart, Star, Flower2, Music, Edit3, Bird, MapPin,
+  Lightbulb, Sprout, Smile, Package, Image as ImageIcon,
+  Calendar, Clock,
 } from "lucide-react";
 import MobileBottomNav from "../components/MobileBottomNav";
 import Navbar_Main from "../components/Navbar_main";
-import { AnimatePresence ,motion} from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import FloatingActions from "../components/FloatingBtn";
 import { useLocation } from "react-router-dom";
 import DashboardMiniCarousel from "../components/DashboardCaraousel";
@@ -25,23 +28,23 @@ import api from "../utils/auth";
 
 // ── Prompts pool ────────────────────────────────────────────────────────────
 const PROMPTS = [
-  { text: "What made you smile today?",                 emoji: "☀️" },
-  { text: "Who are you grateful for right now?",        emoji: "💛" },
-  { text: "What's one small win you're proud of?",      emoji: "🌟" },
-  { text: "Describe a perfect moment from this week",   emoji: "🌸" },
-  { text: "What's something you want to remember forever?", emoji: "💌" },
-  { text: "What song perfectly describes your mood?",   emoji: "🎵" },
-  { text: "Write a letter to your future self",         emoji: "📝" },
-  { text: "What's a dream you're chasing right now?",   emoji: "🦋" },
-  { text: "What made this week worth remembering?",     emoji: "✨" },
-  { text: "Describe where you are in life right now",   emoji: "🗺️" },
+  { text: "What made you smile today?",                 icon: Sun },
+  { text: "Who are you grateful for right now?",        icon: Heart },
+  { text: "What's one small win you're proud of?",      icon: Star },
+  { text: "Describe a perfect moment from this week",   icon: Flower2 },
+  { text: "What's something you want to remember forever?", icon: Heart },
+  { text: "What song perfectly describes your mood?",   icon: Music },
+  { text: "Write a letter to your future self",         icon: Edit3 },
+  { text: "What's a dream you're chasing right now?",   icon: Bird },
+  { text: "What made this week worth remembering?",     icon: Sparkles },
+  { text: "Describe where you are in life right now",   icon: MapPin },
 ];
 
 const TIPS = [
-  "Add a lock date to your capsule so it stays sealed until the right moment 🔒",
-  "Share a capsule with a friend — they'll love the surprise 💌",
-  "Use emotion tags so you can find memories by how they felt 🎭",
-  "Write a letter to your future self — your future you will thank you 🌟",
+  "Add a lock date to your capsule so it stays sealed until the right moment",
+  "Share a capsule with a friend — they'll love the surprise",
+  "Use emotion tags so you can find memories by how they felt",
+  "Write a letter to your future self — your future you will thank you",
 ];
 
 const greetingByHour = () => {
@@ -74,6 +77,7 @@ const PromptCard = ({ prompt, onSave, onNext }) => {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const ta = useRef(null);
+  const Icon = prompt.icon;
 
   const handleSave = async () => {
     if (!text.trim()) return;
@@ -93,9 +97,14 @@ const PromptCard = ({ prompt, onSave, onNext }) => {
       {/* Prompt header */}
       <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <span className="text-2xl flex-shrink-0 mt-0.5">{prompt.emoji}</span>
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <Icon size={18} className="text-pink-500" />
+          </div>
           <div>
-            <p className="text-[10px] font-black text-pink-400 uppercase tracking-widest mb-1">🌼 Today's Prompt</p>
+            <div className="flex items-center gap-1.5 mb-1">
+              <Flower2 size={12} className="text-pink-400" />
+              <p className="text-[10px] font-black text-pink-400 uppercase tracking-widest">Today's Prompt</p>
+            </div>
             <p className="text-base font-bold text-purple-800 leading-snug">{prompt.text}</p>
           </div>
         </div>
@@ -108,7 +117,7 @@ const PromptCard = ({ prompt, onSave, onNext }) => {
       {/* Text area */}
       <div className="px-5 pb-2">
         <textarea ref={ta} value={text} onChange={e => setText(e.target.value)}
-          placeholder="Write your answer here… pour your heart out ♡"
+          placeholder="Write your answer here… pour your heart out"
           rows={4}
           className="w-full resize-none bg-white/70 rounded-2xl border-2 border-purple-100 focus:border-pink-300 focus:ring-4 focus:ring-pink-50 outline-none px-4 py-3 text-sm text-purple-900 placeholder-purple-300 leading-relaxed transition-all"
           style={{ fontFamily: "'Quicksand', sans-serif" }} />
@@ -160,13 +169,9 @@ const Dashboard = () => {
   useEffect(() => {
     api.get('/auth/profile')
       .then(r => setUser(r.data.data || r.data.user)).catch(() => {});
-    // load streak
     api.get('/diary-entries/streak')
       .then(r => setStreak(r.data.data)).catch(() => {});
   }, []);
-
-  // Re-fetch when tab becomes visible (no refresh needed)
-
 
   // load capsule counts
   const fetchCapsules = useCallback(async () => {
@@ -264,11 +269,11 @@ const Dashboard = () => {
               {/* Avatar bubble */}
               <div className="w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl font-black text-white shadow-lg"
                 style={{ background: 'linear-gradient(135deg,#ec4899,#8b5cf6)' }}>
-                {user?.fullname?.[0]?.toUpperCase() || '✨'}
+                {user?.fullname?.[0]?.toUpperCase() || <Sparkles size={22} />}
               </div>
               <div>
                 <h1 className="chewy text-2xl sm:text-3xl text-purple-800 leading-tight">
-                  {greetingByHour()}, {firstName}! ✨
+                  {greetingByHour()}, {firstName}!
                 </h1>
                 <p className="text-xs sm:text-sm text-purple-500 font-semibold mt-0.5">
                   {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -326,20 +331,23 @@ const Dashboard = () => {
             {/* CAPSULE CAROUSEL */}
             <div className="bg-white/85 backdrop-blur rounded-3xl border-2 border-pink-100 shadow-md p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="chewy text-xl text-pink-600">My Capsules 📦</h2>
+                <div className="flex items-center gap-2">
+                  <Package size={18} className="text-pink-500" />
+                  <h2 className="chewy text-xl text-pink-600">My Capsules</h2>
+                </div>
                 <a href="/capsules" className="flex items-center gap-1 text-xs font-bold text-pink-500 hover:text-pink-700 transition-colors">
                   View all <ChevronRight size={13} />
                 </a>
               </div>
               {capsuleStats.total === 0 ? (
                 <div className="flex flex-col items-center py-8 gap-3 text-center">
-                  <div className="text-5xl">🌱</div>
+                  <Sprout size={48} className="text-purple-300" />
                   <p className="text-sm font-semibold text-purple-600">No capsules yet!</p>
                   <p className="text-xs text-purple-400">Create your first one and seal a memory forever</p>
                   <button onClick={() => setShowCapsuleForm(true)}
                     className="mt-1 px-5 py-2 rounded-2xl text-white text-sm font-bold shadow-md hover:scale-105 transition-transform"
                     style={{ background: 'linear-gradient(135deg,#ec4899,#8b5cf6)' }}>
-                    Create Capsule ✦
+                    Create Capsule
                   </button>
                 </div>
               ) : (
@@ -382,9 +390,11 @@ const Dashboard = () => {
             {/* TIP OF THE DAY */}
             <div className="rounded-3xl border-2 border-amber-100 shadow-md p-5 relative overflow-hidden"
               style={{ background: 'linear-gradient(135deg,#fffbeb,#fdf0ff)' }}>
-              <div className="absolute -top-3 -right-3 text-5xl opacity-10 select-none rotate-12">💡</div>
+              <div className="absolute -top-3 -right-3 opacity-10 select-none rotate-12">
+                <Lightbulb size={48} className="text-amber-500" />
+              </div>
               <div className="flex items-center gap-2 mb-2">
-                <Sparkles size={15} className="text-amber-500" />
+                <Lightbulb size={15} className="text-amber-500" />
                 <h4 className="font-black text-amber-700 text-xs uppercase tracking-wider">Tip of the day</h4>
               </div>
               <p className="text-xs text-amber-800 leading-relaxed font-medium">{TIPS[tipIdx]}</p>
@@ -393,7 +403,10 @@ const Dashboard = () => {
             {/* RECENT MEMORIES STRIP */}
             <div className="bg-white/85 backdrop-blur rounded-3xl border-2 border-teal-100 shadow-md p-5">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="chewy text-base text-teal-700">Recent Memories 🪞</h4>
+                <div className="flex items-center gap-2">
+                  <ImageIcon size={16} className="text-teal-500" />
+                  <h4 className="chewy text-base text-teal-700">Recent Memories</h4>
+                </div>
                 <a href="/memories" className="flex items-center gap-1 text-[10px] font-bold text-teal-500 hover:text-teal-700 transition-colors">
                   All <ChevronRight size={11} />
                 </a>
@@ -431,7 +444,10 @@ const Dashboard = () => {
               <div className="p-6 relative">
                 <button onClick={() => setShowMemoryPicker(false)}
                   className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-purple-50 hover:bg-pink-50 text-purple-400 font-bold text-xl">×</button>
-                <h2 className="chewy text-2xl text-purple-700 mb-1">Create a Memory ✨</h2>
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles size={18} className="text-purple-500" />
+                  <h2 className="chewy text-2xl text-purple-700">Create a Memory</h2>
+                </div>
                 <p className="text-xs text-purple-400 mb-5">Choose your style</p>
                 <div className="grid grid-cols-2 gap-3">
                   <button onClick={() => setMemoryType("photo")}

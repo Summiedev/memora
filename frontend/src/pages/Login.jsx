@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import api, { BASE_URL } from '../utils/auth';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Heart, Sparkles, BookOpen, Star, Flower2 } from 'lucide-react';
 import MemoraLoaderOverlay from '../components/MemoraLoader';
 
-const FloatingShape = ({ style, emoji }) => (
-  <div className="pointer-events-none absolute text-2xl animate-bounce select-none" style={style}>{emoji}</div>
+const FloatingIcon = ({ Icon, style }) => (
+  <div className="pointer-events-none absolute select-none" style={style}>
+    <Icon size={22} className="text-purple-300/60 animate-bounce" />
+  </div>
 );
 
 const LoginPage = () => {
@@ -17,21 +19,20 @@ const LoginPage = () => {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    if (!formData.username || !formData.password) { setLoginError('Please fill in all fields! (｡•́︿•̀｡)'); return; }
+    if (!formData.username || !formData.password) { setLoginError('Please fill in all fields'); return; }
     try {
       setLoading(true);
       await api.post('/auth/login', formData);
-      // Server sets secure httpOnly cookies; frontend does not persist tokens in JS.
       setTimeout(() => { window.location.href = '/dashboard'; }, 1800);
     } catch (err) {
       setLoading(false);
-      setLoginError(err.response?.data?.error || 'Hmm, something went wrong (｡•́︿•̀｡) try again!');
+      setLoginError(err.response?.data?.error || 'Hmm, something went wrong. Try again!');
     }
   };
 
   return (
     <>
-      {loading && <MemoraLoaderOverlay message="Logging you in, sweet friend ₊˚⊹♡" />}
+      {loading && <MemoraLoaderOverlay message="Logging you in, sweet friend" />}
       <div className="min-h-screen flex items-center justify-center px-4 py-10 relative overflow-hidden"
         style={{ background: "linear-gradient(160deg,#fce4f3 0%,#e8d5ff 45%,#c7e8ff 100%)" }}>
 
@@ -44,18 +45,18 @@ const LoginPage = () => {
           style={{ background: "radial-gradient(circle,#c4b5fd,transparent)" }} />
 
         {/* Floaties */}
-        <FloatingShape emoji="🌸" style={{ top:'8%',    left:'6%',    animationDelay:'0s',   animationDuration:'3s'   }} />
-        <FloatingShape emoji="✨" style={{ top:'14%',   right:'8%',   animationDelay:'0.7s', animationDuration:'2.5s' }} />
-        <FloatingShape emoji="💌" style={{ bottom:'14%',left:'9%',    animationDelay:'1.2s', animationDuration:'4s'   }} />
-        <FloatingShape emoji="🎀" style={{ bottom:'20%',right:'7%',   animationDelay:'0.4s', animationDuration:'3.5s' }} />
-        <FloatingShape emoji="⭐" style={{ top:'40%',   left:'3%',    animationDelay:'1.8s', animationDuration:'3s'   }} />
-        <FloatingShape emoji="🌷" style={{ top:'35%',   right:'4%',   animationDelay:'0.9s', animationDuration:'2.8s' }} />
+        <FloatingIcon Icon={Sparkles} style={{ top:'8%',    left:'6%',    animationDelay:'0s',   animationDuration:'3s'   }} />
+        <FloatingIcon Icon={Star} style={{ top:'14%',   right:'8%',   animationDelay:'0.7s', animationDuration:'2.5s' }} />
+        <FloatingIcon Icon={BookOpen} style={{ bottom:'14%',left:'9%',    animationDelay:'1.2s', animationDuration:'4s'   }} />
+        <FloatingIcon Icon={Heart} style={{ bottom:'20%',right:'7%',   animationDelay:'0.4s', animationDuration:'3.5s' }} />
+        <FloatingIcon Icon={Sparkles} style={{ top:'40%',   left:'3%',    animationDelay:'1.8s', animationDuration:'3s'   }} />
+        <FloatingIcon Icon={Flower2} style={{ top:'35%',   right:'4%',   animationDelay:'0.9s', animationDuration:'2.8s' }} />
 
         <div className="relative z-10 w-full max-w-md">
           {/* Brand */}
           <div className="text-center mb-6">
             <span className="chewy text-4xl" style={{ background:"linear-gradient(135deg,#ec4899,#8b5cf6,#3b82f6)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
-              Memora ♡
+              Memora <Heart size={20} className="inline text-pink-400" />
             </span>
           </div>
 
@@ -65,9 +66,11 @@ const LoginPage = () => {
 
             <div className="p-8 space-y-5">
               <div className="text-center">
-                <div className="text-4xl mb-2 animate-bounce" style={{ animationDuration:"2s" }}>🌷</div>
+                <div className="mb-2 flex justify-center">
+                  <Flower2 size={32} className="text-pink-400 animate-bounce" style={{ animationDuration:"2s" }} />
+                </div>
                 <h2 className="chewy text-3xl text-purple-700 mb-1">Welcome back!</h2>
-                <p className="text-sm text-purple-400 font-medium">Sign in to your Memora ₊˚⊹♡</p>
+                <p className="text-sm text-purple-400 font-medium">Sign in to your Memora</p>
               </div>
 
               {loginError && (
@@ -117,15 +120,15 @@ const LoginPage = () => {
                 </div>
 
                 <button type="submit" disabled={loading}
-                  className="w-full py-3.5 rounded-2xl text-white font-bold text-base shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-70"
+                  className="w-full py-3.5 rounded-2xl text-white font-bold text-base shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-70 flex items-center justify-center gap-2"
                   style={{ background:"linear-gradient(135deg,#ec4899,#8b5cf6)" }}>
-                  ♡ Sign in →
+                  <Heart size={16} className="text-pink-200" /> Sign in
                 </button>
               </form>
 
               <p className="text-center text-sm text-purple-400">
                 Don't have an account?{" "}
-                <a href="/register" className="text-purple-600 font-bold hover:text-pink-500 transition-colors underline underline-offset-2">Sign up here! ✦</a>
+                <a href="/register" className="text-purple-600 font-bold hover:text-pink-500 transition-colors underline underline-offset-2">Sign up here</a>
               </p>
               <p className="text-center text-xs text-purple-300">
                 <a href="/forgot-password" className="text-pink-400 hover:text-pink-600 font-semibold transition-colors">Forgot your password? Reset it here</a>

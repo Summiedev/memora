@@ -1,71 +1,82 @@
 import { motion } from "framer-motion";
+import { Heart, Sparkles, Send } from "lucide-react";
 
 const SharedCircle = () => {
   return (
-    <section className="relative py-28 sm:py-40 px-6 sm:px-10" style={{ color: "var(--ink-text)" }}>
-      <div className="mx-auto max-w-5xl">
+    <section className="relative py-24 sm:py-36 px-6 sm:px-10 overflow-hidden">
+      <div className="mh-blob w-[24rem] h-[24rem] top-0 -left-24 opacity-25" style={{ background: "radial-gradient(circle,#a5b4fc,transparent)" }} />
+
+      <div className="relative z-10 mx-auto max-w-5xl">
         <div className="max-w-md">
-          <p className="mh-type" style={{ color: "var(--safelight)" }}>
-            Shared memories
-          </p>
-          <h2 className="mh-display mt-4 text-[clamp(2rem,4.5vw,3.2rem)] leading-[1.08]">
+          <div className="mh-tag">
+            <Heart size={16} className="text-blue-400" />
+            <span className="mh-eyebrow text-blue-500">shared memories</span>
+          </div>
+          <h2 className="chewy mt-5 text-[clamp(2rem,4.5vw,3.1rem)] leading-[1.1] text-purple-800">
             Lighter, when
             <br />
             they're shared.
           </h2>
-          <p className="mt-6 text-[1.05rem] leading-relaxed" style={{ color: "var(--ink-text-dim)" }}>
-            Send a capsule to someone who was there. Talk in the
-            space between then and now. Some memories were never
-            meant to be kept alone.
+          <p className="mt-6 text-lg leading-relaxed text-purple-500 quicksand font-medium">
+            Send a capsule to someone who was there. Keep a diary together.
+            Some memories were never meant to be kept alone — Memora holds
+            the space between "back then" and "right now."
           </p>
         </div>
 
-        <div className="relative mt-16 h-[320px] sm:h-[380px]">
-          <svg
-            viewBox="0 0 600 320"
-            className="absolute inset-0 w-full h-full"
-            preserveAspectRatio="none"
-          >
+        <div className="relative mt-16 h-[300px] sm:h-[360px]">
+          <svg viewBox="0 0 600 320" className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
             <motion.path
               d="M 120 90 C 250 30, 350 280, 480 220"
               fill="none"
-              stroke="var(--safelight)"
-              strokeWidth="2"
+              stroke="#c4b5fd"
+              strokeWidth="3"
               strokeLinecap="round"
+              strokeDasharray="1 14"
               initial={{ pathLength: 0, opacity: 0 }}
-              whileInView={{ pathLength: 1, opacity: 0.7 }}
+              whileInView={{ pathLength: 1, opacity: 0.9 }}
               viewport={{ once: true, amount: 0.6 }}
               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
             />
           </svg>
 
-          <div
-            className="mh-photo-chip absolute left-[6%] top-[10%] w-[130px] h-[160px] sm:w-[160px] sm:h-[200px]"
-            style={{
-              background:
-                "radial-gradient(120% 100% at 30% 20%, #f0b96e 0%, #b9613f 50%, #34211f 95%)",
-            }}
-          />
-          <div
-            className="mh-photo-chip absolute right-[8%] bottom-[6%] w-[130px] h-[160px] sm:w-[160px] sm:h-[200px]"
-            style={{
-              background:
-                "radial-gradient(120% 100% at 70% 25%, #d8c9a3 0%, #7c8b73 55%, #202a24 95%)",
-            }}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 16, rotate: -6 }}
+            whileInView={{ opacity: 1, y: 0, rotate: -6 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 0.6 }}
+            className="mh-polaroid absolute left-[4%] top-[6%] w-[130px] sm:w-[160px] aspect-[4/5]"
+          >
+            <div className="absolute inset-[10px] bottom-[30px] rounded-md" style={{ background: "linear-gradient(150deg,#fbcfe8,#f472b6 55%,#831843)" }} />
+            <div className="mh-polaroid-cap">
+              <span className="mh-hand text-purple-400 flex items-center justify-center gap-1">
+                <Heart size={12} className="text-pink-400" /> you
+              </span>
+            </div>
+          </motion.div>
 
-          <p
-            className="mh-type absolute left-[6%] top-[calc(10%+164px)] sm:top-[calc(10%+204px)]"
-            style={{ color: "var(--ink-text-dim)" }}
+          <motion.div
+            initial={{ opacity: 0, y: 16, rotate: 6 }}
+            whileInView={{ opacity: 1, y: 0, rotate: 6 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="mh-polaroid absolute right-[6%] bottom-[4%] w-[130px] sm:w-[160px] aspect-[4/5]"
           >
-            you
-          </p>
-          <p
-            className="mh-type absolute right-[8%] bottom-[calc(6%+164px)] sm:bottom-[calc(6%+204px)] text-right"
-            style={{ color: "var(--ink-text-dim)" }}
+            <div className="absolute inset-[10px] bottom-[30px] rounded-md" style={{ background: "linear-gradient(150deg,#bfdbfe,#60a5fa 55%,#1e3a8a)" }} />
+            <div className="mh-polaroid-cap">
+              <span className="mh-hand text-purple-400 flex items-center justify-center gap-1">
+                them <Sparkles size={10} className="text-blue-400" />
+              </span>
+            </div>
+          </motion.div>
+
+          <motion.div
+            animate={{ y: [-4, 4, -4] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute left-1/2 top-[38%] -translate-x-1/2"
           >
-            them
-          </p>
+            <Send size={24} className="text-purple-300" />
+          </motion.div>
         </div>
       </div>
     </section>

@@ -1,5 +1,5 @@
-import { useState,useEffect, useRef } from "react";
-import { Plus, X } from "lucide-react";
+import { useState, useRef } from "react";
+import { Plus, X, Camera, Pencil } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import TimeCapsuleModal from "./CreateCapsuleForm";
 import PhotoAlbumForm from "./PhotoAlbumForm";
@@ -10,16 +10,8 @@ const FloatingActions = ({ onCreate }) => {
   const [showForm, setShowForm] = useState(false);
   const [memoryType, setMemoryType] = useState(null);
   const [openMemory, setOpenMemory] = useState(false);
-  const [showDiaryForm, setShowDiaryForm] = useState(false);
-  const [showPhotoForm, setShowPhotoForm] = useState(false);
   
   const memoryModalRef = useRef();
-  const capsuleModalRef = useRef();
-
-  const handleOpenMemory = () => {
-    setOpenMemory(true);
-    setMemoryType(null); // reset just in case
-  };
 
   const handleMemoryType = (type) => {
     setMemoryType(type);
@@ -29,171 +21,138 @@ const FloatingActions = ({ onCreate }) => {
     setOpenMemory(false);
     setMemoryType(null);
   };
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        openMemory &&
-        memoryModalRef.current &&
-        !memoryModalRef.current.contains(event.target)
-      ) {
-        handleClose();
-      }
-  
-      if (
-        showForm &&
-        capsuleModalRef.current &&
-        !capsuleModalRef.current.contains(event.target)
-      ) {
-        setShowForm(false);
-      }
-    };
-  
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [openMemory, showForm]);
-  
+
   return (
     <>
-      <div
-        className="fixed bottom-6 right-6 z-50"
-      onMouseLeave={() => setOpen(false)}
-      >
+      <div className="fixed bottom-6 right-6 z-50">
         <div className="relative flex items-end justify-end">
-          {/* Popup Buttons */}
-          <div className="absolute w-[200px] bottom-16 right-0 flex flex-col items-end space-y-2 transition-all duration-300">
-            <button
-              onClick={() => setShowForm(true)}
-              className={`bg-pink-500 hover:bg-pink-700 text-white text-xl font-bold px-2 mb-8 py-2 rounded-xl shadow-lg transition transform ${
-                open ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
-              }`}
-            >
-              ❀⋆｡˚ Create New Capsule ❀⋆｡˚
-            </button>
-            <button
-              onClick={() => setOpenMemory(true)}
-              className={`bg-blue-400 hover:bg-blue-700 text-white mb-8 font-bold text-xl px-2 py-2 rounded-xl shadow-lg transition transform ${
-                open ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
-              }`}
-            >
-              ❀⋆｡˚ Create New Memory ❀⋆｡˚
-            </button>
-          </div>
+          <AnimatePresence>
+            {open && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                className="absolute bottom-20 right-0 flex flex-col items-end space-y-3"
+              >
+                <button
+                  onClick={() => { setShowForm(true); setOpen(false); }}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-white text-sm font-bold shadow-lg hover:scale-105 transition-transform"
+                  style={{ background: 'linear-gradient(135deg,#ec4899,#8b5cf6)' }}
+                >
+                  <X size={14} className="rotate-45" /> New Capsule
+                </button>
+                <button
+                  onClick={() => { setOpenMemory(true); setOpen(false); }}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-white text-sm font-bold shadow-lg hover:scale-105 transition-transform"
+                  style={{ background: 'linear-gradient(135deg,#3b82f6,#06b6d4)' }}
+                >
+                  <Camera size={14} /> New Memory
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* Main FAB */}
-            <button
-      className="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-full shadow-xl"
-      onMouseEnter={() => setOpen(true)}
-
-    >
-      <Plus size={27} />
-    </button>
-         
+          <motion.button
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92 }}
+            onClick={() => setOpen(v => !v)}
+            className="w-14 h-14 rounded-full shadow-xl flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg,#ec4899,#8b5cf6)' }}
+          >
+            <motion.div
+              animate={{ rotate: open ? 45 : 0 }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+            >
+              <Plus size={28} className="text-white" />
+            </motion.div>
+          </motion.button>
         </div>
       </div>
 
-    {/* Memory Type Modal */}
-    {openMemory && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-black/40 z-50 flex justify-center items-center p-2">
-          <div
-            ref={memoryModalRef}
-            className={`relative bg-white rounded-2xl shadow-2xl p-4 w-full max-w-4xl overflow-y-auto font-cute transition-all duration-300
-            ${memoryType ? "h-full sm:h-[90%] md:h-[80%] md:w-[65%]" : "w-[90%] max-w-md border-4 border-blue-200"}`}
+      <AnimatePresence>
+        {openMemory && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 backdrop-blur-sm bg-black/40 z-50 flex justify-center items-center p-4"
+            onClick={e => e.target === e.currentTarget && handleClose()}
           >
-            {/* Modal Content */}
-            {!memoryType ? (
-              <>
-                <h2 className="text-center text-xl font-semibold mb-4 text-blue-700">
-                  Choose Your Memory Style ✧･ﾟ
-                </h2>
+            <motion.div
+              ref={memoryModalRef}
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
+            >
+              <div className="h-1.5" style={{ background: 'linear-gradient(90deg,#f9a8d4,#c4b5fd,#93c5fd)' }} />
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="chewy text-xl text-purple-700">Create a Memory</h2>
+                  <button onClick={handleClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
+                    <X size={16} className="text-gray-500" />
+                  </button>
+                </div>
 
-                <div className="grid gap-4">
+                <div className="grid gap-3">
                   <button
                     onClick={() => handleMemoryType("photo")}
-                    className="bg-blue-100 hover:bg-blue-200 border border-blue-400 text-blue-800 font-medium px-4 py-3 rounded-lg shadow-inner transition"
+                    className="flex items-center gap-4 px-4 py-4 rounded-2xl border-2 border-blue-100 bg-blue-50 hover:bg-blue-100 hover:border-blue-200 transition-all text-left"
                   >
-                    ⋆ Photo Album Mode
-                    <p className="text-sm text-blue-600 mt-1">Upload pictures & captions ⋆｡°✩</p>
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                      <Camera size={20} className="text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-blue-700">Photo Album</p>
+                      <p className="text-xs text-blue-500 mt-0.5">Upload pictures with captions</p>
+                    </div>
                   </button>
 
                   <button
                     onClick={() => handleMemoryType("diary")}
-                    className="bg-pink-100 hover:bg-pink-200 border border-pink-400 text-pink-800 font-medium px-4 py-3 rounded-lg shadow-inner transition"
+                    className="flex items-center gap-4 px-4 py-4 rounded-2xl border-2 border-pink-100 bg-pink-50 hover:bg-pink-100 hover:border-pink-200 transition-all text-left"
                   >
-                    ⋆ Diary Mode
-                    <p className="text-sm text-pink-600 mt-1">Handwritten-style memory ✿˖°</p>
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-100 to-pink-200 flex items-center justify-center">
+                      <Pencil size={20} className="text-pink-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-pink-700">Diary Entry</p>
+                      <p className="text-xs text-pink-500 mt-0.5">Write a handwritten-style memory</p>
+                    </div>
                   </button>
                 </div>
-              </>
-            ) : (
-              <div className="w-full h-full overflow-y-auto">
-               {memoryType === "photo" && (
-                  // <PhotoAlbumForm 
-                  //   onSave={() => {
-                  //     onCreate(); // Trigger parent component to refresh
-                  //     handleClose();
-                  //   }} 
-                  //   closeForm={handleClose} 
-                  // />
-               <PhotoAlbumForm
-  closeForm={handleClose}
-   onCreate={(newItem) => {
-    onCreate(newItem);    // <-- forward the created object
-      handleClose();
-    }}
-  />
-                )}
-                
-                {memoryType === "diary" && (
-                  <DiaryEntryForm
-    closeForm={handleClose}
-   onCreate={(newItem) => {
-      onCreate(newItem);    // <-- forward the created object
-     handleClose();
-    }}
- />
-                  // <DiaryEntryForm
-                  //   onSave={() => {
-                  //     onCreate(); // Trigger parent component to refresh
-                  //     handleClose();
-                  //   }}
-                  //   closeForm={handleClose}
-                  // />
-                )}
               </div>
-            )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-
-         
-          </div>
-        </div>
-      )}
-
-      {/* Capsule Form Modal */}
       <AnimatePresence>
         {showForm && (
           <motion.div
-          
-            className="fixed inset-0 z-50 bg-opacity-50 flex items-center justify-center backdrop-blur-lg"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={e => e.target === e.currentTarget && setShowForm(false)}
           >
             <motion.div
-            
-              initial={{ y: "-30%", opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: "-30%", opacity: 0 }}
-              className="bg-white rounded-lg shadow-xl w-4/5 max-w-lg p-6 relative"
+              initial={{ y: 24, opacity: 0, scale: 0.95 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 24, opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden"
+              onClick={e => e.stopPropagation()}
             >
-              <button
-                onClick={() => setShowForm(false)}
-                className="absolute top-4 right-4 text-gray-600 hover:text-red-500"
-              >
-                <X />
-              </button>
-              <TimeCapsuleModal isOpen={showForm} closeModal={() => setShowForm(false)} addCapsule={onCreate} />
+              <div className="h-1.5" style={{ background: 'linear-gradient(90deg,#f9a8d4,#c4b5fd,#93c5fd)' }} />
+              <div className="p-6 relative">
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors z-10"
+                >
+                  <X size={16} className="text-gray-500" />
+                </button>
+                <TimeCapsuleModal isOpen={showForm} closeModal={() => setShowForm(false)} addCapsule={onCreate} />
+              </div>
             </motion.div>
           </motion.div>
         )}

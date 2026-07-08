@@ -1,4 +1,3 @@
-// pages/MoodTracker.jsx
 import { useEffect, useState } from 'react';
 import api from '../utils/auth';
 import {
@@ -17,7 +16,7 @@ export default function MoodTracker({ user }) {
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
-    if (!user) return; // wait until user is loaded
+    if (!user) return;
 
     const fetchMoodData = async () => {
       try {
@@ -46,16 +45,14 @@ export default function MoodTracker({ user }) {
       // Refresh weekly data
       const res = await api.get('/mood/week');
       setMoodData(res.data);
-
-      // optionally: update user context/state here
     } catch (err) {
       console.error('Failed to submit mood', err);
     }
   };
 
   return (
-    <div className="bg-gradient-to-br from-[#e0f2ff] to-[#f2f7ff] p-4 rounded-xl shadow border border-[#dbeafe]">
-      <h3 className="text-lg font-semibold text-indigo-600 mb-4">Weekly Mood Tracker</h3>
+    <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-xl shadow border border-purple-100">
+      <h3 className="text-lg font-semibold text-purple-700 mb-4 chewy">Weekly Mood</h3>
 
       <ResponsiveContainer width="100%" height={250}>
         <LineChart
@@ -66,15 +63,15 @@ export default function MoodTracker({ user }) {
           <XAxis dataKey="day" stroke="#94a3b8" />
           <YAxis domain={[0, 5]} tickCount={6} stroke="#94a3b8" />
           <Tooltip
-            contentStyle={{ backgroundColor: '#f0f4ff', borderColor: '#6366f1' }}
+            contentStyle={{ backgroundColor: '#fdf0ff', borderColor: '#ec4899' }}
           />
           <Line
             type="monotone"
             dataKey="mood"
-            stroke="#6366f1"
+            stroke="#ec4899"
             strokeWidth={3}
-            dot={{ r: 6 }}
-            activeDot={{ r: 8 }}
+            dot={{ r: 6, fill: '#8b5cf6' }}
+            activeDot={{ r: 8, fill: '#ec4899' }}
           />
         </LineChart>
       </ResponsiveContainer>
