@@ -1,82 +1,60 @@
-import { motion } from "framer-motion";
+﻿import { motion } from "framer-motion";
 import { Heart, Sparkles, Send } from "lucide-react";
+
+const highlights = [
+  {
+    title: "Shared diary",
+    text: "Write a page together when one memory needs more than one voice.",
+  },
+  {
+    title: "Capsules to someone else",
+    text: "Send a sealed memory to a friend and let it open on a date you choose.",
+  },
+  {
+    title: "Private comments",
+    text: "Keep a conversation attached to the memory so the context stays intact.",
+  },
+];
 
 const SharedCircle = () => {
   return (
-    <section className="relative py-24 sm:py-36 px-6 sm:px-10 overflow-hidden">
-      <div className="mh-blob w-[24rem] h-[24rem] top-0 -left-24 opacity-25" style={{ background: "radial-gradient(circle,#a5b4fc,transparent)" }} />
+    <section className="relative py-20 sm:py-28 px-6 sm:px-10 overflow-hidden">
+      <div className="mh-blob w-[24rem] h-[24rem] top-0 -left-24 opacity-20" style={{ background: "radial-gradient(circle,#a5b4fc,transparent)" }} />
 
-      <div className="relative z-10 mx-auto max-w-5xl">
-        <div className="max-w-md">
+      <div className="relative z-10 mx-auto max-w-6xl grid lg:grid-cols-[0.9fr_1.1fr] gap-12 items-center">
+        <div className="max-w-xl">
           <div className="mh-tag">
             <Heart size={16} className="text-blue-400" />
             <span className="mh-eyebrow text-blue-500">shared memories</span>
           </div>
           <h2 className="chewy mt-5 text-[clamp(2rem,4.5vw,3.1rem)] leading-[1.1] text-purple-800">
-            Lighter, when
+            Some memories are
             <br />
-            they're shared.
+            easier together.
           </h2>
-          <p className="mt-6 text-lg leading-relaxed text-purple-500 quicksand font-medium">
-            Send a capsule to someone who was there. Keep a diary together.
-            Some memories were never meant to be kept alone — Memora holds
-            the space between "back then" and "right now."
+          <p className="mt-6 text-lg leading-relaxed text-purple-500 quicksand font-medium max-w-lg">
+            Memora lets you share a capsule, keep a diary together, or attach a note to a memory so the story still feels complete when you open it later.
           </p>
         </div>
 
-        <div className="relative mt-16 h-[300px] sm:h-[360px]">
-          <svg viewBox="0 0 600 320" className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
-            <motion.path
-              d="M 120 90 C 250 30, 350 280, 480 220"
-              fill="none"
-              stroke="#c4b5fd"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeDasharray="1 14"
-              initial={{ pathLength: 0, opacity: 0 }}
-              whileInView={{ pathLength: 1, opacity: 0.9 }}
-              viewport={{ once: true, amount: 0.6 }}
-              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-            />
-          </svg>
-
-          <motion.div
-            initial={{ opacity: 0, y: 16, rotate: -6 }}
-            whileInView={{ opacity: 1, y: 0, rotate: -6 }}
-            viewport={{ once: true, amount: 0.6 }}
-            transition={{ duration: 0.6 }}
-            className="mh-polaroid absolute left-[4%] top-[6%] w-[130px] sm:w-[160px] aspect-[4/5]"
-          >
-            <div className="absolute inset-[10px] bottom-[30px] rounded-md" style={{ background: "linear-gradient(150deg,#fbcfe8,#f472b6 55%,#831843)" }} />
-            <div className="mh-polaroid-cap">
-              <span className="mh-hand text-purple-400 flex items-center justify-center gap-1">
-                <Heart size={12} className="text-pink-400" /> you
-              </span>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 16, rotate: 6 }}
-            whileInView={{ opacity: 1, y: 0, rotate: 6 }}
-            viewport={{ once: true, amount: 0.6 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            className="mh-polaroid absolute right-[6%] bottom-[4%] w-[130px] sm:w-[160px] aspect-[4/5]"
-          >
-            <div className="absolute inset-[10px] bottom-[30px] rounded-md" style={{ background: "linear-gradient(150deg,#bfdbfe,#60a5fa 55%,#1e3a8a)" }} />
-            <div className="mh-polaroid-cap">
-              <span className="mh-hand text-purple-400 flex items-center justify-center gap-1">
-                them <Sparkles size={10} className="text-blue-400" />
-              </span>
-            </div>
-          </motion.div>
-
-          <motion.div
-            animate={{ y: [-4, 4, -4] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute left-1/2 top-[38%] -translate-x-1/2"
-          >
-            <Send size={24} className="text-purple-300" />
-          </motion.div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {highlights.map((item, index) => (
+            <motion.article
+              key={item.title}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.5 }}
+              transition={{ duration: 0.55, delay: index * 0.08 }}
+              className="mh-card p-5 sm:p-6"
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles size={14} className="text-pink-400" />
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-purple-400 quicksand">shared</p>
+              </div>
+              <h3 className="mt-4 chewy text-2xl text-purple-800">{item.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-purple-500 quicksand font-medium">{item.text}</p>
+            </motion.article>
+          ))}
         </div>
       </div>
     </section>

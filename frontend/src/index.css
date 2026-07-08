@@ -1,18 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Chewy&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Chewy&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap');
-@import url("https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap");
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Reenie+Beanie&display=swap');
 @import "tailwindcss";
 
-/* ── Brand colours ─────────────────────────────────────── */
 :root {
-  --memora-pink:   #ec4899;
+  --memora-pink: #ec4899;
   --memora-purple: #8b5cf6;
-  --memora-blue:   #3b82f6;
-  --memora-teal:   #14b8a6;
-  --memora-bg:     #fdf0f9;
+  --memora-blue: #3b82f6;
+  --memora-teal: #14b8a6;
+  --memora-bg: #fdf0f9;
 
   line-height: 1.5;
   font-weight: 400;
@@ -26,7 +22,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Scrollbar ─────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #f3e8ff; border-radius: 99px; }
 ::-webkit-scrollbar-thumb {
@@ -34,16 +29,11 @@
   border-radius: 99px;
 }
 
-/* ── Font helpers ──────────────────────────────────────── */
-.chewy    { font-family: 'Chewy', cursive; }
-.cursive  { font-family: 'Dancing Script', cursive; }
-.patrick  { font-family: 'Patrick Hand', cursive; }
-.caveat-o { font-family: "Caveat", cursive; font-weight: 700; }
-.quicksand { font-family: "Quicksand", sans-serif; font-weight: 800; }
-.reenie-beanie-regular { font-family: "Reenie Beanie", cursive; }
-.dancing-script { font-family: "Dancing Script", cursive; }
+.chewy { font-family: 'Chewy', cursive; }
+.cursive { font-family: 'Dancing Script', cursive; }
+.quicksand { font-family: 'Quicksand', sans-serif; font-weight: 500; }
+.dancing-script { font-family: 'Dancing Script', cursive; }
 
-/* ── Gradient text ─────────────────────────────────────── */
 .gradient-text {
   background: linear-gradient(135deg, #ec4899, #8b5cf6, #3b82f6);
   -webkit-background-clip: text;
@@ -51,16 +41,13 @@
   background-clip: text;
 }
 
-/* ── Text shadow ───────────────────────────────────────── */
-.text-shadow-cute { text-shadow: 1px 1px 0 rgba(0,0,0,0.05); }
+.text-shadow-cute { text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.05); }
 
-/* ── Page background ───────────────────────────────────── */
 .bg-memora {
   background: linear-gradient(160deg, #fdf0f9 0%, #f0ebff 45%, #e8f4ff 100%);
   min-height: 100vh;
 }
 
-/* ── Cloud animation (login/register pages) ────────────── */
 @layer utilities {
   .bg-memora-clouds {
     background: linear-gradient(160deg, #fce4f3 0%, #e8d5ff 45%, #c7e8ff 100%);
@@ -69,92 +56,89 @@
   }
 
   .cloud {
-    width: 200px; height: 60px;
-    background: rgba(255,255,255,0.35);
+    width: 200px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.35);
     border-radius: 100px;
     position: absolute;
     animation: float 6s ease-in-out infinite;
     filter: blur(2px);
   }
-  .cloud::before, .cloud::after {
+
+  .cloud::before,
+  .cloud::after {
     content: '';
     position: absolute;
-    background: rgba(255,255,255,0.35);
+    background: rgba(255, 255, 255, 0.35);
     border-radius: 100px;
     filter: blur(2px);
   }
+
   .cloud::before { width: 100px; height: 100px; top: -40px; left: 20px; }
-  .cloud::after  { width: 120px; height: 120px; top: -60px; right: 20px; }
+  .cloud::after { width: 120px; height: 120px; top: -60px; right: 20px; }
 
   @keyframes float {
     0%, 100% { transform: translateY(0px); }
-    50%       { transform: translateY(-24px); }
+    50% { transform: translateY(-24px); }
   }
 
-  .cloud-1 { width: 200px; height: 100px; top: 10%;    left: 10%;  }
-  .cloud-2 { width: 230px; height: 80px;  top: 30%;    right: 10%; animation-delay: 1.5s; }
-  .cloud-3 { width: 250px; height: 100px; bottom: 20%; left: 15%;  animation-delay: 3s;   }
-  .cloud-4 { width: 180px; height: 90px;  bottom: 10%; right: 15%; animation-delay: 4.5s; }
+  .cloud-1 { width: 200px; height: 100px; top: 10%; left: 10%; }
+  .cloud-2 { width: 230px; height: 80px; top: 30%; right: 10%; animation-delay: 1.5s; }
+  .cloud-3 { width: 250px; height: 100px; bottom: 20%; left: 15%; animation-delay: 3s; }
+  .cloud-4 { width: 180px; height: 90px; bottom: 10%; right: 15%; animation-delay: 4.5s; }
 
-  /* Paper bg */
   .bg-paper {
     background-color: #fefbf4;
   }
 }
 
-/* ── Mobile App Feel ─────────────────────────────────────── */
-
-/* Prevent text selection flash on tap (mobile) */
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Smooth scrolling */
 html {
   scroll-behavior: smooth;
 }
 
-/* Remove 300ms tap delay on mobile */
 body {
   touch-action: manipulation;
 }
 
-/* iOS safe area support */
 @supports (padding: env(safe-area-inset-bottom)) {
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
-/* Mobile-optimized inputs */
-input, textarea, select {
-  font-size: 16px; /* Prevents iOS zoom on focus */
+input,
+textarea,
+select {
+  font-size: 16px;
 }
 
-/* Smooth active states on mobile */
-button, a {
+button,
+a {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
 
-/* Hide scrollbar on mobile for horizontal scroll areas */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
-/* Ensure modals are always on top */
 .modal-overlay {
   z-index: 9999;
 }
 
-/* Swipe-friendly card interactions */
 .card-swipe {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
 .card-swipe:active {
   transform: scale(0.98);
 }

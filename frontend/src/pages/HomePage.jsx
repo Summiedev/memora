@@ -1,8 +1,7 @@
-import HomeNav from "../components/home/HomeNav";
+﻿import HomeNav from "../components/home/HomeNav";
 import HomeHero from "../components/home/HomeHero";
 import VaultSection from "../components/home/VaultSection";
 import ArchiveFilmstrip from "../components/home/ArchiveFilmstrip";
-import SharedCircle from "../components/home/SharedCircle";
 import BeginSection from "../components/home/BeginSection";
 
 import "./homepage.css";
@@ -14,7 +13,6 @@ const HomePage = () => {
       <HomeHero />
       <VaultSection />
       <ArchiveFilmstrip />
-      <SharedCircle />
       <BeginSection />
     </div>
   );
