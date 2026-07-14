@@ -7,9 +7,9 @@ import api from '../utils/auth';
 import { compressImage } from '../utils/compressImage';
 
 const achievements = [
-  { label: 'Explorer âœ¨', level: 3, progress: 9,  total: 10, color: '#f59e0b', bg: 'bg-amber-100' },
-  { label: 'Mentor ðŸŒ¸',   level: 2, progress: 2,  total: 3,  color: '#10b981', bg: 'bg-emerald-100' },
-  { label: 'Expert â­',   level: 1, progress: 2,  total: 5,  color: '#8b5cf6', bg: 'bg-violet-100' },
+  { label: 'Explorer¨', level: 3, progress: 9,  total: 10, color: '#f59e0b', bg: 'bg-amber-100' },
+  { label: 'Mentor¸',   level: 2, progress: 2,  total: 3,  color: '#10b981', bg: 'bg-emerald-100' },
+  { label: 'Expert',   level: 1, progress: 2,  total: 5,  color: '#8b5cf6', bg: 'bg-violet-100' },
 ];
 
 const inputCls = "w-full p-3 rounded-2xl bg-purple-50 border border-purple-100 text-purple-900 placeholder:text-purple-300 focus:outline-none focus:ring-2 focus:ring-pink-300 text-sm transition";
@@ -67,7 +67,7 @@ export default function ProfileSettingsPage({ onClose }) {
       style={{ background: "linear-gradient(160deg,#fce4f3,#ede9ff,#dbeafe)" }}>
       <div className="flex flex-col items-center gap-3">
         <div className="w-10 h-10 rounded-full border-4 border-pink-300 border-t-pink-600 animate-spin" />
-        <p className="text-purple-400 text-sm animate-pulse">Loading profileâ€¦ ðŸŒ¸</p>
+        <p className="text-purple-400 text-sm animate-pulse">Loading profile¸</p>
       </div>
     </div>
   );
@@ -85,7 +85,7 @@ export default function ProfileSettingsPage({ onClose }) {
         {/* Header */}
         <div className="text-center mb-8 mt-6">
           <h1 className="chewy text-4xl text-purple-700 mb-1">My Profile âœ¨</h1>
-          <p className="text-sm text-purple-400">Customise your Memora experience ðŸŒ¸</p>
+          <p className="text-sm text-purple-400">Customise your Memora experience¸</p>
         </div>
 
         {/* Avatar hero */}
@@ -115,9 +115,9 @@ export default function ProfileSettingsPage({ onClose }) {
         {/* Tabs */}
         <div className="flex justify-center gap-2 mb-6">
           {[
-            { id: 'profile',  label: 'ðŸ§¸ Profile'      },
-            { id: 'settings', label: 'âš™ï¸ Settings'     },
-            { id: 'achieve',  label: 'ðŸ† Achievements' },
+            { id: 'profile',  label: ' Profile'      },
+            { id: 'settings', label: 'Settings'     },
+            { id: 'achieve',  label: 'Achievements' },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={`px-5 py-2 rounded-2xl text-sm font-semibold transition-all ${activeTab === tab.id
@@ -137,7 +137,7 @@ export default function ProfileSettingsPage({ onClose }) {
             {/* Profile tab */}
             {activeTab === 'profile' && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                <h2 className="chewy text-2xl text-purple-700 mb-4">Edit your details ðŸŒ·</h2>
+                <h2 className="chewy text-2xl text-purple-700 mb-4">Edit your details</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-purple-500 mb-1 ml-1">Full name</label>
@@ -157,7 +157,7 @@ export default function ProfileSettingsPage({ onClose }) {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-purple-500 mb-1 ml-1">Bio âœ¦</label>
-                  <textarea rows={3} placeholder="Tell us a little about yourselfâ€¦" value={profile.bio}
+                  <textarea rows={3} placeholder="Tell us a little about yourself" value={profile.bio}
                     onChange={e => setProfile(p => ({ ...p, bio: e.target.value }))} className={inputCls} />
                 </div>
                 <div className="flex items-center gap-3 pt-2">
@@ -179,7 +179,7 @@ export default function ProfileSettingsPage({ onClose }) {
             {/* Settings tab */}
             {activeTab === 'settings' && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
-                <h2 className="chewy text-2xl text-purple-700 mb-4">Preferences âš™ï¸</h2>
+                <h2 className="chewy text-2xl text-purple-700 mb-4">Preferences</h2>
 
                 {[
                   { name: 'notifications', icon: <Bell size={16} />, label: 'Notifications', sub: 'Get notified when capsules unlock' },
@@ -215,7 +215,7 @@ export default function ProfileSettingsPage({ onClose }) {
                   <button onClick={saveSettings}
                     className="px-6 py-2.5 rounded-2xl text-white font-bold text-sm shadow-md hover:scale-105 hover:shadow-lg transition-all"
                     style={{ background: "linear-gradient(135deg,#10b981,#3b82f6)" }}>
-                    Save settings âœ“
+                    Save settings“
                   </button>
                   {showSettingsSuccess && (
                     <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
