@@ -27,9 +27,6 @@ const HomeNav = () => {
         }`}
       >
         <a href="/" className="flex items-center gap-2 group select-none">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-blue-400 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-            <span className="text-white text-sm font-bold">M</span>
-          </div>
           <span className="chewy text-2xl bg-gradient-to-r from-violet-600 to-blue-500 bg-clip-text text-transparent">
             Memora
           </span>

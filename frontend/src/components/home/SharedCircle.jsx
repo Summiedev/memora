@@ -1,5 +1,5 @@
 ﻿import { motion } from "framer-motion";
-import { Heart, Sparkles, Send } from "lucide-react";
+ 
 
 const highlights = [
   {
@@ -23,10 +23,7 @@ const SharedCircle = () => {
 
       <div className="relative z-10 mx-auto max-w-6xl grid lg:grid-cols-[0.9fr_1.1fr] gap-12 items-center">
         <div className="max-w-xl">
-          <div className="mh-tag">
-            <Heart size={16} className="text-blue-400" />
-            <span className="mh-eyebrow text-blue-500">shared memories</span>
-          </div>
+          <p className="mh-kicker">shared memories</p>
           <h2 className="chewy mt-5 text-[clamp(2rem,4.5vw,3.1rem)] leading-[1.1] text-purple-800">
             Some memories are
             <br />
@@ -47,10 +44,6 @@ const SharedCircle = () => {
               transition={{ duration: 0.55, delay: index * 0.08 }}
               className="mh-card p-5 sm:p-6"
             >
-              <div className="flex items-center gap-2">
-                <Sparkles size={14} className="text-pink-400" />
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-purple-400 quicksand">shared</p>
-              </div>
               <h3 className="mt-4 chewy text-2xl text-purple-800">{item.title}</h3>
               <p className="mt-3 text-sm leading-relaxed text-purple-500 quicksand font-medium">{item.text}</p>
             </motion.article>

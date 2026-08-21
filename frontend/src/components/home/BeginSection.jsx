@@ -1,5 +1,5 @@
 ﻿import { motion } from "framer-motion";
-import { Heart, Sparkles } from "lucide-react";
+ 
 
 const BeginSection = () => {
   return (
@@ -7,10 +7,7 @@ const BeginSection = () => {
       <div className="mh-blob w-[22rem] sm:w-[26rem] h-[22rem] sm:h-[26rem] top-0 left-1/2 -translate-x-1/2 opacity-25" style={{ background: "radial-gradient(circle,#f9a8d4,transparent)" }} />
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">
-        <div className="mh-tag mx-auto w-fit">
-          <Sparkles size={16} className="text-purple-400" />
-          <span className="mh-eyebrow text-purple-500">shared memories</span>
-        </div>
+        <p className="mh-kicker mx-auto w-fit">shared memories</p>
 
         <h2 className="chewy mt-6 text-[clamp(2.1rem,5.5vw,3.6rem)] leading-[1.08] text-purple-800">
           Some memories are
@@ -46,7 +43,7 @@ const BeginSection = () => {
 
         <div className="mt-10 flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 sm:gap-4">
           <a href="/register" className="mh-btn mh-btn-solid w-full sm:w-auto justify-center">
-            <Heart size={16} className="text-pink-200" /> Create your first capsule
+            Create your first capsule
           </a>
           <a href="/login" className="mh-btn mh-btn-outline w-full sm:w-auto justify-center">
             Already have memories waiting? Sign in
@@ -55,8 +52,8 @@ const BeginSection = () => {
       </div>
 
       <footer className="relative z-10 mt-16 sm:mt-24 pt-6 max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p className="chewy text-lg bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent flex items-center gap-1.5">
-          Memora - a place to keep what matters <Heart size={14} className="text-pink-400 inline" />
+        <p className="chewy text-lg bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">
+          Memora - a place to keep what matters
         </p>
         <div className="flex gap-6 text-sm font-semibold text-purple-400 quicksand">
           <a href="#" className="hover:text-purple-600 transition-colors">Privacy</a>

@@ -1,6 +1,5 @@
 ﻿import { useRef } from "react";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
-import { Hourglass, Lock, Heart } from "lucide-react";
 
 const VaultSection = () => {
   const ref = useRef(null);
@@ -12,8 +11,6 @@ const VaultSection = () => {
 
   const flapRotate = useTransform(scrollYProgress, [0, 1], prefersReduced ? [-158, -158] : [0, -158]);
   const letterY = useTransform(scrollYProgress, [0, 1], prefersReduced ? [-56, -56] : [22, -56]);
-  const sealScale = useTransform(scrollYProgress, [0, 0.35, 0.5], [1, 1, 0]);
-  const sealOpacity = useTransform(scrollYProgress, [0, 0.35, 0.5], [1, 1, 0]);
 
   return (
     <section ref={ref} className="relative py-20 sm:py-28 px-5 sm:px-10">
@@ -27,7 +24,7 @@ const VaultSection = () => {
               className="absolute left-[6%] right-[6%] top-[-38%] h-[90%] rounded-t-xl shadow-[0_20px_40px_rgba(139,92,246,0.22)]"
             >
               <div className="p-5 sm:p-6">
-                <p className="mh-eyebrow text-pink-400">opens 12 . 25 . 2031</p>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-pink-400">opens 12 . 25 . 2031</p>
                 <p className="mh-script text-purple-800 mt-3 text-xl sm:text-2xl leading-snug">
                   "Read this when you've forgotten what today felt like."
                 </p>
@@ -44,20 +41,11 @@ const VaultSection = () => {
               style={{ rotateX: flapRotate, background: "linear-gradient(160deg,#fbcfe8,#ddd6fe)", zIndex: 3 }}
             />
 
-            <motion.div
-              style={{ scale: sealScale, opacity: sealOpacity, zIndex: 4 }}
-              className="mh-seal absolute w-12 h-12 rounded-full left-1/2 top-[30%] -translate-x-1/2 flex items-center justify-center"
-            >
-              <Heart size={20} className="text-white fill-white" />
-            </motion.div>
           </div>
         </div>
 
         <div className="text-center lg:text-left">
-          <div className="mh-tag mx-auto lg:mx-0">
-            <Hourglass size={16} className="text-purple-400" />
-            <span className="mh-eyebrow text-purple-500">time capsules</span>
-          </div>
+          <p className="mh-kicker mx-auto lg:mx-0">time capsules</p>
           <h2 className="chewy mt-5 text-[clamp(2rem,4.5vw,3.1rem)] leading-[1.1] text-purple-800">
             Some letters are
             <br />
@@ -69,9 +57,7 @@ const VaultSection = () => {
           <p className="mt-4 mx-auto lg:mx-0 max-w-md text-sm leading-relaxed text-purple-400 quicksand font-semibold">
             The point is not to rush the moment. It is to give it a place to wait until it can be felt fully.
           </p>
-          <div className="mt-7 flex items-center justify-center lg:justify-start gap-2 text-sm font-bold text-pink-500 quicksand">
-            <Lock size={16} className="text-pink-400" /> Locked until the date you choose
-          </div>
+          <p className="mt-7 text-sm font-bold text-pink-500 quicksand">Locked until the date you choose</p>
         </div>
       </div>
     </section>
