@@ -6,7 +6,7 @@
  * - ONLY remove the token on an explicit 401 from the server that confirms the
  *   token is invalid/expired — not on connection errors (status === 0 / no response)
  * - Use a shared axios instance with httpOnly cookies (JWT auth via cookies)
- * - CSRF is handled by SameSite=Lax cookies + httpOnly — no additional CSRF tokens needed
+ * - CSRF is handled by double-submit cookie pattern
  */
 
 import axios from "axios";
@@ -16,6 +16,13 @@ if (!BASE_URL) {
   throw new Error('VITE_API_BASE_URL must be defined in your environment.');
 }
 export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || BASE_URL.replace(/\/api\/?$/, "");
+
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -41,21 +48,33 @@ const subscribeRefresh = (cb) => {
 
 const refreshSession = async () => {
   try {
-    await refreshClient.post("/auth/refresh");
+    const csrfToken = getCookie('_csrf');
+    await refreshClient.post("/auth/refresh", {}, {
+      headers: { 'X-CSRF-Token': csrfToken }
+    });
     return true;
   } catch (err) {
     return false;
   }
 };
 
-api.interceptors.request.use(async (config) => {
+api.interceptors.request.use((config) => {
   config.withCredentials = true;
-  
-  console.log('[Request]', config.method?.toUpperCase(), config.url);
-  
+
+  const method = config.method?.toLowerCase();
+  if (['post', 'patch', 'put', 'delete'].includes(method)) {
+    const csrfToken = getCookie('_csrf');
+    if (csrfToken) {
+      config.headers['X-CSRF-Token'] = csrfToken;
+    }
+  }
+
+  if (import.meta.env.DEV) {
+    console.log('[Request]', config.method?.toUpperCase(), config.url);
+  }
+
   return config;
 }, (err) => {
-  console.error('[Request Interceptor Error]', err);
   return Promise.reject(err);
 });
 
@@ -66,12 +85,13 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const errorData = error.response?.data;
 
-    // Log response errors
-    console.error('[Response Error]', {
-      status,
-      message: errorData?.error || errorData?.message || error.message,
-      url: originalRequest?.url
-    });
+    if (import.meta.env.DEV) {
+      console.error('[Response Error]', {
+        status,
+        message: errorData?.error || errorData?.message || error.message,
+        url: originalRequest?.url
+      });
+    }
 
     if (
       status === 401 &&

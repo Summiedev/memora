@@ -6,6 +6,6 @@ const router = express.Router();
 
 router.post('/friend-request',          authenticateUser, FriendController.sendFriendRequest);
 router.post('/friend-accept',           authenticateUser, FriendController.acceptFriendRequest);
-router.get('/friend-requests/:userId',  authenticateUser, FriendController.getFriendRequests);
+router.get('/friend-requests',  authenticateUser, FriendController.getFriendRequests);
 
 module.exports = router;

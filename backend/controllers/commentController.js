@@ -1,123 +1,78 @@
+const { z } = require('zod');
 const Comment = require('../models/comment');
-const Capsule = require('../models/capsule');   // your capsule model
-const User = require('../models/user');
+const Capsule = require('../models/capsule');
+const { CommentDTO } = require('../utils/response');
+const logger = require('../utils/logger');
+const { postCommentBody, commentParams } = require('../utils/schemas');
 
-// exports.getComments = async (req, res, next) => {
-//   try {
-//     const { capsuleId } = req.params;
-//     // optionally verify capsule exists
-//     const comments = await Comment.find({ capsuleId })
-//       .sort('createdAt')
-//       .populate('userId', 'fullname username avatar');
+const checkCapsulePermission = async (capsuleId, userId) => {
+  const capsule = await Capsule.findById(capsuleId).lean();
+  if (!capsule) return { error: 'Capsule not found', status: 404 };
 
-//     res.json({ success: true, data: comments });
-//   } catch (err) {
-//     next(err);
-//   }
-// };
+  const isCreator = capsule.createdBy.toString() === userId;
+  const isSharedRecipient = capsule.sharedWith.map(x => x.toString()).includes(userId);
 
-// exports.postComment = async (req, res, next) => {
-//   try {
-//     const { capsuleId } = req.params;
-//     const { content } = req.body;
-//     const userId = req.user.id;
+  if (capsule.capsuleType === 'private' && !isCreator) {
+    return { error: 'Forbidden', status: 403 };
+  }
+  if (capsule.capsuleType === 'shared' && !isCreator && !isSharedRecipient) {
+    return { error: 'Forbidden', status: 403 };
+  }
+  if (capsule.lockUntilSend && new Date() < new Date(capsule.sendDate)) {
+    return { error: 'Capsule still locked', status: 403 };
+  }
 
-//     // (Optionally verify capsule exists and is unlocked)
-//     const capsule = await Capsule.findById(capsuleId);
-//     if (!capsule) return res.status(404).json({ success: false, error: 'Capsule not found' });
-
-//     const comment = await Comment.create({ capsuleId, userId, content });
-//     await comment.populate('userId', 'fullname username avatar').execPopulate();
-
-//     res.status(201).json({ success: true, data: comment });
-//   } catch (err) {
-//     next(err);
-//   }
-// };
-// // ==========================
-// // controllers/commentController.js
-// // ==========================
-// const Capsule = require('../models/capsule');
-
+  return { capsule };
+};
 
 const getComments = async (req, res) => {
   try {
-    const { capsuleId } = req.params;                    // ← match the route param
+    const { capsuleId } = commentParams.parse(req.params);
 
-    // 1. Fetch the capsule
-    const capsule = await Capsule.findById(capsuleId);
-    if (!capsule) {
-      return res.status(404).json({ success: false, message: 'Capsule not found' });
+    const permission = await checkCapsulePermission(capsuleId, req.user._id.toString());
+    if (permission.error) {
+      return res.status(permission.status).json({ success: false, message: permission.error });
     }
 
-    // 2. Permission checks
-    const userId = req.user._id.toString();
-    const isCreator = capsule.createdBy.toString() === userId;
-    const isSharedRecipient = capsule.sharedWith.map(x => x.toString()).includes(userId);
-    const now = new Date();
-
-    if (capsule.capsuleType === 'private' && !isCreator) {
-      return res.status(403).json({ success: false, message: 'Forbidden' });
-    }
-    if (capsule.capsuleType === 'shared' && !isCreator && !isSharedRecipient) {
-      return res.status(403).json({ success: false, message: 'Forbidden' });
-    }
-    if (capsule.lockUntilSend && now < new Date(capsule.sendDate)) {
-      return res.status(403).json({ success: false, message: 'Capsule still locked' });
-    }
-
-    // 3. Fetch comments, populating `userId` (not `author`)
     const comments = await Comment.find({ capsuleId })
       .populate('userId', 'username avatar')
-      .sort({ createdAt: 1 });
+      .sort({ createdAt: 1 })
+      .lean();
 
-    return res.json({ success: true, comments });
+    return res.json({ success: true, comments: comments.map(CommentDTO) });
   } catch (err) {
-    console.error(err);
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ success: false, message: err.errors[0].message });
+    }
+    logger.error(err, 'Failed to fetch comments');
     return res.status(500).json({ success: false, message: 'Failed to fetch comments' });
   }
 };
 
 const postComment = async (req, res) => {
   try {
-    const { capsuleId } = req.params;                    // ← match the route param
-    const { content } = req.body;
+    const { capsuleId } = commentParams.parse(req.params);
+    const { content } = postCommentBody.parse(req.body);
 
-    // 1. Fetch the capsule
-    const capsule = await Capsule.findById(capsuleId);
-    if (!capsule) {
-      return res.status(404).json({ success: false, message: 'Capsule not found' });
+    const permission = await checkCapsulePermission(capsuleId, req.user._id.toString());
+    if (permission.error) {
+      return res.status(permission.status).json({ success: false, message: permission.error });
     }
 
-    // 2. Permission checks (same as getComments)
-    const userId = req.user._id.toString();
-    const isCreator = capsule.createdBy.toString() === userId;
-    const isSharedRecipient = capsule.sharedWith.map(x => x.toString()).includes(userId);
-    const now = new Date();
-
-    if (capsule.capsuleType === 'private' && !isCreator) {
-      return res.status(403).json({ success: false, message: 'Forbidden' });
-    }
-    if (capsule.capsuleType === 'shared' && !isCreator && !isSharedRecipient) {
-      return res.status(403).json({ success: false, message: 'Forbidden' });
-    }
-    if (capsule.lockUntilSend && now < new Date(capsule.sendDate)) {
-      return res.status(403).json({ success: false, message: 'Capsule still locked' });
-    }
-
-    // 3. Create the new comment, using `userId` (required by your schema)
     const newComment = await Comment.create({
       capsuleId,
-      userId: req.user._id,                              // ← must match schema’s required field
+      userId: req.user._id,
       content: content.trim()
     });
 
-    // 4. Populate the `userId` field so you can return username/avatar
     await newComment.populate('userId', 'username avatar');
 
-    return res.status(201).json({ success: true, comment: newComment });
+    return res.status(201).json({ success: true, comment: CommentDTO(newComment.toObject()) });
   } catch (err) {
-    console.error(err);
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ success: false, message: err.errors[0].message });
+    }
+    logger.error(err, 'Failed to post comment');
     return res.status(500).json({ success: false, message: 'Failed to post comment' });
   }
 };

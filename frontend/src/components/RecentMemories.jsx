@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 dayjs.extend(isoWeek);
 
-const RecentMemories = ({ newEntryTrigger, onMemoryClick } ) => {
+const RecentMemories = ({ newEntryTrigger, onMemoryClick, compact = false } ) => {
   const [weeks, setWeeks] = useState([]);
   const [memoriesMap, setMemoriesMap] = useState({});
 
@@ -12,11 +12,13 @@ const RecentMemories = ({ newEntryTrigger, onMemoryClick } ) => {
     try {
       const response = await api.get('/photo-memories/get-all-photo');
 
-      const memories = response.data.data;
+      const memories = response.data.data || [];
       const grouped = {};
       const map = {};
 
       memories.forEach(memory => {
+        const photos = Array.isArray(memory.photos) ? memory.photos.slice(0, 1) : [];
+        if (!photos[0]) return;
         const weekNum = dayjs(memory.createdAt).isoWeek();
         const year = dayjs(memory.createdAt).year();
         const weekKey = `${year}-W${weekNum}`;
@@ -32,7 +34,6 @@ const RecentMemories = ({ newEntryTrigger, onMemoryClick } ) => {
         }
 
         const dayName = dayjs(memory.createdAt).format('ddd');
-        const photos = memory.photos.slice(0, 1);
         if (!grouped[weekKey].days[dayName]) {
           grouped[weekKey].days[dayName] = {
             photo: photos[0],
@@ -57,15 +58,20 @@ const RecentMemories = ({ newEntryTrigger, onMemoryClick } ) => {
     fetchMemories();
   }, [newEntryTrigger]);
   return (
-    <div className="bg-blue-50 rounded-xl shadow p-4">
-      <div className="p-4 border-b border-blue-200 mb-4">
+    <div className={`${compact ? 'rounded-2xl bg-slate-50/70' : 'rounded-2xl bg-blue-50'} p-3 sm:p-4`}>
+      {!compact && <div className="px-1 pb-3 border-b border-blue-100 mb-3">
         <h3 className="text-lg font-semibold text-blue-700 quicksand">
           🌈 Recent Memories
         </h3>
         <p className="text-xs text-blue-400">(past 4 weeks)</p>
-      </div>
+      </div>}
 
-      <div className="space-y-6">
+      {weeks.length === 0 ? (
+        <div className="py-7 text-center">
+          <p className="text-sm font-bold text-slate-600">Your photo shelf is waiting.</p>
+          <p className="mt-1 text-xs text-slate-400">Add a photo album and it will show up here.</p>
+        </div>
+      ) : <div className="space-y-5">
         {weeks.map((week, idx) => (
           <div key={idx}>
             <div className="text-blue-600 font-semibold text-md mb-2 flex justify-between items-center">
@@ -114,7 +120,7 @@ const RecentMemories = ({ newEntryTrigger, onMemoryClick } ) => {
             </div>
           </div>
         ))}
-      </div>
+      </div>}
     </div>
   );
 };

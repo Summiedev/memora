@@ -5,6 +5,7 @@ import {
   Users, BookOpen, ChevronDown, Menu,
 } from "lucide-react";
 import { AnimatePresence,motion } from "framer-motion";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import TimeCapsuleModal from "./CreateCapsuleForm";
 import ProfileSettingsPage from "../pages/Profile_Settings";
 import api from "../utils/auth";
@@ -25,8 +26,10 @@ const Navbar_Main = () => {
   const [notifications,    setNotifications]    = useState([]);
   const [unreadCount,      setUnreadCount]      = useState(0);
 
-  const notifRef   = useRef();
-  const profileRef = useRef();
+  const notifRefDesktop = useRef();
+  const notifRefMobile  = useRef();
+  const profileRefDesktop = useRef();
+  const profileRefMobile  = useRef();
 
   // ── Fetch user — SAFE: never removes token on network errors ──────────────
   const fetchUser = useCallback(async () => {
@@ -88,14 +91,16 @@ const Navbar_Main = () => {
   // ── Click outside ─────────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e) => {
-      if (notifRef.current   && !notifRef.current.contains(e.target))   setShowNotif(false);
-      if (profileRef.current && !profileRef.current.contains(e.target)) setShowProfile(false);
+      if (notifRefDesktop.current && !notifRefDesktop.current.contains(e.target)) setShowNotif(false);
+      if (notifRefMobile.current  && !notifRefMobile.current.contains(e.target))  setShowNotif(false);
+      if (profileRefDesktop.current && !profileRefDesktop.current.contains(e.target)) setShowProfile(false);
+      if (profileRefMobile.current  && !profileRefMobile.current.contains(e.target))  setShowProfile(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const currentPath = window.location.pathname;
+  const { pathname: currentPath } = useLocation();
 
   return (
     <>
@@ -104,14 +109,14 @@ const Navbar_Main = () => {
           <div className="flex items-center justify-between h-16">
 
             {/* Logo */}
-            <a href="/dashboard" className="flex items-center gap-2 group select-none">
+            <Link to="/dashboard" className="flex items-center gap-2 group select-none">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-blue-400 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
                 <span className="text-white text-sm font-bold">M</span>
               </div>
               <span className="chewy text-2xl bg-gradient-to-r from-violet-600 to-blue-500 bg-clip-text text-transparent tracking-wide">
                 Memora
               </span>
-            </a>
+            </Link>
 
             {/* Desktop Nav Links */}
             {user && !loadingUser && (
@@ -120,14 +125,14 @@ const Navbar_Main = () => {
                 {NAV_LINKS.map(({ href, label, icon: Icon }) => {
                   const isActive = currentPath === href;
                   return (
-                    <a key={href} href={href}
+                    <NavLink key={href} to={href}
                       className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 quicksand ${
                         isActive
                           ? "bg-violet-100 text-violet-700"
                           : "text-gray-500 hover:bg-violet-50 hover:text-violet-600"
                       }`}>
                       <Icon size={15} />{label}
-                    </a>
+                    </NavLink>
                   );
                 })}
               </div>
@@ -138,7 +143,7 @@ const Navbar_Main = () => {
               <div className="hidden md:flex items-center gap-2">
 
                 {/* Notifications */}
-                <div className="relative" ref={notifRef}>
+                <div className="relative" ref={notifRefDesktop}>
                   <button
                     onClick={() => { setShowNotif((v) => !v); if (!showNotif) setUnreadCount(0); }}
                     className="relative p-2.5 rounded-xl text-gray-500 hover:bg-violet-50 hover:text-violet-600 transition-all">
@@ -189,7 +194,7 @@ const Navbar_Main = () => {
                 </div>
 
                 {/* Profile dropdown */}
-                <div className="relative" ref={profileRef}>
+                <div className="relative" ref={profileRefDesktop}>
                   <button onClick={() => setShowProfile((v) => !v)}
                     className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-violet-50 transition-all">
                     <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-400 to-blue-400 flex items-center justify-center text-xs font-bold text-white shadow">
@@ -230,7 +235,7 @@ const Navbar_Main = () => {
             {user && !loadingUser && (
               <div className="flex md:hidden items-center gap-2">
                 {/* Notification bell */}
-                <div className="relative" ref={notifRef}>
+                <div className="relative" ref={notifRefMobile}>
                   <button
                     onClick={() => { setShowNotif((v) => !v); if (!showNotif) setUnreadCount(0); }}
                     className="relative p-2 rounded-xl text-gray-500 hover:bg-violet-50 transition-all">
@@ -268,7 +273,7 @@ const Navbar_Main = () => {
                   </AnimatePresence>
                 </div>
                 {/* Profile avatar */}
-                <div className="relative" ref={profileRef}>
+                <div className="relative" ref={profileRefMobile}>
                   <button onClick={() => setShowProfile((v) => !v)}
                     className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-400 to-blue-400 flex items-center justify-center text-xs font-bold text-white shadow">
                     {user?.username?.[0]?.toUpperCase() || "U"}

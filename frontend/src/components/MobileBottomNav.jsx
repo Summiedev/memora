@@ -1,4 +1,5 @@
 import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Home, Archive, Users, BookOpen } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -9,7 +10,7 @@ const NAV_ITEMS = [
 ];
 
 export default function MobileBottomNav() {
-  const current = window.location.pathname;
+  const { pathname: current } = useLocation();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden"
@@ -18,7 +19,7 @@ export default function MobileBottomNav() {
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const isActive = current === href;
           return (
-            <a key={href} href={href}
+            <Link key={href} to={href}
               className="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-2xl transition-all active:scale-90"
               style={isActive ? { background: 'linear-gradient(135deg,rgba(236,72,153,0.12),rgba(139,92,246,0.12))' } : {}}>
               <div className={`w-6 h-6 flex items-center justify-center transition-all ${isActive ? 'scale-110' : ''}`}>
@@ -30,7 +31,7 @@ export default function MobileBottomNav() {
               {isActive && (
                 <div className="w-1 h-1 rounded-full bg-purple-500 mt-0.5" />
               )}
-            </a>
+            </Link>
           );
         })}
       </div>

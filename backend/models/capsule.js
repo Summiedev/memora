@@ -30,5 +30,8 @@ const CapsuleSchema = new mongoose.Schema({
   }]
 }, { timestamps: true });
 
+CapsuleSchema.index({ createdBy: 1, createdAt: -1 });
+CapsuleSchema.index({ createdBy: 1, sendDate: 1 });
+
 const Capsule = mongoose.model('Capsule', CapsuleSchema);
 module.exports = Capsule;

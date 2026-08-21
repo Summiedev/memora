@@ -2,7 +2,7 @@
 import { motion } from 'framer-motion';
 
 import { FaCheckCircle, FaArrowLeft } from 'react-icons/fa';
-import { Camera, Bell, Moon, Lock, Star } from 'lucide-react';
+import { Camera, Bell, Moon, Lock, Star, User } from 'lucide-react';
 import api from '../utils/auth';
 import { compressImage } from '../utils/compressImage';
 
@@ -73,8 +73,7 @@ export default function ProfileSettingsPage({ onClose }) {
   );
 
   return (
-    <div className="min-h-screen py-8 px-4 sm:px-6 relative"
-      style={{ background: "linear-gradient(160deg,#fce4f3 0%,#ede9ff 40%,#dbeafe 100%)" }}>
+    <div className="app-shell min-h-screen py-8 px-4 sm:px-6 relative">
 
       {/* Back button */}
       <button onClick={onClose} className="absolute top-5 left-5 flex items-center gap-2 text-purple-500 hover:text-purple-700 font-semibold text-sm transition-colors">
@@ -84,8 +83,8 @@ export default function ProfileSettingsPage({ onClose }) {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8 mt-6">
-          <h1 className="chewy text-4xl text-purple-700 mb-1">My Profile âœ¨</h1>
-          <p className="text-sm text-purple-400">Customise your Memora experience¸</p>
+          <h1 className="chewy text-4xl text-purple-700 mb-1">My Profile</h1>
+          <p className="text-sm text-purple-400">Customise your Memora experience</p>
         </div>
 
         {/* Avatar hero */}
@@ -93,8 +92,14 @@ export default function ProfileSettingsPage({ onClose }) {
           <div className="relative">
             <div className="w-28 h-28 rounded-full overflow-hidden ring-4 shadow-xl"
               style={{ ringColor: "#f9a8d4" }}>
-              <img src={profile.avatar || '/default-avatar.png'} alt="avatar"
-                className="w-full h-full object-cover" />
+              {profile.avatar ? (
+                <img src={profile.avatar} alt="avatar"
+                  className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-pink-300 to-purple-400 flex items-center justify-center">
+                  <User size={42} className="text-white" />
+                </div>
+              )}
             </div>
             <label className="absolute bottom-0 right-0 w-9 h-9 rounded-full flex items-center justify-center cursor-pointer shadow-lg border-2 border-white transition-all hover:scale-110"
               style={{ background: "linear-gradient(135deg,#ec4899,#8b5cf6)" }}>
@@ -215,7 +220,7 @@ export default function ProfileSettingsPage({ onClose }) {
                   <button onClick={saveSettings}
                     className="px-6 py-2.5 rounded-2xl text-white font-bold text-sm shadow-md hover:scale-105 hover:shadow-lg transition-all"
                     style={{ background: "linear-gradient(135deg,#10b981,#3b82f6)" }}>
-                    Save settings“
+                    Save settings
                   </button>
                   {showSettingsSuccess && (
                     <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}

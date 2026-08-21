@@ -102,15 +102,12 @@ export default function MemoriesListPage() {
   return (
     <>
       <div
-        className="min-h-screen"
-        style={{
-          background: "linear-gradient(135deg,#f0f4ff 0%,#fdf4ff 50%,#f0fff4 100%)",
-        }}
+        className="app-shell"
       >
         <Navbar_Main />
         <MobileBottomNav />
 
-        <div className="max-w-6xl mx-auto px-4 py-8 pb-24 md:pb-8">
+        <div className="app-container py-8 pb-24 md:pb-8">
           <div className="mb-6 text-center">
             <h1 className="chewy text-4xl bg-gradient-to-r from-violet-600 to-blue-500 bg-clip-text text-transparent mb-1">
               My Memories ✧･ﾟ

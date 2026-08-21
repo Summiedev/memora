@@ -55,15 +55,17 @@ const greetingByHour = () => {
 };
 
 // â”€â”€ Tiny helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const StatCard = ({ label, count, subtitle, grad, border, tc, delay, onClick }) => (
+const StatCard = ({ label, count, subtitle, grad, border, tc, delay, onClick, icon: Icon = Sparkles }) => (
   <motion.button onClick={onClick}
     initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
     transition={{ delay, duration: 0.35 }}
-    whileHover={{ scale: 1.05, y: -3 }} whileTap={{ scale: 0.97 }}
+    whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}
     className={`w-full text-left rounded-3xl p-5 border-2 ${border} shadow-md hover:shadow-xl transition-all`}
     style={{ background: grad }}>
     <div className="flex items-center gap-3 mb-3">
-      <span className="w-3 h-3 rounded-full bg-white/80 shadow-sm"></span>
+      <span className="w-8 h-8 rounded-xl bg-white/70 flex items-center justify-center shadow-sm">
+        <Icon size={15} className={tc} />
+      </span>
       <span className="text-xs font-semibold text-slate-700 uppercase tracking-[0.2em]">{label}</span>
     </div>
     <div className={`text-4xl font-black chewy ${tc} leading-none mb-1`}>{count ?? <span className="opacity-30">â€”</span>}</div>
@@ -247,15 +249,15 @@ const Dashboard = () => {
 
   // â”€â”€ JSX â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
-    <div style={{ background: 'linear-gradient(160deg,#fdf0f9 0%,#f0ebff 45%,#e8f4ff 100%)', minHeight: '100vh' }}>
+    <div className="app-shell">
       <Navbar_Main />
       <MobileBottomNav />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24 md:pb-6 space-y-5">
+      <main className="app-container py-5 sm:py-7 pb-24 md:pb-7 space-y-5">
 
         {/* â”€â”€ WELCOME BANNER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-          className="rounded-3xl p-5 sm:p-6 relative overflow-hidden shadow-xl border-2 border-pink-100"
+          className="dashboard-welcome rounded-[2rem] p-5 sm:p-7 relative overflow-hidden shadow-xl border border-white/80"
           style={{ background: 'linear-gradient(135deg,#fff0f9,#f5f0ff,#eef6ff)' }}>
 
           {/* decorative blobs */}
@@ -264,8 +266,9 @@ const Dashboard = () => {
           <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-15 pointer-events-none"
             style={{ background: 'radial-gradient(circle,#a78bfa,transparent)' }} />
 
-          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
+          <div className="relative z-10 grid lg:grid-cols-[1fr_auto] gap-6 items-center">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+              <div className="flex items-center gap-4">
               {/* Avatar bubble */}
               <div className="w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl font-black text-white shadow-lg"
                 style={{ background: 'linear-gradient(135deg,#ec4899,#8b5cf6)' }}>
@@ -279,44 +282,69 @@ const Dashboard = () => {
                   {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                 </p>
               </div>
-            </div>
+              </div>
 
             {/* Quick create buttons */}
-            <div className="flex gap-2 flex-wrap sm:flex-nowrap">
+            <div className="flex gap-2 flex-wrap sm:flex-nowrap w-full sm:w-auto">
               <motion.button whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.95 }}
                 onClick={() => setShowCapsuleForm(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-white text-sm font-bold shadow-lg"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-white text-sm font-bold shadow-lg"
                 style={{ background: 'linear-gradient(135deg,#ec4899,#8b5cf6)' }}>
                 <Plus size={15} /> Capsule
               </motion.button>
               <motion.button whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.95 }}
                 onClick={() => setShowMemoryPicker(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-white text-sm font-bold shadow-lg"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-white text-sm font-bold shadow-lg"
                 style={{ background: 'linear-gradient(135deg,#3b82f6,#06b6d4)' }}>
                 <BookOpen size={15} /> Memory
               </motion.button>
+            </div>
+            </div>
+
+            <div className="dashboard-shelf rounded-3xl border border-white/80 bg-white/60 p-4 shadow-sm">
+              <div className="flex items-center justify-between gap-6">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-400">Your memory shelf</p>
+                  <p className="mt-1 text-sm font-bold text-purple-800">A little room for today</p>
+                </div>
+                <Sparkles size={18} className="text-pink-400" />
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                <div className="rounded-2xl bg-pink-50 px-2 py-2.5 text-center">
+                  <Pencil size={14} className="mx-auto text-pink-500" />
+                  <p className="mt-1 text-[10px] font-bold text-pink-700">Write</p>
+                </div>
+                <div className="rounded-2xl bg-blue-50 px-2 py-2.5 text-center">
+                  <Camera size={14} className="mx-auto text-blue-500" />
+                  <p className="mt-1 text-[10px] font-bold text-blue-700">Capture</p>
+                </div>
+                <div className="rounded-2xl bg-violet-50 px-2 py-2.5 text-center">
+                  <Lock size={14} className="mx-auto text-violet-500" />
+                  <p className="mt-1 text-[10px] font-bold text-violet-700">Save</p>
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>
 
         {/* â”€â”€ STAT CARDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <StatCard label="Total"    count={capsuleStats.total} subtitle="all memories"
+          <StatCard label="Total"    count={capsuleStats.total} subtitle="all capsules"
             grad="linear-gradient(135deg,#fce7f3,#fdf4ff)"
             border="border-pink-200" tc="text-pink-700" delay={0}
-            onClick={() => window.location.href = '/capsules'} />
+            onClick={() => window.location.href = '/capsules'} icon={Package} />
           <StatCard label="Unlocked" count={capsuleStats.unlocked} subtitle="ready now"
             grad="linear-gradient(135deg,#d1fae5,#ecfdf5)"
             border="border-emerald-200" tc="text-emerald-700" delay={0.07}
-            onClick={() => window.location.href = '/capsules'} />
+            onClick={() => window.location.href = '/capsules'} icon={Unlock} />
           <StatCard label="Sealed"   count={capsuleStats.locked} subtitle="still waiting"
             grad="linear-gradient(135deg,#ede9fe,#faf5ff)"
             border="border-violet-200" tc="text-violet-700" delay={0.14}
-            onClick={() => window.location.href = '/capsules'} />
+            onClick={() => window.location.href = '/capsules'} icon={Lock} />
           <StatCard label="Shared"   count={capsuleStats.shared} subtitle="shared with others"
             grad="linear-gradient(135deg,#e0f2fe,#eff6ff)"
             border="border-sky-200" tc="text-sky-700" delay={0.21}
-            onClick={() => window.location.href = '/capsules'} />
+            onClick={() => window.location.href = '/capsules'} icon={Share2} />
         </div>
 
         {/* â”€â”€ MAIN GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
@@ -417,7 +445,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-      </div>
+      </main>
 
       {/* â”€â”€ FAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <FloatingActions onCreate={() => { fetchCapsules(); setMemoryTrigger(t => t + 1); }} />

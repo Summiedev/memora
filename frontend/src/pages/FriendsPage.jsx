@@ -783,8 +783,8 @@ export default function FriendsPage() {
    
         <Navbar_Main />
         <MobileBottomNav />
-      <div className="min-h-screen quicksand" style={{ background: "linear-gradient(135deg,#ede9fe 0%,#e0e7ff 50%,#dbeafe 100%)" }}>
-        <div className="max-w-7xl mx-auto px-3 py-4">
+      <div className="app-shell quicksand">
+        <div className="app-container py-4">
 
           {/* ── Header ── */}
           <div className="flex items-center justify-between mb-4">

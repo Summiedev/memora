@@ -1,6 +1,10 @@
+const { z } = require('zod');
 const bcrypt = require('bcryptjs');
 const DiaryMemory = require('../models/diaryEntry.js');
 const Streak = require('../models/streak.js');
+const { DiaryDTO, StreakDTO } = require('../utils/response');
+const logger = require('../utils/logger');
+const { createDiaryBody, updateDiaryBody, unlockDiaryBody, shareDiaryBody, diaryParams, pagination } = require('../utils/schemas');
 
 // ─── Streak helper ───────────────────────────────────────────────────────────
 const toDateStr = (d) => d.toISOString().split('T')[0]; // YYYY-MM-DD
@@ -39,12 +43,13 @@ async function updateStreak(userId) {
 // ─── Create diary memory ─────────────────────────────────────────────────────
 const createDiaryMemory = async (req, res) => {
   try {
+    const parsed = createDiaryBody.parse(req.body);
     const {
       title, entryText, date, emotionTag,
       isSecret, pin, burnAfterReading,
       voiceNoteUrl, voiceNoteDuration, voiceNotePublicId,
       groupId
-    } = req.body;
+    } = parsed;
 
     let pinHash = null;
     if (isSecret && pin) {
@@ -71,44 +76,73 @@ const createDiaryMemory = async (req, res) => {
     // Update streak
     const streak = await updateStreak(req.user._id);
 
-    res.status(201).json({ success: true, data: diary, streak });
+res.status(201).json({ success: true, data: DiaryDTO(diary.toObject()), streak: StreakDTO(streak.toObject()) });
   } catch (error) {
-    console.error('createDiaryMemory:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ success: false, message: error.errors[0].message });
+    }
     res.status(500).json({ success: false, message: 'Failed to create diary', error });
   }
-};
+ };
 
 // ─── Get my diary memories ───────────────────────────────────────────────────
 const getMyDiaryMemories = async (req, res) => {
   try {
-    const diaries = await DiaryMemory.find({
-      createdBy: req.user._id,
-      groupId: null  // personal only
-    }).sort({ createdAt: -1 }).select('-pinHash');
+    const parsed = pagination.parse(req.query);
+    const page = Math.max(1, parsed.page);
+    const limit = Math.min(50, parsed.limit);
+    const skip = (page - 1) * limit;
 
-    res.json({ success: true, data: diaries });
+    const [diaries, total] = await Promise.all([
+      DiaryMemory.find({ createdBy: req.user._id, groupId: null })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select('-pinHash')
+        .lean(),
+      DiaryMemory.countDocuments({ createdBy: req.user._id, groupId: null })
+    ]);
+
+res.json({ success: true, data: diaries, pagination: { total, page, pages: Math.ceil(total / limit) } });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ success: false, message: error.errors[0].message });
+    }
     res.status(500).json({ success: false, message: 'Failed to fetch diaries', error });
   }
-};
+ };
 
 // ─── Get shared diary memories ───────────────────────────────────────────────
 const getSharedDiaryMemories = async (req, res) => {
   try {
-    const sharedDiaries = await DiaryMemory.find({
-      sharedWith: req.user._id
-    }).sort({ createdAt: -1 }).select('-pinHash');
+    const parsed = pagination.parse(req.query);
+    const page = Math.max(1, parsed.page);
+    const limit = Math.min(50, parsed.limit);
+    const skip = (page - 1) * limit;
 
-    res.json({ success: true, data: sharedDiaries });
+    const [sharedDiaries, total] = await Promise.all([
+      DiaryMemory.find({ sharedWith: req.user._id })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select('-pinHash')
+        .lean(),
+      DiaryMemory.countDocuments({ sharedWith: req.user._id })
+    ]);
+
+res.json({ success: true, data: sharedDiaries, pagination: { total, page, pages: Math.ceil(total / limit) } });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ success: false, message: error.errors[0].message });
+    }
     res.status(500).json({ success: false, message: 'Failed to fetch shared diaries', error });
   }
-};
+ };
 
 // ─── Get a specific diary memory ─────────────────────────────────────────────
 const getDiaryMemoryById = async (req, res) => {
   try {
-    const diary = await DiaryMemory.findById(req.params.memoryId).select('-pinHash');
+    const diary = await DiaryMemory.findById(req.params.memoryId).select('-pinHash').lean();
     if (!diary) return res.status(404).json({ success: false, message: 'Diary not found' });
 
     const userId = req.user._id.toString();
@@ -119,28 +153,23 @@ const getDiaryMemoryById = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Unauthorized access' });
     }
 
-    // Secret entry: return locked flag unless owner provided PIN
     if (diary.isSecret && !isOwner) {
       return res.status(403).json({ success: false, message: 'This entry is secret' });
     }
 
-    // Burn after reading
     if (diary.burnAfterReading && !isOwner) {
       const alreadyRead = diary.burnAfterReadBy.map(id => id.toString()).includes(userId);
-      const diaryObj = diary.toObject();
       if (!alreadyRead) {
-        diary.burnAfterReadBy.push(req.user._id);
-        await diary.save();
+        await DiaryMemory.findByIdAndUpdate(req.params.memoryId, { $addToSet: { burnAfterReadBy: req.user._id } });
       }
-      // delete after returning to non-owner readers
-      const response = res.json({ success: true, data: diaryObj, burnedAfterRead: true });
-      if (alreadyRead) {
-        await diary.deleteOne();
+      const burned = alreadyRead;
+      if (burned) {
+        await DiaryMemory.findByIdAndDelete(req.params.memoryId);
       }
-      return response;
+      return res.json({ success: true, data: DiaryDTO(diary), burnedAfterRead: true });
     }
 
-    res.json({ success: true, data: diary });
+    res.json({ success: true, data: DiaryDTO(diary) });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to fetch diary', error });
   }
@@ -150,7 +179,7 @@ const getDiaryMemoryById = async (req, res) => {
 const unlockSecretDiary = async (req, res) => {
   try {
     const { pin } = req.body;
-    const diary = await DiaryMemory.findById(req.params.memoryId);
+    const diary = await DiaryMemory.findById(req.params.memoryId).lean();
     if (!diary) return res.status(404).json({ success: false, message: 'Diary not found' });
 
     const userId = req.user._id.toString();
@@ -168,7 +197,7 @@ const unlockSecretDiary = async (req, res) => {
     const match = await bcrypt.compare(String(pin), diary.pinHash);
     if (!match) return res.status(401).json({ success: false, message: 'Incorrect PIN' });
 
-    const diaryObj = diary.toObject();
+    const diaryObj = DiaryDTO(diary);
     delete diaryObj.pinHash;
     res.json({ success: true, data: diaryObj });
   } catch (error) {
@@ -180,28 +209,26 @@ const unlockSecretDiary = async (req, res) => {
 const updateDiaryMemory = async (req, res) => {
   try {
     const { title, content, emotionTag, voiceNoteUrl, voiceNoteDuration, voiceNotePublicId } = req.body;
-    const diary = await DiaryMemory.findById(req.params.memoryId);
-
+    const diary = await DiaryMemory.findById(req.params.memoryId).lean();
     if (!diary) return res.status(404).json({ success: false, message: 'Diary not found' });
     if (diary.createdBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Not allowed to edit this diary' });
     }
 
-    if (title)      diary.title = title;
-    if (content)    diary.content = content;
-    if (emotionTag !== undefined) diary.emotionTag = emotionTag;
+    const updates = {};
+    if (title) updates.title = title;
+    if (content) updates.content = content;
+    if (emotionTag !== undefined) updates.emotionTag = emotionTag;
     if (voiceNoteUrl) {
-      diary.voiceNote = {
+      updates.voiceNote = {
         url: voiceNoteUrl,
         duration: voiceNoteDuration || null,
         publicId: voiceNotePublicId || null
       };
     }
 
-    await diary.save();
-    const diaryObj = diary.toObject();
-    delete diaryObj.pinHash;
-    res.json({ success: true, data: diaryObj });
+    const updated = await DiaryMemory.findByIdAndUpdate(req.params.memoryId, { $set: updates }, { new: true }).select('-pinHash').lean();
+    res.json({ success: true, data: DiaryDTO(updated) });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to update diary', error });
   }
@@ -226,23 +253,15 @@ const deleteDiaryMemory = async (req, res) => {
 const shareDiaryWithUsers = async (req, res) => {
   try {
     const { userIds } = req.body;
-    const diary = await DiaryMemory.findById(req.params.memoryId);
-
+    const diary = await DiaryMemory.findById(req.params.memoryId).lean();
     if (!diary) return res.status(404).json({ success: false, message: 'Diary not found' });
     if (diary.createdBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Unauthorized to share this diary' });
     }
 
-    userIds.forEach(id => {
-      if (!diary.sharedWith.map(s => s.toString()).includes(id)) {
-        diary.sharedWith.push(id);
-      }
-    });
-
-    await diary.save();
-    const diaryObj = diary.toObject();
-    delete diaryObj.pinHash;
-    res.json({ success: true, data: diaryObj });
+    const uniqueIds = [...new Set([...diary.sharedWith.map(id => id.toString()), ...userIds.map(id => id.toString())])];
+    const updated = await DiaryMemory.findByIdAndUpdate(req.params.memoryId, { $set: { sharedWith: uniqueIds } }, { new: true }).select('-pinHash').lean();
+    res.json({ success: true, data: DiaryDTO(updated) });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to share diary', error });
   }
@@ -254,22 +273,29 @@ const getOnThisDay = async (req, res) => {
     const now = new Date();
     const month = now.getMonth() + 1;
     const day   = now.getDate();
+    const currentYear = now.getFullYear();
 
-    // Find all entries by this user created on same month+day in previous years
-    const allDiaries = await DiaryMemory.find({
-      createdBy: req.user._id
-    }).select('-pinHash').sort({ createdAt: -1 });
+    const onThisDay = await DiaryMemory.aggregate([
+      { $match: { createdBy: req.user._id } },
+      {
+        $addFields: {
+          entryMonth: { $month: '$createdAt' },
+          entryDay:   { $dayOfMonth: '$createdAt' },
+          entryYear:  { $year: '$createdAt' }
+        }
+      },
+      {
+        $match: {
+          entryMonth: month,
+          entryDay:   day,
+          entryYear:  { $lt: currentYear }
+        }
+      },
+      { $sort: { createdAt: -1 } },
+      { $limit: 50 },
+      { $project: { pinHash: 0, entryMonth: 0, entryDay: 0, entryYear: 0 } }
+    ]);
 
-    const onThisDay = allDiaries.filter(d => {
-      const created = new Date(d.createdAt);
-      return (
-        created.getMonth() + 1 === month &&
-        created.getDate()       === day  &&
-        created.getFullYear()   < now.getFullYear()
-      );
-    });
-
-    // Attach emotional context messages
     const emotionContextMap = {
       happy:    "You were beaming with joy here — carry that energy forward! ☀️",
       sad:      "This was a tough day — look how far you've come. 💪",
@@ -281,11 +307,11 @@ const getOnThisDay = async (req, res) => {
     };
 
     const enriched = onThisDay.map(d => ({
-      ...d.toObject(),
+      ...d,
       emotionContext: d.emotionTag
         ? (emotionContextMap[d.emotionTag] || `Feeling ${d.emotionTag} on this day.`)
         : "A memory from this day in the past. 📅",
-      yearsAgo: now.getFullYear() - new Date(d.createdAt).getFullYear()
+      yearsAgo: currentYear - d.createdAt.getFullYear()
     }));
 
     res.json({ success: true, data: enriched });
@@ -297,9 +323,9 @@ const getOnThisDay = async (req, res) => {
 // ─── Get streak ───────────────────────────────────────────────────────────────
 const getStreak = async (req, res) => {
   try {
-    const streak = await Streak.findOne({ userId: req.user._id });
+    const streak = await Streak.findOne({ userId: req.user._id }).lean();
     if (!streak) return res.json({ success: true, data: { currentStreak: 0, longestStreak: 0, totalEntries: 0, lastEntryDate: null } });
-    res.json({ success: true, data: streak });
+    res.json({ success: true, data: StreakDTO(streak) });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to fetch streak', error });
   }

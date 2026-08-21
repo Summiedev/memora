@@ -129,3 +129,60 @@
 @media (max-width: 640px) {
   .mh-envelope-scene { perspective: 900px; }
 }
+
+/* Small brand primitives used by the landing-page components. Keeping these
+   here makes the public page feel intentional even when Tailwind is not
+   available during a static preview. */
+.mh-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.mh-script,
+.mh-hand {
+  font-family: "Dancing Script", cursive;
+  font-weight: 700;
+}
+
+.mh-seal {
+  background: linear-gradient(135deg, #ec4899, #8b5cf6);
+  border: 4px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 8px 22px rgba(139, 92, 246, 0.32);
+}
+
+.mh-float {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.48);
+  box-shadow: 0 8px 22px rgba(139, 92, 246, 0.1);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: mh-float 5s ease-in-out infinite;
+}
+
+@keyframes mh-float {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-10px) rotate(4deg); }
+}
+
+.memora-home section:nth-of-type(even) {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.memora-home a:focus-visible,
+.memora-home button:focus-visible {
+  outline: 3px solid rgba(236, 72, 153, 0.38);
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .mh-float { display: none; }
+  .mh-eyebrow { letter-spacing: 0.16em; }
+}

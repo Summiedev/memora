@@ -41,4 +41,8 @@ const DiaryMemorySchema = new mongoose.Schema({
   timestamps: true
 });
 
+DiaryMemorySchema.index({ createdBy: 1, createdAt: -1 });
+DiaryMemorySchema.index({ sharedWith: 1 });
+DiaryMemorySchema.index({ groupId: 1 });
+
 module.exports = mongoose.model('DiaryMemory', DiaryMemorySchema);

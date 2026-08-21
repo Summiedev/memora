@@ -27,4 +27,7 @@ sharedWith: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   }
 });
 
+PhotoAlbumSchema.index({ createdBy: 1, createdAt: -1 });
+PhotoAlbumSchema.index({ sharedWith: 1 });
+
 module.exports = mongoose.model('PhotoAlbum', PhotoAlbumSchema);

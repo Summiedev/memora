@@ -9,8 +9,9 @@ const userSchema = new mongoose.Schema({
   pendingFriendRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   isVerified:        { type: Boolean, default: false },
   verificationToken: { type: String },
-  googleId:          { type: String },
+  googleId:          { type: String, unique: true, sparse: true },
   bio:               { type: String, default: '' },
+  tokenVersion:      { type: Number, default: 0 },
   settings: {
     notifications: { type: Boolean, default: true },
     darkMode:      { type: Boolean, default: false }
@@ -20,6 +21,9 @@ const userSchema = new mongoose.Schema({
     contentType: String
   }
 }, { timestamps: true });
+
+userSchema.index({ pendingFriendRequests: 1 });
+userSchema.index({ username: 'text', fullname: 'text' });
 
 const User = mongoose.model('User', userSchema);
 module.exports = User;

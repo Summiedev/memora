@@ -1,6 +1,4 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import HomePage from "./pages/HomePage";
-
 import Register from './pages/Register';
 import Login from './pages/Login';
 import CapsulesListPage from './pages/CapsulesListPage';
@@ -11,6 +9,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/PasswordChange";
 import MemoriesListPage from "./pages/MemoriesPageList";
 import FriendsPage from "./pages/FriendsPage";
+import HomePage from "./pages/HomePage";
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import ResetConfirmation from "./pages/ResretConfirmation";
@@ -31,17 +30,24 @@ function App() {
   return null;
 }
 
+function CsrfFetcher() {
+  useEffect(() => {
+    fetch('/api/csrf-token', { credentials: 'include' }).catch(() => {});
+  }, []);
+  return null;
+}
 
 
   return (
 
     
     <Router>
+      <CsrfFetcher />
       <TokenHandler />
       <Routes>
         <Route path="/" element={<HomePage />} />
        
-  
+
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 

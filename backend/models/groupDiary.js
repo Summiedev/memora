@@ -15,4 +15,6 @@ const GroupDiarySchema = new mongoose.Schema({
   inviteCode: { type: String, unique: true, sparse: true }
 }, { timestamps: true });
 
+GroupDiarySchema.index({ members: 1 });
+
 module.exports = mongoose.model('GroupDiary', GroupDiarySchema);

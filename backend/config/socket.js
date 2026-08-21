@@ -58,24 +58,30 @@ function initSocket(server) {
         if (payload.memoryType) msgData.memoryType = payload.memoryType;
 
         // Save and populate
+        const User = require('../models/user');
         const saved = await Message.create(msgData);
-        const populated = await Message.findById(saved._id)
-          .populate('sender',   'username fullname')
-          .populate('receiver', 'username fullname');
 
-        let outObj = populated.toObject();
+        const [sender, receiver] = await Promise.all([
+          User.findById(sid).select('username fullname').lean(),
+          User.findById(rid).select('username fullname').lean(),
+        ]);
+
+        let outObj = {
+          ...saved.toObject(),
+          sender,
+          receiver,
+        };
 
         // Attach capsule data if it's a capsule share
         if (capsuleId) {
           const Capsule = require('../models/capsule');
-          const capsule = await Capsule.findById(capsuleId)
-            .select('title coverImage sendDate lockUntilSend capsuleType sharedWith createdBy')
-            .populate('createdBy', 'username');
+          const capsule = await Capsule.findByIdAndUpdate(
+            capsuleId,
+            { $addToSet: { sharedWith: rid }, capsuleType: 'shared' },
+            { new: true }
+          ).select('title coverImage sendDate lockUntilSend capsuleType sharedWith createdBy')
+           .populate('createdBy', 'username');
           outObj.capsuleData = capsule ? capsule.toObject() : null;
-          await Capsule.findByIdAndUpdate(capsuleId, {
-            $addToSet: { sharedWith: rid },
-            capsuleType: 'shared',
-          });
         }
 
         // Attach memory preview if it's a memory share

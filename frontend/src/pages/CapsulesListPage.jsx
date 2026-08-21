@@ -289,7 +289,7 @@ const CapsuleListPage = () => {
 
   return (
     <>
-      <div className="min-h-screen pb-24 sm:pb-8" style={{ background: "linear-gradient(160deg,#fce4f3 0%,#ede9ff 40%,#dbeafe 100%)" }}>
+      <div className="app-shell pb-24 sm:pb-8">
         <Navbar_Main />
         <MobileBottomNav />
 
@@ -329,7 +329,7 @@ const CapsuleListPage = () => {
           </div>
         </div>
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        <main className="app-container py-6">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <Package size={18} className="text-purple-500" />
