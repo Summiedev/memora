@@ -198,10 +198,10 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 ```bash
 # Terminal 1 — backend
-cd backend && node index.js
+cd backend && npm start
 
 # Terminal 2 — frontend
-npm run dev
+cd ../frontend && npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173)
@@ -241,13 +241,69 @@ These are features planned for future releases:
 - [ ] Refresh token rotation (replace long-lived JWTs)
 - [ ] Rate limiting on auth endpoints
 - [ ] End-to-end encrypted messages
-- [ ] PWA / offline support
+- [x] **PWA / offline support** — installable app shell with a versioned service worker and update prompt
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
-> *(Add screenshots here once deployed)*
+The screenshots below are generated from the app itself by the reusable browser script in `frontend/scripts/capture-screenshots.mjs`.
+
+### Landing page
+
+<p align="center">
+  <img src="docs/screenshots/home-desktop.png" alt="Memora landing page on desktop" width="74%" />
+  <img src="docs/screenshots/home-mobile.png" alt="Memora landing page on a phone" width="20%" />
+</p>
+
+### Account and dashboard
+
+<p align="center">
+  <img src="docs/screenshots/register.png" alt="Account creation screen" width="48%" />
+  <img src="docs/screenshots/dashboard.png" alt="Memora dashboard" width="48%" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/dashboard-mobile.png" alt="Memora dashboard on a phone" width="24%" />
+</p>
+
+### Memory and capsule flows
+
+<p align="center">
+  <img src="docs/screenshots/diary-entry-form.png" alt="Diary-entry editor" width="48%" />
+  <img src="docs/screenshots/memories.png" alt="Memory library with a saved diary entry" width="48%" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/capsule-basics.png" alt="Time-capsule creation flow" width="48%" />
+  <img src="docs/screenshots/capsules.png" alt="Time-capsule library" width="48%" />
+</p>
+
+### Friends and profile
+
+<p align="center">
+  <img src="docs/screenshots/friends.png" alt="Friends and messaging screen" width="48%" />
+  <img src="docs/screenshots/profile.png" alt="Profile settings screen" width="48%" />
+</p>
+
+The complete capture set also includes the capsule scheduling step and the dashboard after a diary entry is saved. See [docs/screenshots](docs/screenshots) and the machine-readable [QA report](docs/screenshots/qa-report.json).
+
+### Reproduce the visual check
+
+With the frontend running, capture the real app against its configured API:
+
+```bash
+cd frontend
+npm run capture:screenshots
+```
+
+For deterministic UI documentation when an API or database is unavailable, the script has an explicit fixture mode. It still drives the real browser UI, but its report is marked `mock-api` rather than a live backend run:
+
+```powershell
+$env:APP_URL = 'http://127.0.0.1:5173'
+$env:QA_MOCK_API = '1'
+npm run capture:screenshots
+```
 
 ---
 

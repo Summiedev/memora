@@ -1,0 +1,105 @@
+{
+  "appUrl": "http://127.0.0.1:5174",
+  "mode": "mock-api",
+  "generatedAt": "2026-11-20T12:23:47.498Z",
+  "screenshots": [
+    "home-desktop.png",
+    "home-mobile.png",
+    "register.png",
+    "dashboard.png",
+    "diary-entry-form.png",
+    "dashboard-with-diary.png",
+    "capsule-basics.png",
+    "capsule-schedule.png",
+    "memories.png",
+    "capsules.png",
+    "friends.png",
+    "profile.png",
+    "dashboard-mobile.png"
+  ],
+  "checks": [
+    {
+      "label": "Home page renders",
+      "status": "passed"
+    },
+    {
+      "label": "Home page renders on a phone viewport",
+      "status": "passed"
+    },
+    {
+      "label": "Registration page renders",
+      "status": "passed"
+    },
+    {
+      "label": "New account reaches the dashboard",
+      "status": "passed"
+    },
+    {
+      "label": "Diary entry form opens",
+      "status": "passed"
+    },
+    {
+      "label": "Diary entry can be created",
+      "status": "passed"
+    },
+    {
+      "label": "Capsule creation flow opens",
+      "status": "passed"
+    },
+    {
+      "label": "Capsule schedule step opens",
+      "status": "passed"
+    },
+    {
+      "label": "Time capsule can be created",
+      "status": "passed"
+    },
+    {
+      "label": "Created diary appears in memories",
+      "status": "passed"
+    },
+    {
+      "label": "Created capsule appears in capsules",
+      "status": "passed"
+    },
+    {
+      "label": "Dashboard renders on a phone viewport",
+      "status": "passed"
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED"
+  ],
+  "failedRequests": [
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/quicksand/v37/6xKtdSZaM9iE8KbpRA_hK1QN.woff2",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "status": "passed",
+  "testAccount": {
+    "username": "memoraqa1774274984",
+    "email": "memora.qa.1795177427498-aukwg4@example.test"
+  }
+}

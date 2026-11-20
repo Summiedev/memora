@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import MobileBottomNav from "../components/MobileBottomNav";
 import Navbar_Main from "../components/Navbar_main";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion as Motion } from "framer-motion";
 import FloatingActions from "../components/FloatingBtn";
 import { useLocation } from "react-router-dom";
 import DashboardMiniCarousel from "../components/DashboardCaraousel";
@@ -42,9 +42,9 @@ const PROMPTS = [
 
 const TIPS = [
   "Add a lock date to your capsule so it stays sealed until the right moment",
-  "Share a capsule with a friend â€” they'll love the surprise",
+  "Share a capsule with a friend — they'll love the surprise",
   "Use emotion tags so you can find memories by how they felt",
-  "Write a letter to your future self â€” your future you will thank you",
+  "Write a letter to your future self — your future you will thank you",
 ];
 
 const greetingByHour = () => {
@@ -56,7 +56,7 @@ const greetingByHour = () => {
 
 // â”€â”€ Tiny helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const StatCard = ({ label, count, subtitle, grad, border, tc, delay, onClick, icon: Icon = Sparkles }) => (
-  <motion.button onClick={onClick}
+  <Motion.button onClick={onClick}
     initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
     transition={{ delay, duration: 0.35 }}
     whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}
@@ -64,13 +64,13 @@ const StatCard = ({ label, count, subtitle, grad, border, tc, delay, onClick, ic
     style={{ background: grad }}>
     <div className="flex items-center gap-3 mb-3">
       <span className="w-8 h-8 rounded-xl bg-white/70 flex items-center justify-center shadow-sm">
-        <Icon size={15} className={tc} />
+        {React.createElement(Icon, { size: 15, className: tc })}
       </span>
       <span className="text-xs font-semibold text-slate-700 uppercase tracking-[0.2em]">{label}</span>
     </div>
-    <div className={`text-4xl font-black chewy ${tc} leading-none mb-1`}>{count ?? <span className="opacity-30">â€”</span>}</div>
+    <div className={`text-4xl font-black chewy ${tc} leading-none mb-1`}>{count ?? <span className="opacity-30">—</span>}</div>
     <div className={`text-xs font-semibold ${tc} opacity-70`}>{subtitle}</div>
-  </motion.button>
+  </Motion.button>
 );
 
 // â”€â”€ Prompt card with inline response â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -92,7 +92,7 @@ const PromptCard = ({ prompt, onSave, onNext }) => {
   };
 
   return (
-    <motion.div key={prompt.text}
+    <Motion.div key={prompt.text}
       initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
       className="rounded-3xl border-2 border-pink-100 overflow-hidden shadow-md"
       style={{ background: 'linear-gradient(135deg,#fff5fa,#fdf0ff,#f0f5ff)' }}>
@@ -119,7 +119,7 @@ const PromptCard = ({ prompt, onSave, onNext }) => {
       {/* Text area */}
       <div className="px-5 pb-2">
         <textarea ref={ta} value={text} onChange={e => setText(e.target.value)}
-          placeholder="Write your answer hereâ€¦ pour your heart out"
+          placeholder="Write your answer here… pour your heart out"
           rows={4}
           className="w-full resize-none bg-white/70 rounded-2xl border-2 border-purple-100 focus:border-pink-300 focus:ring-4 focus:ring-pink-50 outline-none px-4 py-3 text-sm text-purple-900 placeholder-purple-300 leading-relaxed transition-all"
           style={{ fontFamily: "'Quicksand', sans-serif" }} />
@@ -127,14 +127,14 @@ const PromptCard = ({ prompt, onSave, onNext }) => {
 
       {/* Actions */}
       <div className="px-5 pb-4 flex items-center justify-between">
-        <p className="text-xs text-purple-300 font-medium">{text.length > 0 ? `${text.length} chars` : 'Start typingâ€¦'}</p>
+        <p className="text-xs text-purple-300 font-medium">{text.length > 0 ? `${text.length} chars` : 'Start typing…'}</p>
         <button onClick={handleSave} disabled={!text.trim() || saving || saved}
           className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold text-white shadow transition-all hover:scale-105 disabled:opacity-50 ${saved ? 'bg-emerald-500' : ''}`}
           style={!saved ? { background: 'linear-gradient(135deg,#ec4899,#8b5cf6)' } : {}}>
-          {saved ? <><Check size={14}/> Saved!</> : saving ? 'Savingâ€¦' : <><Send size={13}/> Save to Diary</>}
+          {saved ? <><Check size={14}/> Saved!</> : saving ? 'Saving…' : <><Send size={13}/> Save to Diary</>}
         </button>
       </div>
-    </motion.div>
+    </Motion.div>
   );
 };
 
@@ -256,7 +256,7 @@ const Dashboard = () => {
       <main className="app-container py-5 sm:py-7 pb-24 md:pb-7 space-y-5">
 
         {/* â”€â”€ WELCOME BANNER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+        <Motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
           className="dashboard-welcome rounded-[2rem] p-5 sm:p-7 relative overflow-hidden shadow-xl border border-white/80"
           style={{ background: 'linear-gradient(135deg,#fff0f9,#f5f0ff,#eef6ff)' }}>
 
@@ -286,18 +286,18 @@ const Dashboard = () => {
 
             {/* Quick create buttons */}
             <div className="flex gap-2 flex-wrap sm:flex-nowrap w-full sm:w-auto">
-              <motion.button whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.95 }}
+              <Motion.button whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.95 }}
                 onClick={() => setShowCapsuleForm(true)}
                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-white text-sm font-bold shadow-lg"
                 style={{ background: 'linear-gradient(135deg,#ec4899,#8b5cf6)' }}>
                 <Plus size={15} /> Capsule
-              </motion.button>
-              <motion.button whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.95 }}
+              </Motion.button>
+              <Motion.button whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.95 }}
                 onClick={() => setShowMemoryPicker(true)}
                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-white text-sm font-bold shadow-lg"
                 style={{ background: 'linear-gradient(135deg,#3b82f6,#06b6d4)' }}>
                 <BookOpen size={15} /> Memory
-              </motion.button>
+              </Motion.button>
             </div>
             </div>
 
@@ -325,7 +325,7 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
 
         {/* â”€â”€ STAT CARDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
@@ -395,7 +395,7 @@ const Dashboard = () => {
             {/* MOOD TRACKER */}
             <div className="bg-white/85 backdrop-blur rounded-3xl border-2 border-pink-100 shadow-md p-5">
               {user ? <MoodTracker user={user} /> : (
-                <div className="h-32 flex items-center justify-center text-purple-300 text-sm">Loadingâ€¦</div>
+                <div className="h-32 flex items-center justify-center text-purple-300 text-sm">Loading…</div>
               )}
             </div>
 
@@ -461,17 +461,17 @@ const Dashboard = () => {
       {/* â”€â”€ MEMORY TYPE PICKER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <AnimatePresence>
         {showMemoryPicker && !memoryType && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             style={{ background: 'rgba(139,92,246,0.2)', backdropFilter: 'blur(8px)' }}
             onClick={e => { if (e.target === e.currentTarget) setShowMemoryPicker(false); }}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+            <Motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
               className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
               onClick={e => e.stopPropagation()}>
               <div className="h-1.5" style={{ background: 'linear-gradient(90deg,#f9a8d4,#c4b5fd,#93c5fd)' }} />
               <div className="p-6 relative">
                 <button onClick={() => setShowMemoryPicker(false)}
-                  className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-purple-50 hover:bg-pink-50 text-purple-400 font-bold text-xl">Ã—</button>
+                  className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-purple-50 hover:bg-pink-50 text-purple-400 font-bold text-xl">×</button>
                 <div className="flex items-center gap-2 mb-1">
                   <Sparkles size={18} className="text-purple-500" />
                   <h2 className="chewy text-2xl text-purple-700">Create a Memory</h2>
@@ -490,8 +490,8 @@ const Dashboard = () => {
                   </button>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </Motion.div>
+          </Motion.div>
         )}
       </AnimatePresence>
 

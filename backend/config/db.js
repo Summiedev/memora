@@ -9,6 +9,17 @@ const connectDB = async () => {
     }
 
     const isProduction = process.env.NODE_ENV === 'production';
+    const uriTlsInsecure = /(?:[?&])tlsInsecure=true(?:&|$)/i.test(mongoUri);
+    const tlsInsecure = uriTlsInsecure || process.env.MONGO_TLS_INSECURE === 'true';
+    const tlsAllowInvalidCertificates = !tlsInsecure
+      && process.env.MONGO_TLS_ALLOW_INVALID_CERTIFICATES === 'true';
+    const connectionUrl = new URL(mongoUri);
+
+    if (tlsInsecure) {
+      connectionUrl.searchParams.delete('tlsAllowInvalidCertificates');
+    } else if (tlsAllowInvalidCertificates) {
+      connectionUrl.searchParams.delete('tlsInsecure');
+    }
 
     const options = {
       // Connection Pool
@@ -37,14 +48,19 @@ const connectDB = async () => {
 
       // TLS/SSL
       tls: isProduction || process.env.MONGO_TLS === 'true',
-      tlsAllowInvalidCertificates: process.env.MONGO_TLS_ALLOW_INVALID_CERTIFICATES === 'true',
-      tlsInsecure: process.env.MONGO_TLS_INSECURE === 'true',
+      // The MongoDB driver rejects these two options together. Avoid passing
+      // either option at all unless it is explicitly enabled.
+      ...(tlsInsecure
+        ? { tlsInsecure: true }
+        : tlsAllowInvalidCertificates
+          ? { tlsAllowInvalidCertificates: true }
+          : {}),
 
       // Observability
       monitorCommands: isProduction,
     };
 
-    await mongoose.connect(mongoUri, options);
+    await mongoose.connect(connectionUrl.toString(), options);
 
     console.log(
       `✅ MongoDB connected [pool:${options.maxPoolSize} min:${options.minPoolSize} app:${options.appName}]`

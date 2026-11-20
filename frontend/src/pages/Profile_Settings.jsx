@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 
 import { FaCheckCircle, FaArrowLeft } from 'react-icons/fa';
 import { Camera, Bell, Moon, Lock, Star, User } from 'lucide-react';
@@ -141,7 +141,7 @@ export default function ProfileSettingsPage({ onClose }) {
 
             {/* Profile tab */}
             {activeTab === 'profile' && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+              <Motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                 <h2 className="chewy text-2xl text-purple-700 mb-4">Edit your details</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -161,7 +161,7 @@ export default function ProfileSettingsPage({ onClose }) {
                     onChange={e => setProfile(p => ({ ...p, email: e.target.value }))} className={inputCls} />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-purple-500 mb-1 ml-1">Bio âœ¦</label>
+                  <label className="block text-xs font-semibold text-purple-500 mb-1 ml-1">Bio</label>
                   <textarea rows={3} placeholder="Tell us a little about yourself" value={profile.bio}
                     onChange={e => setProfile(p => ({ ...p, bio: e.target.value }))} className={inputCls} />
                 </div>
@@ -169,21 +169,21 @@ export default function ProfileSettingsPage({ onClose }) {
                   <button onClick={saveProfile}
                     className="px-6 py-2.5 rounded-2xl text-white font-bold text-sm shadow-md hover:scale-105 hover:shadow-lg transition-all"
                     style={{ background: "linear-gradient(135deg,#ec4899,#8b5cf6)" }}>
-                    Save changes â™¡
+                    Save changes
                   </button>
                   {showProfileSuccess && (
-                    <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+                    <Motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
                       className="flex items-center gap-1.5 text-emerald-600 font-semibold text-sm">
                       <FaCheckCircle size={18} /> Saved!
-                    </motion.div>
+                    </Motion.div>
                   )}
                 </div>
-              </motion.div>
+              </Motion.div>
             )}
 
             {/* Settings tab */}
             {activeTab === 'settings' && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+              <Motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
                 <h2 className="chewy text-2xl text-purple-700 mb-4">Preferences</h2>
 
                 {[
@@ -223,19 +223,19 @@ export default function ProfileSettingsPage({ onClose }) {
                     Save settings
                   </button>
                   {showSettingsSuccess && (
-                    <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+                    <Motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
                       className="flex items-center gap-1.5 text-emerald-600 font-semibold text-sm">
                       <FaCheckCircle size={18} /> Saved!
-                    </motion.div>
+                    </Motion.div>
                   )}
                 </div>
-              </motion.div>
+              </Motion.div>
             )}
 
             {/* Achievements tab */}
             {activeTab === 'achieve' && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                <h2 className="chewy text-2xl text-purple-700 mb-6">Your Achievements ðŸ†</h2>
+              <Motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <h2 className="chewy text-2xl text-purple-700 mb-6">Your Achievements</h2>
                 <div className="space-y-5">
                   {achievements.map((a, i) => (
                     <div key={i} className={`${a.bg} rounded-2xl p-5 border border-white shadow-sm`}>
@@ -259,9 +259,9 @@ export default function ProfileSettingsPage({ onClose }) {
                   ))}
                 </div>
                 <button className="mt-6 text-sm text-purple-500 hover:text-purple-700 font-semibold transition-colors">
-                  View all achievements â†’
+                  View all achievements →
                 </button>
-              </motion.div>
+              </Motion.div>
             )}
           </div>
         </div>

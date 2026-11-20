@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator');
 const { ZodError } = require('zod');
-const logger = require('./logger');
+const logger = require('../utils/logger');
 
 const validate = (source, schema) => {
   return (req, res, next) => {
