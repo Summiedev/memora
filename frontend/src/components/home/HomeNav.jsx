@@ -1,54 +1,52 @@
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { Menu, X } from "lucide-react";
+import { useState } from "react";
+import PwaControls from "../PwaControls";
+
+const navItems = [
+  { href: "#how-it-works", label: "How it works" },
+  { href: "#inside", label: "Inside Memora" },
+  { href: "#shared", label: "Share a memory" },
+];
 
 const HomeNav = () => {
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = () => setMenuOpen(false);
 
   return (
-    <motion.nav
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6 }}
-      className={`fixed top-0 inset-x-0 z-50 px-5 sm:px-10 transition-all duration-300 ${
-        scrolled ? "py-3" : "py-5"
-      }`}
-    >
-      <div
-        className={`max-w-6xl mx-auto flex items-center justify-between rounded-2xl transition-all duration-300 ${
-          scrolled
-            ? "bg-white/80 backdrop-blur-xl shadow-md px-5 py-2 border border-violet-100"
-            : "px-2 py-1"
-        }`}
-      >
-        <a href="/" className="flex items-center gap-2 group select-none">
-          <span className="chewy text-2xl bg-gradient-to-r from-violet-600 to-blue-500 bg-clip-text text-transparent">
-            Memora
-          </span>
-        </a>
+    <header className="home-nav">
+      <a className="home-nav__brand" href="/" aria-label="Memora home">
+        <img src="/memora-icon.svg" alt="" aria-hidden="true" />
+        <span>Memora</span>
+      </a>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          <a
-            href="/login"
-            className="hidden sm:inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold text-gray-500 hover:text-violet-600 hover:bg-violet-50 transition-colors quicksand"
-          >
-            Sign in
-          </a>
-          <a
-            href="/register"
-            className="mh-btn mh-btn-solid"
-            style={{ padding: "0.55rem 1.35rem", fontSize: "0.85rem" }}
-          >
-            Start free
-          </a>
-        </div>
+      <nav className="home-nav__links" aria-label="Landing page">
+        {navItems.map((item) => <a key={item.href} href={item.href}>{item.label}</a>)}
+      </nav>
+
+      <div className="home-nav__actions">
+        <PwaControls />
+        <a className="home-nav__signin" href="/login">Sign in</a>
+        <a className="button button--primary home-nav__join" href="/register">Create account</a>
+        <button
+          type="button"
+          className="home-nav__menu"
+          aria-expanded={menuOpen}
+          aria-controls="home-mobile-navigation"
+          aria-label={menuOpen ? "Close navigation" : "Open navigation"}
+          onClick={() => setMenuOpen((isOpen) => !isOpen)}
+        >
+          {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+        </button>
       </div>
-    </motion.nav>
+
+      {menuOpen && (
+        <nav id="home-mobile-navigation" className="home-nav__mobile" aria-label="Landing page mobile">
+          {navItems.map((item) => <a key={item.href} href={item.href} onClick={closeMenu}>{item.label}</a>)}
+          <a href="/login" onClick={closeMenu}>Sign in</a>
+          <a className="button button--primary" href="/register" onClick={closeMenu}>Create account</a>
+        </nav>
+      )}
+    </header>
   );
 };
 

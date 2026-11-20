@@ -1,99 +1,42 @@
-﻿import { motion } from "framer-motion";
-const items = [
-  {
-    title: "Diary entries",
-    text: "Write the quick notes, the long thoughts, and the little details you would otherwise forget by tomorrow.",
-  },
-  {
-    title: "Photos and albums",
-    text: "Drop in a picture, organize a moment, and keep the story attached to what you saw.",
-  },
-  {
-    title: "Mood logs",
-    text: "Track how a day felt, not just what happened, so your timeline keeps the emotional context too.",
-  },
+import { BookOpenText, CalendarHeart, Image, LockKeyhole } from "lucide-react";
+import { createElement } from "react";
+
+const archiveItems = [
+  { icon: BookOpenText, title: "Journal entries", text: "Keep quick notes, longer thoughts, and the details from your day." },
+  { icon: Image, title: "Photo albums", text: "Save photos with the notes that go with them." },
+  { icon: CalendarHeart, title: "Mood tracker", text: "Look back at how each day felt." },
 ];
 
-const CapsuleCard = () => (
-  <div className="rounded-[2rem] border-2 border-violet-100 bg-gradient-to-br from-violet-50 via-white to-blue-50 p-5 sm:p-6 shadow-md">
-    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-purple-400 quicksand">capsule</p>
-    <div className="mt-4 rounded-[1.5rem] border border-violet-100 bg-white/80 p-4 sm:p-5 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-violet-400 quicksand">sealed memory</p>
-        <p className="text-[10px] font-bold text-violet-500 quicksand">opens later</p>
-      </div>
-      <div className="mt-4 h-1 bg-gradient-to-r from-pink-200 via-violet-200 to-blue-200" />
-      <p className="mt-4 text-base sm:text-lg text-purple-700 chewy">Something saved for the right day.</p>
-      <p className="mt-2 text-sm text-purple-500 quicksand font-medium leading-relaxed">
-        A private moment, a future reminder, or a gift for someone else, locked until you choose.
-      </p>
+const ArchiveFilmstrip = () => (
+  <section id="inside" className="home-section home-section--archive" aria-labelledby="archive-title">
+    <div className="section-heading section-heading--archive">
+      <h2 id="archive-title">Everything is easy to find.</h2>
+      <p>Your notes, photos, mood logs, and time capsules are organised by date.</p>
     </div>
-  </div>
-);
 
-const ArchiveFilmstrip = () => {
-  return (
-    <section className="relative py-16 sm:py-24 px-5 sm:px-10 overflow-hidden">
-      <div className="mh-blob w-[20rem] sm:w-[24rem] h-[20rem] sm:h-[24rem] top-0 -left-24 opacity-22" style={{ background: "radial-gradient(circle,#a5b4fc,transparent)" }} />
-
-      <div className="relative z-10 mx-auto max-w-6xl">
-        <div className="max-w-2xl">
-          <p className="mh-kicker">memory lane</p>
-          <h2 className="chewy mt-5 text-[clamp(2rem,4.5vw,3.2rem)] leading-[1.1] text-purple-800">
-            Everything you keep
-            <br />
-            has a place to live.
-          </h2>
-          <p className="mt-5 max-w-2xl text-base sm:text-lg leading-relaxed text-purple-500 quicksand font-medium">
-            Memora brings diaries, photo albums, mood logs, capsules, and shared memories into one timeline, so you can move through your archive without losing the thread.
-          </p>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-purple-400 quicksand font-semibold">
-            It should feel like opening a familiar drawer, not searching through a folder list.
-          </p>
+    <div className="archive-layout" data-reveal="section">
+      <div className="archive-browser" aria-label="Example archive timeline" role="img">
+        <div className="archive-browser__topline"><span>MEMORA / TIMELINE</span><span>2026</span></div>
+        <div className="archive-browser__main">
+          <p className="archive-browser__month">November</p><div className="archive-browser__line" />
+          <article className="archive-browser__entry"><span className="archive-browser__date">20</span><div><strong>Coffee before work</strong><p>Journal entry</p></div></article>
+          <article className="archive-browser__entry archive-browser__entry--photo"><span className="archive-browser__date">18</span><div><strong>Balcony sunset</strong><p>6 photos</p></div></article>
+          <article className="archive-browser__entry"><span className="archive-browser__date">14</span><div><strong>Finished my project</strong><p>Mood: Good</p></div></article>
         </div>
-
-        <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          <CapsuleCard />
-          {items.map((item, index) => {
-            return (
-              <motion.article
-                key={item.title}
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.6 }}
-                transition={{ duration: 0.6, delay: index * 0.08 }}
-                className="mh-card p-5 sm:p-6"
-              >
-                <h3 className="mt-4 chewy text-2xl text-purple-800">{item.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-purple-500 quicksand font-medium">{item.text}</p>
-              </motion.article>
-            );
-          })}
-        </div>
-
-        <div className="mt-8 rounded-3xl border-2 border-violet-100 bg-white/80 backdrop-blur-sm px-5 py-5 sm:px-6 sm:py-6 shadow-md">
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-purple-400 quicksand">inside the app</p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {[
-              "Diary pages",
-              "Photo albums",
-              "Mood tracker",
-              "Capsules",
-              "Shared diary",
-              "Memory comments",
-            ].map((label) => (
-              <span
-                key={label}
-                className="border-b border-violet-100 pb-2 text-sm font-semibold text-purple-600 quicksand"
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-        </div>
+        <div className="archive-browser__lock"><LockKeyhole size={15} aria-hidden="true" /> Private timeline</div>
       </div>
-    </section>
-  );
-};
+
+      <div className="archive-features">
+        {archiveItems.map(({ icon: Icon, title, text }) => (
+          <article className="archive-feature" key={title}>
+            <div className="archive-feature__icon">{createElement(Icon, { size: 22, "aria-hidden": true })}</div>
+            <div><h3>{title}</h3><p>{text}</p></div>
+          </article>
+        ))}
+        <a className="text-link" href="/register">Add your first memory <span aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+  </section>
+);
 
 export default ArchiveFilmstrip;

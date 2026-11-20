@@ -1,57 +1,28 @@
-﻿import { motion } from "framer-motion";
- 
+import { MessageCircleMore, Send, UserRoundPlus } from "lucide-react";
 
-const highlights = [
-  {
-    title: "Shared diary",
-    text: "Write a page together when one memory needs more than one voice.",
-  },
-  {
-    title: "Capsules to someone else",
-    text: "Send a sealed memory to a friend and let it open on a date you choose.",
-  },
-  {
-    title: "Private comments",
-    text: "Keep a conversation attached to the memory so the context stays intact.",
-  },
-];
-
-const SharedCircle = () => {
-  return (
-    <section className="relative py-20 sm:py-28 px-6 sm:px-10 overflow-hidden">
-      <div className="mh-blob w-[24rem] h-[24rem] top-0 -left-24 opacity-20" style={{ background: "radial-gradient(circle,#a5b4fc,transparent)" }} />
-
-      <div className="relative z-10 mx-auto max-w-6xl grid lg:grid-cols-[0.9fr_1.1fr] gap-12 items-center">
-        <div className="max-w-xl">
-          <p className="mh-kicker">shared memories</p>
-          <h2 className="chewy mt-5 text-[clamp(2rem,4.5vw,3.1rem)] leading-[1.1] text-purple-800">
-            Some memories are
-            <br />
-            easier together.
-          </h2>
-          <p className="mt-6 text-lg leading-relaxed text-purple-500 quicksand font-medium max-w-lg">
-            Memora lets you share a capsule, keep a diary together, or attach a note to a memory so the story still feels complete when you open it later.
-          </p>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-3">
-          {highlights.map((item, index) => (
-            <motion.article
-              key={item.title}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.5 }}
-              transition={{ duration: 0.55, delay: index * 0.08 }}
-              className="mh-card p-5 sm:p-6"
-            >
-              <h3 className="mt-4 chewy text-2xl text-purple-800">{item.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-purple-500 quicksand font-medium">{item.text}</p>
-            </motion.article>
-          ))}
-        </div>
+const SharedCircle = () => (
+  <section id="shared" className="home-section home-section--shared" aria-labelledby="shared-title">
+    <div className="shared-layout">
+      <div className="shared-copy">
+        <h2 id="shared-title">Share memories with people you trust.</h2>
+        <p>Send a time capsule, share a page, or keep a note for someone. You choose what stays private.</p>
+        <ul className="shared-points">
+          <li><UserRoundPlus size={18} aria-hidden="true" /> Invite a trusted circle</li>
+          <li><Send size={18} aria-hidden="true" /> Send a time capsule to a friend</li>
+          <li><MessageCircleMore size={18} aria-hidden="true" /> Add notes to shared memories</li>
+        </ul>
       </div>
-    </section>
-  );
-};
+
+      <div className="shared-note" aria-label="Example shared-memory conversation" role="img">
+        <div className="shared-note__header"><div className="avatar-stack" aria-hidden="true"><span>J</span><span>A</span><span>L</span></div><div><strong>Weekend by the lake</strong><p>Shared with 3 people</p></div><span className="shared-note__private">private</span></div>
+        <div className="shared-note__thread">
+          <div className="shared-note__message"><span className="avatar avatar--jade">J</span><p><strong>Jules</strong> I forgot how clear the water was that day.</p></div>
+          <div className="shared-note__message shared-note__message--reply"><span className="avatar avatar--lilac">A</span><p><strong>Ada</strong> I still have the photos from the way home.</p></div>
+        </div>
+        <div className="shared-note__composer"><span>Leave a note…</span><Send size={17} aria-hidden="true" /></div>
+      </div>
+    </div>
+  </section>
+);
 
 export default SharedCircle;

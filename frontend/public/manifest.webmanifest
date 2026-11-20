@@ -1,0 +1,19 @@
+{
+  "name": "Memora — Keep what matters",
+  "short_name": "Memora",
+  "description": "A private place for diary pages, photos, moods, and time capsules.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f8ff",
+  "theme_color": "#31275f",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "./memora-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
